@@ -1,0 +1,33 @@
+{# Stable data-nav-node keys preserve opened branches during partial navigation;
+   data-nav-current forces active ancestors open. #}<details class="course-navigator" data-course-navigator open>
+  <summary class="course-toggle">Contents</summary>
+  <nav aria-label="Contents">
+    <p class="nav-eyebrow">Contents</p>
+    <a class="nav-home" href="{{ home_url }}" {% if not document %}aria-current="page"{% endif %}>Home</a>
+    <div class="course-tree">
+      {% for nav_module in documents %}
+      {% set current_module = document and document.slug == nav_module.slug %}
+      <details class="nav-module-group" data-nav-node="module:{{ nav_module.slug }}" {% if current_module %}open data-nav-current{% endif %}>
+        <summary><span class="nav-row"><span>{{ nav_module.title }}</span><small data-progress-module="{{ nav_module.slug }}" aria-label="Exercises completed">0/{{ site_data.modules[nav_module.slug] | length }}</small></span></summary>
+        <div class="nav-module-body">
+          <a class="nav-module-overview" data-module-overview="{{ nav_module.slug }}" href="{{ module_link(nav_module) }}" {% if current_module and active_section is not defined %}aria-current="page"{% endif %}>Module overview</a>
+          {% for nav_section in nav_module.sections %}
+          {% set current_section = current_module and active_section is defined and active_section == nav_section %}
+          <details class="nav-section-group" data-nav-node="section:{{ nav_module.slug }}:{{ nav_section.slug }}" {% if current_section %}open data-nav-current{% endif %}>
+            <summary><span class="nav-row"><span>{{ nav_section.title }}</span><small data-progress-section="{{ nav_section.slug }}" data-progress-module-id="{{ nav_module.slug }}" aria-label="Exercises completed">0/{{ nav_section.exercises | length }}</small></span></summary>
+            <div class="section-nav-body">
+              <a href="{{ course_section_url(nav_module, nav_section) }}" {% if current_section and exercise is not defined %}aria-current="page"{% endif %}>Overview</a>
+              {% for nav_exercise in nav_section.exercises %}
+              <a href="{{ course_exercise_url(nav_module, nav_section, nav_exercise) }}" data-exercise-link="{{ nav_exercise.id }}" data-module-id="{{ nav_module.slug }}" {% if exercise is defined and exercise.id == nav_exercise.id %}aria-current="page"{% endif %}>
+                <span class="state-dot" aria-hidden="true"></span>{{ nav_exercise.title }}
+              </a>
+              {% endfor %}
+            </div>
+          </details>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </nav>
+</details>

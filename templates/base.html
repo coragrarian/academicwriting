@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page_title }} · Academic Writing for Agrarian Sciences</title>
+  <link rel="stylesheet" href="{{ asset_css }}">
+  <script defer src="{{ asset_js }}"></script>
+  <script defer src="{{ asset_navigation }}"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-name" href="{{ home_url }}">Academic Writing <span>for Agrarian Sciences</span></a>
+      {% if document %}<a class="module-link" href="{{ module_url }}">{{ document.title }}</a>{% endif %}
+    </div>
+  </header>
+  <div class="layout">
+    {# navigation.js replaces these two marked regions,
+       retaining the header and scripts. #}<aside class="course-panel" aria-label="Course navigation" data-site-navigation>
+      {% include "_course_navigation.html" %}
+    </aside>
+    <main id="main" class="main-content" data-page-content>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {# Course metadata is read once; each exercise carries
+     its own answer-key inside main. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+type: software
+repository-code: https://github.com/coragrarian/academicwriting
+message: >-
+  If you use the software that builds this course, please cite it using
+  these metadata. Teaching content and its scholarly sources have separate
+  attribution and rights.
+title: Academic Writing for Agrarian Sciences
+authors:
+  - given-names: Jhonatan H.
+    family-names: Lopes
+abstract: >-
+  A static academic-writing course builder with structured Markdown,
+  interactive exercises, feedback and browser-local learner progress.

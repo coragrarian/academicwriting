@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>{{ document.title }}</span></nav>
+<div class="page-head">
+  <p class="eyebrow">Module</p>
+  <h1>{{ document.title }}</h1>
+  {% if document.introduction_html %}<div class="prose">{{ document.introduction_html | safe }}</div>{% endif %}
+</div>
+<section aria-labelledby="subsections-heading">
+  <h2 id="subsections-heading" class="section-heading">Subsections</h2>
+  <ol class="overview-list overview-list--numbered">
+    {% for section in document.sections %}
+    <li><a class="overview-link" href="{{ section_url(section) }}">
+      <span class="overview-number" aria-hidden="true">{{ loop.index }}</span>
+      <span class="overview-copy"><strong>{{ section.title | e | replace('/', '/<wbr>' | safe) }}</strong></span>
+      <span class="overview-progress"><span data-progress-section="{{ section.slug }}" data-progress-module-id="{{ document.slug }}">0/{{ section.exercises | length }}</span><small>completed</small></span>
+      {% include "_chevron_right.html" %}
+    </a></li>
+    {% endfor %}
+  </ol>
+</section>
+{% include "_page_navigation.html" %}
+{% endblock %}
