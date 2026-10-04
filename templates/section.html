@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><a href="{{ module_url }}">{{ document.title }}</a><span aria-hidden="true">/</span><span>{{ section.title }}</span></nav>
+<div class="page-head">
+  <p class="eyebrow">Subsection overview</p>
+  {# Slash compounds can wrap naturally without changing the title text. #}
+  <h1>{{ section.title | e | replace('/', '/<wbr>' | safe) }}</h1>
+  <div class="prose lead">{{ section.introduction_html | safe }}</div>
+  <p class="section-count"><span data-progress-section="{{ section.slug }}" data-progress-module-id="{{ document.slug }}">0/{{ section.exercises | length }}</span> exercises completed</p>
+</div>
+<section aria-labelledby="exercises-heading">
+  <h2 id="exercises-heading" class="section-heading">Exercises</h2>
+  <ol class="exercise-list">
+    {% for current in section.exercises %}
+    <li><a href="{{ exercise_url(section, current) }}" data-exercise-link="{{ current.id }}" data-module-id="{{ document.slug }}"><span class="state-dot" aria-hidden="true"></span><span>{{ current.title }}</span><span class="list-arrow">{% include "_chevron_right.html" %}</span></a></li>
+    {% endfor %}
+  </ol>
+</section>
+{% include "_page_navigation.html" %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><a href="{{ module_url }}">{{ document.title }}</a><span aria-hidden="true">/</span><a href="{{ section_url(section) }}">{{ section.title }}</a></nav>
+<div class="page-head exercise-head">
+  {% if total > 1 %}<p class="eyebrow">{{ position }} of {{ total }}</p>{% endif %}
+  <h1>{{ exercise.title }}</h1>
+  <p class="exercise-state" data-current-status>Not started</p>
+</div>
+<form id="exercise-form" data-exercise-id="{{ exercise.id }}" novalidate>
+  <div class="exercise-content prose" data-response-group="exercise">
+    {% for block in rendered_blocks %}{{ block | safe }}{% endfor %}
+    {% if exercise.direct_questions %}<p class="item-feedback" id="exercise-item-feedback" data-item-feedback hidden></p>{% endif %}
+  </div>
+  {# Worked models contain resolved answers, never scored data-question controls. #}{% for model in rendered_examples %}
+  <section class="worked-model prose" aria-label="Model">
+    <h2>{{ model.title }}</h2>
+    {% for block in model.blocks %}{{ block | safe }}{% endfor %}
+  </section>
+  {% endfor %}
+  {% for item in rendered_items %}
+  <section class="exercise-item" id="{{ item.id }}" aria-labelledby="{{ item.id }}-heading" data-response-group="{{ item.id }}">
+    <h2 id="{{ item.id }}-heading">{{ item.title }}</h2>
+    <div class="prose">
+      {% for block in item.blocks %}{{ block | safe }}{% endfor %}
+    </div>
+    <p class="item-feedback" id="{{ item.id }}-feedback" data-item-feedback hidden></p>
+  </section>
+  {% endfor %}
+  <p class="item-feedback" id="shared-feedback" hidden></p>
+  <div class="form-actions">
+    <button type="submit" class="button button-primary">Check {{ 'answer' if exercise.questions | length == 1 else 'answers' }}</button>
+    <button type="button" class="button button-secondary" id="reset-exercise">Reset</button>
+    <p id="exercise-feedback" role="status" aria-live="polite"></p>
+  </div>
+  <noscript><p>Enable JavaScript to check answers and save progress. The pages and navigation remain available.</p></noscript>
+</form>
+{% include "_page_navigation.html" %}
+<script id="answer-key" type="application/json">{{ answers | tojson }}</script>
+{% endblock %}

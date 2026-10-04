@@ -1,0 +1,4 @@
+<nav class="page-navigation" aria-label="Page navigation">
+  <a href="{{ previous_url }}" rel="prev">{% include "_chevron_left.html" %} {{ previous_label }}</a>
+  <a href="{{ next_url }}" {% if next_terminal %}data-course-terminal{% else %}rel="next"{% endif %}>{{ next_label }} {% if not next_terminal %}{% include "_chevron_right.html" %}{% endif %}</a>
+</nav>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Self-study platform</p>
+  <h1>Academic Writing for Agrarian Sciences</h1>
+  <p class="lead">Explore academic writing through short, interactive exercises.</p>
+</div>
+<section aria-labelledby="modules-heading">
+  <h2 id="modules-heading" class="section-heading">Modules</h2>
+  <ul class="overview-list">
+  {% for module in documents %}
+    <li><a class="overview-link feature-link" href="{{ module_link(module) }}">
+      <span class="overview-copy"><strong>{{ module.title }}</strong><small>{{ module.sections | length }} subsections</small></span>
+      <span class="overview-progress"><span data-progress-other-module="{{ module.slug }}">0/{{ site_data.modules[module.slug] | length }}</span><small>completed</small></span>
+      {% include "_chevron_right.html" %}
+    </a></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

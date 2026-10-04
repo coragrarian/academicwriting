@@ -1,0 +1,27 @@
+{% if example %}
+<ul class="model-options">
+  {% for option in question.options %}
+  <li>{{ option.text_html | safe }}{% if option.correct %} <strong>(model answer)</strong>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% elif question.kind in ('single-choice', 'multi-select') %}
+<fieldset class="choice-question" id="{{ question.id }}" data-question="{{ question.id }}" aria-describedby="{{ question.id }}-feedback">
+  <legend>{{ 'Choose one answer' if question.kind == 'single-choice' else 'Select all that apply' }}</legend>
+  {% for option in question.options %}
+  <label class="choice-option">
+    <input type="{{ 'radio' if question.kind == 'single-choice' else 'checkbox' }}" name="{{ question.id }}" value="{{ loop.index0 }}">
+    <span>{{ option.text_html | safe }}</span>
+  </label>
+  {% endfor %}
+  <span class="response-feedback sr-only" id="{{ question.id }}-feedback" data-response-feedback hidden></span>
+</fieldset>
+{% elif question.kind == 'matching' %}
+<div class="matching-question">
+  <label for="{{ question.id }}">{{ question.prompt_html | safe }}</label>
+  <select id="{{ question.id }}" data-question="{{ question.id }}" aria-describedby="{{ question.id }}-feedback">
+    <option value="">Select a sentence</option>
+    {% for option in question.options %}<option value="{{ loop.index0 }}">{{ option.text_html | striptags }}</option>{% endfor %}
+  </select>
+  <span class="response-feedback sr-only" id="{{ question.id }}-feedback" data-response-feedback hidden></span>
+</div>
+{% endif %}
