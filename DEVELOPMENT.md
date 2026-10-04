@@ -240,10 +240,11 @@ Run the ordinary test suite with:
 uv run pytest -q
 ```
 
-Run the browser tests with installed Google Chrome:
+Run the browser tests with Playwright-managed Chromium:
 
 ```sh
-AGRARIAN_BROWSER_CHANNEL=chrome uv run pytest -m browser -q
+uv run --frozen playwright install --with-deps chromium
+uv run --frozen pytest -m browser -q
 ```
 
 Other useful checks are:
