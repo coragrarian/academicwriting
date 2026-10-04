@@ -1,0 +1,22 @@
+[project]
+name = "agrarian-writing-builder"
+version = "0.2.0a1"
+requires-python = ">=3.12"
+dependencies = [
+    "markdown-it-py>=4,<5",
+    "Jinja2>=3.1,<4",
+    "pyyaml>=6,<7",
+]
+
+[dependency-groups]
+dev = [
+    "playwright>=1.55,<2",
+    "pytest>=9,<10",
+    "ruff>=0.16.5,<0.17",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-m 'not browser'"
+markers = ["browser: real Chromium interaction and navigation checks"]
