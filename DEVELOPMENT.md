@@ -20,8 +20,11 @@ The Markdown files contain the teaching material. The parser decides what that
 Markdown means, the model carries that meaning between stages, and the renderer
 turns it into the pages that are published.
 
-JavaScript adds the interactive behaviour in the browser: answer checking,
+On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
+
+Home and About use ordinary links and only the shared stylesheet. They do not
+receive course scripts or learner-state JSON.
 
 There is no backend or database.
 
@@ -194,6 +197,10 @@ There is no fuzzy matching or synonym expansion.
 Direct URLs, reloads, new tabs and ordinary navigation should still work
 without that enhancement. If partial navigation fails, the browser falls back
 to a normal page load.
+
+The shared header and footer remain mounted during these page swaps. Their
+links are resolved against the initial URL so changing course-page depth does
+not change their destinations.
 
 ## Where to make changes
 

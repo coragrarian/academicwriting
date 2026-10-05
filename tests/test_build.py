@@ -30,13 +30,23 @@ class Page(HTMLParser):
         self.links = []
         self.image_links = []
         self.scripts = {}
+        self.regions = {"header": [], "main": [], "footer": []}
+        self.title = ""
         self._script = None
         self._link = None
+        self._region = None
+        self._title = False
         self.feed(source)
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
         self.elements.append((tag, attrs))
+        if tag in self.regions:
+            self._region = tag
+        if self._region:
+            self.regions[self._region].append((tag, attrs))
+        if tag == "title":
+            self._title = True
         if tag == "a":
             self._link = attrs
         if tag == "img" and self._link:
@@ -53,12 +63,18 @@ class Page(HTMLParser):
                 self.links.append(attrs[key])
 
     def handle_endtag(self, tag):
+        if tag == self._region:
+            self._region = None
+        if tag == "title":
+            self._title = False
         if tag == "a":
             self._link = None
         if tag == "script":
             self._script = None
 
     def handle_data(self, data):
+        if self._title:
+            self.title += data
         if self._script:
             self.scripts[self._script] += data
 
@@ -78,7 +94,7 @@ def test_complete_canonical_build(tmp_path, documents):
         < home.index("methods/index.html")
         < home.index("results/index.html")
     )
-    assert json.loads(pages[output / "index.html"].scripts["site-data"])["module"] is None
+    assert "site-data" not in pages[output / "index.html"].scripts
     for path, page in pages.items():
         source = path.read_text()
         public_page = path.relative_to(output) in {Path("index.html"), Path("about/index.html")}
@@ -114,14 +130,20 @@ def test_complete_canonical_build(tmp_path, documents):
         assert sum(
             1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
         ) == 1
-        data = json.loads(page.scripts["site-data"])
-        assert data["course_sections"] == {
-            document.slug: {
-                section.slug: [exercise.id for exercise in section.exercises]
-                for section in document.sections
+        data = {}
+        if public_page:
+            assert "site-data" not in page.scripts
+            assert not any(tag == "script" for tag, _ in page.elements)
+        else:
+            data = json.loads(page.scripts["site-data"])
+            assert data["course_sections"] == {
+                document.slug: {
+                    section.slug: [exercise.id for exercise in section.exercises]
+                    for section in document.sections
+                }
+                for document in documents
             }
-            for document in documents
-        }
+            assert page.title.endswith(" · Academic Writing for Agrarian Sciences")
         for node_id, attrs in nav_nodes.items():
             assert ("open" in attrs) == ("data-nav-current" in attrs)
             if node_id.startswith("module:"):
@@ -136,7 +158,8 @@ def test_complete_canonical_build(tmp_path, documents):
             assert resolved.is_file(), f"{path}: unresolved link {link}"
             if target.fragment:
                 assert target.fragment in pages[resolved].ids, f"{path}: missing fragment {link}"
-        for asset in ("styles.css", "exercises.js", "navigation.js"):
+        assets = ("styles.css",) if public_page else ("styles.css", "exercises.js", "navigation.js")
+        for asset in assets:
             assert any(link.endswith("assets/" + asset) for link in page.links)
     ids = set()
     for document in documents:
@@ -217,21 +240,22 @@ def test_complete_canonical_build(tmp_path, documents):
     } == first_build
 
 
-def test_public_project_pages_preserve_course_state(tmp_path, documents):
+def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
     output = tmp_path / "site"
     build_site(documents, output)
-    home = Page((output / "index.html").read_text())
-    expected_data = json.loads(home.scripts["site-data"])
+    module = Page((output / "introduction/index.html").read_text())
+    expected_data = json.loads(module.scripts["site-data"])
     assert {module: len(ids) for module, ids in expected_data["modules"].items()} == {
         "introduction": 14,
         "methods": 7,
         "results": 9,
     }
     assert sum(map(len, expected_data["modules"].values())) == 30
-    assert expected_data["module"] is None and expected_data["sections"] == {}
+    assert expected_data["module"] == "introduction"
     for path in (Path("index.html"), Path("about/index.html")):
         page = Page((output / path).read_text())
-        assert json.loads(page.scripts["site-data"]) == expected_data
+        assert "site-data" not in page.scripts
+        assert not any(tag == "script" for tag, _ in page.elements)
         assert "answer-key" not in page.scripts
         assert not any(
             attrs.get("rel") in {"prev", "next"} or "data-course-terminal" in attrs
@@ -239,11 +263,15 @@ def test_public_project_pages_preserve_course_state(tmp_path, documents):
         )
         assert not any(attrs.get("id") == "exercise-form" for _, attrs in page.elements)
         assert not any(
-            tag == "aside" or "data-site-navigation" in attrs
+            "course-panel" in attrs.get("class", "").split() or "data-site-navigation" in attrs
             or any(name.startswith("data-progress-") for name in attrs)
             for tag, attrs in page.elements
         )
         assert any("public-layout" in attrs.get("class", "").split() for _, attrs in page.elements)
+        expected_title = "Academic Writing for Agrarian Sciences"
+        if path.parent.name == "about":
+            expected_title = "About · " + expected_title
+        assert page.title == expected_title
 
 
 def test_home_and_about_public_content(tmp_path, documents):
@@ -253,6 +281,8 @@ def test_home_and_about_public_content(tmp_path, documents):
     home = Page(home_source)
     assert "course" in home.ids
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
+    assert sum(attrs.get("class") == "project-start" for _, attrs in home.elements) == 1
+    assert "About the project" not in home_source
     first = min(documents, key=lambda document: (document.order, document.slug))
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
@@ -261,7 +291,19 @@ def test_home_and_about_public_content(tmp_path, documents):
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
         assert f'>{number:02d}</span>' in home_source
-        assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
+        assert f"<span>{len(document.sections)} subsections</span>" in home_source
+        assert f"<span>{exercise_count} exercises</span>" in home_source
+    public_pages = (
+        (output / "index.html", home),
+        (output / "about/index.html", Page((output / "about/index.html").read_text())),
+    )
+    for path, page in public_pages:
+        header_links = [attrs for tag, attrs in page.regions["header"] if tag == "a"]
+        course = next(attrs for attrs in header_links if attrs.get("class") == "course-link")
+        target = urlsplit(course["href"])
+        assert target.fragment == "course"
+        assert (path.parent / target.path).resolve() == output / "index.html"
+        assert any(attrs.get("class") == "about-link" for attrs in header_links)
     for detail in (
         "About this resource", "Research context", "Institutional context", "Funding and support",
         "APQ-01173-22", "FUNDEP", "Escrita acadêmica em língua inglesa nas ciências agrárias",
@@ -271,21 +313,31 @@ def test_home_and_about_public_content(tmp_path, documents):
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
     assert {
-        "resource-heading", "research-heading", "institutions-heading",
-        "support-heading", "repository-heading",
+        "resource-heading", "research-heading", "corpus-heading",
+        "learning-heading", "repository-heading", "facts-heading",
     } <= about.ids
+    for heading in (
+        "About the resource", "Research behind the resource", "CorAgrarian",
+        "From research to learning", "Source and reuse", "Project at a glance",
+    ):
+        assert heading in about_source
     assert 'href="https://github.com/coragrarian/academicwriting"' in about_source
     assert (
         "Escrita acadêmica em língua inglesa nas ciências agrárias: "
         "necessidades e insumos para aplicações pedagógicas"
     ) in about_source
     for fact in (
-        "APQ-01173-22", "UFMG", "FUNDEP", "executing institution", "fund administrator",
-        "Faculdade de Letras, UFMG", "FAPEMIG", "CAPES",
+        "APQ-01173-22", "UFMG", "FUNDEP", "Executing institution", "Fund administrator",
+        "FAPEMIG", "CAPES", "lexical and syntactic", "rhetorical functions",
+        "specialised corpus of English-language journal articles", "classroom use",
+        "independent online study", "undergraduate and postgraduate",
     ):
         assert fact in about_source
     assert "Original software is licensed under MIT" in about_source
     assert "original teaching content is licensed under CC BY-NC-SA 4.0" in about_source
+    assert "third-party material retain their own rights" in about_source
+    assert any(tag == "dl" for tag, _ in about.regions["main"])
+    assert not any(tag == "img" for tag, _ in about.regions["main"])
     assert not {"team", "people", "contact"} & about.ids
     assert "mailto:" not in about_source and "Coming soon" not in about_source
     assert not any(
@@ -298,7 +350,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     )
 
 
-def test_home_catalogue_and_entry_follow_the_supplied_modules(tmp_path, documents):
+def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, documents):
     # A reduced, reordered course catches canonical paths or counts baked into Home.
     introduction, methods, _ = documents
     modules = [
@@ -311,38 +363,55 @@ def test_home_catalogue_and_entry_follow_the_supplied_modules(tmp_path, document
     home = Page(source)
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
     assert start["href"] == "methods/index.html"
-    rows = source.split('<ol class="overview-list course-catalogue">', 1)[1].split("</ol>", 1)[0]
-    rows = rows.split("<li>")[1:]
+    rows = source.split('<ol class="course-programme">', 1)[1].split("</ol>", 1)[0]
+    rows = rows.split('<li class="programme-module">')[1:]
     assert len(rows) == 2
     for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
         assert f'>{number:02d}</span>' in row
         assert f'href="{module.slug}/index.html"' in row
-        assert f"<strong>{module.title}</strong>" in row
+        assert f"<h3>{module.title}</h3>" in row
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)
-        assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
+        assert f"<span>{subsection_count} {subsection_label}</span>" in row
+        assert f"<span>{exercise_count} exercises</span>" in row
 
 
-def test_home_institutional_marks_link_to_official_sites(tmp_path, documents):
+def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):
     output = tmp_path / "site"
     build_site(documents, output)
-    home = Page((output / "index.html").read_text())
     destinations = {
         "logo-ufmg-fale.png": ("https://www.letras.ufmg.br/site/", "Faculdade de Letras da UFMG"),
         "logo-fapemig.png": ("https://fapemig.br/", "FAPEMIG"),
         "logo-capes.png": ("https://www.gov.br/capes/pt-br/", "CAPES"),
     }
-    assert len(home.image_links) == len(destinations)
-    for image, link in home.image_links:
-        href, name = destinations[Path(image["src"]).name]
-        assert link["href"] == href
-        assert "target" not in link
-        assert image["alt"] == name
-    assert not any(tag == "figcaption" for tag, _ in home.elements)
+    for path in output.rglob("*.html"):
+        source = path.read_text()
+        page = Page(source)
+        assert sum(tag == "footer" for tag, _ in page.elements) == 1
+        assert source.index("</main>") < source.index('<footer class="site-footer">')
+        assert not any(tag == "img" for tag, _ in page.regions["main"])
+        assert len(page.image_links) == len(destinations)
+        assert sum(tag == "img" for tag, _ in page.regions["footer"]) == 3
+        for image, link in page.image_links:
+            href, name = destinations[Path(image["src"]).name]
+            assert link["href"] == href
+            assert "target" not in link
+            assert image["alt"] == name
+        utility_links = [attrs["href"] for tag, attrs in page.regions["footer"] if tag == "a"]
+        assert "https://github.com/coragrarian/academicwriting" in utility_links
+        assert any(
+            not urlsplit(href).scheme and (path.parent / href).resolve() == output / "about/index.html"
+            for href in utility_links
+        )
+        assert not any(tag == "figcaption" for tag, _ in page.elements)
 
 
-@pytest.mark.parametrize("path", ["index.html", "about/index.html"])
+@pytest.mark.parametrize("path", [
+    "index.html", "about/index.html", "methods/index.html",
+    "methods/purpose-of-the-methods-section/index.html",
+    "methods/purpose-of-the-methods-section/exercise-1/index.html",
+])
 def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, path):
     output = tmp_path / "site"
     build_site(documents, output)

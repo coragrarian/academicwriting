@@ -7,33 +7,22 @@
   <p class="lead">A self-study resource for students and researchers writing research articles in the Agrarian Sciences.</p>
   <div class="project-actions">
     <a class="project-start" href="{{ module_link(documents[0]) }}">Start the course {% include "_chevron_right.html" %}</a>
-    <a href="{{ about_url }}">About the project</a>
   </div>
 </div>
 <section id="course" class="resource-section" aria-labelledby="modules-heading">
   <h2 id="modules-heading" class="section-heading">Explore the course</h2>
-  <ol class="overview-list course-catalogue">
+  <ol class="course-programme">
   {% for module in documents %}
     {% set subsection_count = module.sections | length %}
-    {% set exercise_count = site_data.modules[module.slug] | length %}
-    <li><a class="overview-link" href="{{ module_link(module) }}">
-      <span class="catalogue-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
-      <span class="overview-copy"><strong>{{ module.title }}</strong><small>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %} · {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</small></span>
-      {% include "_chevron_right.html" %}
-    </a></li>
+    {% set exercise_count = module_exercise_counts[module.slug] %}
+    <li class="programme-module">
+      <span class="programme-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
+      <h3>{{ module.title }}</h3>
+      <p class="programme-counts"><span>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %}</span><span>{{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span></p>
+      <a class="programme-link" href="{{ module_link(module) }}" aria-label="Explore {{ module.title }}">Explore {% include "_chevron_right.html" %}</a>
+    </li>
   {% endfor %}
   </ol>
-</section>
-<section class="institution-signature" aria-label="Institutions and supporters">
-  <a href="https://www.letras.ufmg.br/site/">
-    <img class="institution-logo institution-logo--ufmg-fale" src="{{ institution_asset('logo-ufmg-fale.png') }}" alt="Faculdade de Letras da UFMG" width="400" height="141" loading="lazy">
-  </a>
-  <a href="https://fapemig.br/">
-    <img class="institution-logo institution-logo--fapemig" src="{{ institution_asset('logo-fapemig.png') }}" alt="FAPEMIG" width="251" height="251" loading="lazy">
-  </a>
-  <a href="https://www.gov.br/capes/pt-br/">
-    <img class="institution-logo institution-logo--capes" src="{{ institution_asset('logo-capes.png') }}" alt="CAPES" width="3332" height="3085" loading="lazy">
-  </a>
 </section>
 </div>
 {% endblock %}

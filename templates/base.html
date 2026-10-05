@@ -3,32 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page_title }} · Academic Writing for Agrarian Sciences</title>
+  <title>{{ document_title }}</title>
   <link rel="stylesheet" href="{{ asset_css }}">
-  <script defer src="{{ asset_js }}"></script>
-  <script defer src="{{ asset_navigation }}"></script>
+  {% if not public_page %}<script defer src="{{ asset_js }}"></script>
+  <script defer src="{{ asset_navigation }}"></script>{% endif %}
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header">
+  <header class="site-header{% if public_page %} site-header--public{% endif %}">
     <div class="site-header-inner">
       <a class="site-name" href="{{ home_url }}"{% if public_page and not is_about %} aria-current="page"{% endif %}>Academic Writing <span>for Agrarian Sciences</span></a>
       {% if document %}<a class="module-link" href="{{ module_url }}">{{ document.title }}</a>{% endif %}
       <nav class="site-links" aria-label="Site">
+        <a class="course-link" href="{{ course_url }}">Course</a>
         <a class="about-link" href="{{ about_url }}" {% if is_about %}aria-current="page"{% endif %}>About</a>
       </nav>
     </div>
   </header>
   <div class="layout{% if public_page %} public-layout{% endif %}">
     {% if not public_page %}{# navigation.js replaces these two marked regions,
-       retaining the header and scripts. #}<aside class="course-panel" aria-label="Course navigation" data-site-navigation>
+       retaining the header, footer and scripts. #}<aside class="course-panel" aria-label="Course navigation" data-site-navigation>
       {% include "_course_navigation.html" %}
     </aside>{% endif %}
     <main id="main" class="main-content" data-page-content>
       {% block content %}{% endblock %}
     </main>
   </div>
-  {# Course metadata is read once; each exercise carries
-     its own answer-key inside main. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>
+  {% include "_site_footer.html" %}
+  {% if not public_page %}{# Course metadata is read once; each exercise carries
+     its own answer-key inside main. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>{% endif %}
 </body>
 </html>

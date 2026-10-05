@@ -4,27 +4,63 @@
   <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>About</span></nav>
   <div class="page-head">
     <h1>About Academic Writing for Agrarian Sciences</h1>
+    <p class="lead">The research, corpus and teaching work behind this resource.</p>
   </div>
-  <section class="resource-section" aria-labelledby="resource-heading">
-    <h2 id="resource-heading" class="section-heading">About the resource</h2>
-    <div class="prose">
-      <p>This website provides interactive self-study activities focused on academic writing in research articles in the Agrarian Sciences. The available modules cover the Introduction, Methods and Results sections.</p>
-      <p>Guided exercises let you check your answers and review feedback. Responses and progress are saved locally in your browser, so you can return to your work and continue at your own pace.</p>
+  <div class="about-layout">
+    <div class="about-narrative">
+      <section class="resource-section" aria-labelledby="resource-heading">
+        <h2 id="resource-heading" class="section-heading">About the resource</h2>
+        <div class="prose">
+          <p>Academic Writing for Agrarian Sciences is an interactive self-study resource for undergraduate and postgraduate students and researchers writing research articles in English. The available modules cover the Introduction, Methods and Results sections.</p>
+          <p>Guided exercises let you practise the structure and language of academic writing, check your answers and review feedback. Responses and progress are saved locally in your browser, so you can return to your work and continue at your own pace.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="research-heading">
+        <h2 id="research-heading" class="section-heading">Research behind the resource</h2>
+        <div class="prose">
+          <p>The research behind the resource investigates lexical and syntactic features of academic English in the Agrarian Sciences and their relationship to rhetorical functions. It examines how language used in disciplinary texts can inform materials for teaching academic writing.</p>
+          <p>The work addresses the academic English needs of Brazilian students and researchers, connecting linguistic analysis with pedagogical applications.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="corpus-heading">
+        <h2 id="corpus-heading" class="section-heading">CorAgrarian</h2>
+        <div class="prose">
+          <p>CorAgrarian is a specialised corpus of English-language journal articles in the Agrarian Sciences. It supplies disciplinary research data for examining how academic English is used in published research.</p>
+          <p>CorAgrarian and this website serve different purposes: the corpus provides texts for research; the website presents related learning activities.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="learning-heading">
+        <h2 id="learning-heading" class="section-heading">From research to learning</h2>
+        <div class="prose">
+          <p>Project documentation connects the analysis of disciplinary writing with the development of teaching materials for classroom use and independent online study. Research into the language and rhetorical organisation of research articles informs that pedagogical work.</p>
+          <p>On this site, the activities take the form of guided practice with the structure and language of research articles. Learners examine choices in context, check responses and use feedback to revisit their answers.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="repository-heading">
+        <h2 id="repository-heading" class="section-heading">Source and reuse</h2>
+        <div class="prose">
+          <p>The website source is publicly available in the <a href="{{ repository_url }}">Academic Writing repository</a>. Original software is licensed under MIT; original teaching content is licensed under CC BY-NC-SA 4.0.</p>
+          <p>Quoted or adapted passages, institutional marks and other third-party material retain their own rights. See the repository's <a href="{{ repository_url }}/blob/main/LICENSE">licence scope</a> for details.</p>
+        </div>
+      </section>
     </div>
-  </section>
-  <section class="resource-section" aria-labelledby="research-heading">
-    <h2 id="research-heading" class="section-heading">Research context</h2>
-    <div class="prose">
-      <p>The resource was developed in connection with the research project <em lang="pt-BR">Escrita acadêmica em língua inglesa nas ciências agrárias: necessidades e insumos para aplicações pedagógicas</em>.</p>
-      <p>Research on academic writing in the Agrarian Sciences informs the pedagogical activities presented here.</p>
-    </div>
-  </section>
-  {% include "_institutional_context.html" %}
-  <section class="resource-section" aria-labelledby="repository-heading">
-    <h2 id="repository-heading" class="section-heading">Open source / repository</h2>
-    <div class="prose">
-      <p>The website source is publicly available in the <a href="{{ repository_url }}">Academic Writing repository</a>. Original software is licensed under MIT; original teaching content is licensed under CC BY-NC-SA 4.0. See the repository for the full licence scope and third-party notices.</p>
-    </div>
-  </section>
+    <aside class="project-facts" aria-labelledby="facts-heading">
+      <h2 id="facts-heading">Project at a glance</h2>
+      <dl>
+        <dt>Official project</dt>
+        <dd lang="pt-BR">Escrita acadêmica em língua inglesa nas ciências agrárias: necessidades e insumos para aplicações pedagógicas</dd>
+        <dt>Executing institution</dt>
+        <dd>Universidade Federal de Minas Gerais (UFMG)</dd>
+        <dt>Fund administrator</dt>
+        <dd>Fundação de Desenvolvimento da Pesquisa (FUNDEP)</dd>
+        <dt>Support</dt>
+        <dd>FAPEMIG and CAPES</dd>
+        <dt>FAPEMIG reference</dt>
+        <dd>APQ-01173-22</dd>
+        <dt>Repository</dt>
+        <dd><a href="{{ repository_url }}">coragrarian/academicwriting</a></dd>
+      </dl>
+    </aside>
+  </div>
 </div>
 {% endblock %}

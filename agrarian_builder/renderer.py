@@ -30,6 +30,7 @@ from .model import Block, Document, Exercise, Feedback, Question, Section
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 STATIC = ROOT / "static"
+SITE_TITLE = "Academic Writing for Agrarian Sciences"
 
 
 def _plain(value: str) -> str:
@@ -325,8 +326,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
     All asset and page links are relative, including single-module builds.
-    Home and About use the public shell without course navigation. Home
-    terminates the course rather than becoming another learning node.
+    Home and About use the public shell without course navigation or runtime
+    data. Home terminates the course rather than becoming another learning node.
 
     Rendering occurs in a marked sibling directory, leaving an existing site
     intact if rendering fails. Only after every page is written is recognised
@@ -362,7 +363,12 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     page_navigation = _page_navigation(documents, temp)
 
     def write_page(
-        path: Path, template: str, document: Document | None = None, **content: object
+        path: Path,
+        template: str,
+        document: Document | None = None,
+        *,
+        page_title: str | None = None,
+        **content: object,
     ) -> None:
         """Combine shared course context with page-specific semantic content.
 
@@ -381,14 +387,14 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             document=document,
             documents=documents,
             public_page=document is None,
+            document_title=(f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE),
+            module_exercise_counts={slug: len(ids) for slug, ids in module_ids.items()},
             site_data={
-                "module": document.slug if document else None,
+                "module": document.slug,
                 "sections": {
                     section.slug: [exercise.id for exercise in section.exercises]
                     for section in document.sections
-                }
-                if document
-                else {},
+                },
                 "modules": module_ids,
                 "course_sections": {
                     module.slug: {
@@ -397,7 +403,9 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                     }
                     for module in documents
                 },
-            },
+            }
+            if document
+            else None,
             total_exercises=len(module_ids[document.slug])
             if document
             else sum(map(len, module_ids.values())),
@@ -412,6 +420,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                 _path_for(module, section, exercise)
             ),
             home_url=link(Path("index.html")),
+            course_url=link(Path("index.html")) + "#course",
             about_url=link(Path("about/index.html")),
             repository_url="https://github.com/coragrarian/academicwriting",
             section_url=lambda section: link(_path_for(document, section)),
@@ -421,9 +430,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         )
         destination.write_text(rendered, encoding="utf-8")
 
-    write_page(
-        Path("index.html"), "home.html", page_title="Academic Writing for Agrarian Sciences"
-    )
+    write_page(Path("index.html"), "home.html")
     write_page(Path("about/index.html"), "about.html", page_title="About", is_about=True)
 
     for document in documents:

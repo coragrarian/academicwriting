@@ -641,12 +641,57 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     )
     page.locator(".site-name").click()
     expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
-    page.get_by_role("link", name="About the project", exact=True).click()
+    navigation = page.get_by_role("navigation", name="Site", exact=True)
+    navigation.get_by_role("link", name="Course", exact=True).click()
+    assert page.url == f"{site[0]}/index.html#course"
+    navigation.get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     context.close()
 
 
-@pytest.mark.parametrize("width", [1280, 768, 375, 320])
+@pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
+def test_public_pages_do_not_load_course_runtime(page, site, path):
+    requests = []
+    page.on("request", lambda request: requests.append(request.url))
+    page.goto(site[0] + path)
+    expect(page.locator("script, #site-data, #answer-key")).to_have_count(0)
+    assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
+    assert any(url.endswith("/assets/styles.css") for url in requests)
+    assert page.evaluate("JSON.stringify({...localStorage})") == "{}"
+
+
+def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
+    page.goto(site[0] + "/methods/index.html")
+    page.evaluate("window.footerProbe = document.querySelector('.site-footer')")
+    footer = page.get_by_role("contentinfo")
+    about = footer.get_by_role("link", name="About", exact=True)
+    expected_about = f"{site[0]}/about/index.html"
+    expect(about).to_have_attribute("href", expected_about)
+    for heading in ("Purpose of the Methods section", "Exercise 1"):
+        page.locator('.page-navigation a[rel="next"]').click()
+        expect(page.locator("h1")).to_have_text(heading)
+        assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
+        expect(about).to_have_attribute("href", expected_about)
+        expect(page.locator(".course-link")).to_have_attribute("href", f"{site[0]}/index.html#course")
+    # The footer has remained below the viewport while URL depth changed.
+    # Its lazy images must still load from the original site's asset directory.
+    for image in footer.locator("img").all():
+        image.scroll_into_view_if_needed()
+        expect(image).to_have_js_property("complete", True)
+        assert image.evaluate("node => node.naturalWidth > 0")
+        assert image.evaluate("node => node.currentSrc").startswith(f"{site[0]}/assets/institutions/")
+    page.go_back()
+    expect(page.locator("h1")).to_have_text("Purpose of the Methods section")
+    page.go_forward()
+    expect(page.locator("h1")).to_have_text("Exercise 1")
+    assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
+    expect(about).to_have_attribute("href", expected_about)
+    about.click()
+    expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
+    assert page.evaluate("window.footerProbe") is None
+
+
+@pytest.mark.parametrize("width", [1280, 1024, 768, 375, 320])
 def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
@@ -662,6 +707,10 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         assert about.bounding_box()["height"] >= 44
         about.focus()
         assert about.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+        course = page.locator(".course-link")
+        expect(course).to_be_visible()
+        assert course.bounding_box()["height"] >= 44
+        assert course.evaluate("node => node.href") == f"{site[0]}/index.html#course"
         links = page.locator(".site-header a").all()
         for index, link in enumerate(links):
             box = link.bounding_box()
@@ -683,42 +732,75 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             natural_ratio = image.evaluate("node => node.naturalWidth / node.naturalHeight")
             assert box["width"] / box["height"] == pytest.approx(natural_ratio, rel=0.01)
             assert box["x"] >= 0 and box["x"] + box["width"] <= width
+        footer = page.get_by_role("contentinfo")
+        expect(footer).to_have_count(1)
+        layout = page.locator(".layout").bounding_box()
+        assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
+        for name, href in (
+            ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
+            ("FAPEMIG", "https://fapemig.br/"),
+            ("CAPES", "https://www.gov.br/capes/pt-br/"),
+            ("Source code", "https://github.com/coragrarian/academicwriting"),
+        ):
+            link = footer.get_by_role("link", name=name, exact=True)
+            expect(link).to_have_attribute("href", href)
+            assert link.get_attribute("target") is None
+            assert link.bounding_box()["height"] >= 44
+        if width >= 768:
+            marks = [mark.bounding_box() for mark in page.locator(".footer-institutions a").all()]
+            assert all(
+                following["x"] >= current["x"] + current["width"]
+                for current, following in pairwise(marks)
+            )
+            centres = [mark["y"] + mark["height"] / 2 for mark in marks]
+            assert centres == pytest.approx([centres[0]] * 3, abs=0.02)
         if path == "/index.html":
-            for action in page.locator(".project-actions a").all():
-                assert action.bounding_box()["height"] >= 44
-            expect(page.locator("#course .overview-link")).to_have_count(3)
-            assert page.locator(".catalogue-number").all_text_contents() == ["01", "02", "03"]
-            assert page.locator(".course-catalogue small").all_text_contents() == [
-                "6 subsections · 14 exercises", "2 subsections · 7 exercises", "2 subsections · 9 exercises",
+            expect(page.locator(".project-actions a")).to_have_count(1)
+            expect(page.get_by_role("link", name="About the project", exact=True)).to_have_count(0)
+            expect(page.locator("#course .programme-link")).to_have_count(3)
+            assert page.locator(".programme-number").all_text_contents() == ["01", "02", "03"]
+            assert page.locator(".programme-counts span").all_text_contents() == [
+                "6 subsections", "14 exercises", "2 subsections", "7 exercises", "2 subsections", "9 exercises",
             ]
             start = page.get_by_role("link", name="Start the course", exact=True)
             expect(start).to_have_attribute("href", "introduction/index.html")
-            secondary = page.get_by_role("link", name="About the project", exact=True)
+            assert start.bounding_box()["height"] >= 44
             assert start.evaluate("node => getComputedStyle(node).backgroundColor") == "rgb(40, 94, 81)"
-            assert secondary.evaluate("node => getComputedStyle(node).backgroundColor") == "rgba(0, 0, 0, 0)"
-            for name, href in (
-                ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
-                ("FAPEMIG", "https://fapemig.br/"),
-                ("CAPES", "https://www.gov.br/capes/pt-br/"),
-            ):
-                mark = page.get_by_role("link", name=name, exact=True)
-                expect(mark).to_have_attribute("href", href)
-                assert mark.get_attribute("target") is None
-                assert mark.bounding_box()["height"] >= 44
+            columns = [column.bounding_box() for column in page.locator(".programme-module").all()]
             if width >= 768:
-                marks = [mark.bounding_box() for mark in page.locator(".institution-signature a").all()]
+                assert [column["y"] for column in columns] == pytest.approx([columns[0]["y"]] * 3)
                 assert all(
                     following["x"] >= current["x"] + current["width"]
-                    for current, following in pairwise(marks)
+                    for current, following in pairwise(columns)
                 )
-                centres = [mark["y"] + mark["height"] / 2 for mark in marks]
-                assert centres == pytest.approx([centres[0]] * 3)
+            else:
+                assert all(
+                    following["y"] >= current["y"] + current["height"]
+                    for current, following in pairwise(columns)
+                )
+            for link in page.locator(".programme-link").all():
+                assert link.bounding_box()["height"] >= 44
+                link.focus()
+                assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
         if path in {"/index.html", "/about/index.html"}:
             expect(page.locator(".public-layout")).to_have_count(1)
+            expect(page.locator("script, #site-data, main img")).to_have_count(0)
             expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module], [data-progress-other-module]")).to_have_count(0)
+            public_edge = page.locator("main").evaluate("node => node.getBoundingClientRect().x + parseFloat(getComputedStyle(node).paddingLeft)")
+            assert page.locator(".site-name").bounding_box()["x"] == pytest.approx(public_edge, abs=0.02)
+            if path == "/about/index.html":
+                narrative = page.locator(".about-narrative").bounding_box()
+                facts = page.locator(".project-facts").bounding_box()
+                expect(page.locator(".project-facts dl")).to_have_count(1)
+                if width >= 1024:
+                    assert facts["x"] >= narrative["x"] + narrative["width"]
+                    assert facts["y"] == pytest.approx(narrative["y"])
+                else:
+                    assert facts["y"] >= narrative["y"] + narrative["height"]
         else:
             expect(page.locator(".course-panel, [data-site-navigation]")).to_have_count(1)
             expect(page.locator(".module-link")).to_be_visible()
+            expect(page.locator("#site-data, script[src$='exercises.js'], script[src$='navigation.js']")).to_have_count(3)
 
 
 def test_authorised_content_changes_preserve_existing_progress(page, site):
@@ -808,7 +890,7 @@ def test_every_sequential_course_page_forward_and_backward(page, site, documents
     assert backwards == list(reversed(sequence))
 
 
-@pytest.mark.parametrize("width", [1280, 768, 375, 320])
+@pytest.mark.parametrize("width", [1280, 1024, 768, 375, 320])
 def test_editorial_components_and_contents_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     paths = [
