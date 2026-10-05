@@ -1,6 +1,6 @@
 /* Ordinary hrefs own navigation. On HTTP(S), eligible links within the current
    module may fetch and replace the contents tree and main region instead.
-   The header, module state and scripts persist; exercise behaviour is then
+   The header, footer, module state and scripts persist; exercise behaviour is then
    reinitialised. Home, other modules and file previews use full page loads. */
 (() => {
   "use strict";
@@ -33,8 +33,8 @@
   let navigationNumber = 0;
   let renderedUrl = new URL(window.location.href);
 
-  // The header persists while page-relative links change their base URL.
-  document.querySelectorAll('.site-header a[href]').forEach((link) => {
+  // Persistent site chrome keeps its original link targets as the URL changes.
+  document.querySelectorAll('.site-header a[href], .site-footer a[href]').forEach((link) => {
     link.href = new URL(link.getAttribute('href'), window.location.href).href;
   });
   document.documentElement.classList.add('enhanced-navigation');

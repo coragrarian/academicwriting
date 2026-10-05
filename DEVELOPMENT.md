@@ -20,8 +20,11 @@ The Markdown files contain the teaching material. The parser decides what that
 Markdown means, the model carries that meaning between stages, and the renderer
 turns it into the pages that are published.
 
-JavaScript adds the interactive behaviour in the browser: answer checking,
+On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
+
+Home and About use ordinary links and only the shared stylesheet. They do not
+receive course scripts or learner-state JSON.
 
 There is no backend or database.
 
@@ -32,6 +35,7 @@ There is no backend or database.
 | `exercises/` | Canonical teaching content, answers and authored feedback |
 | `agrarian_builder/parser.py` | Interprets and validates the Markdown conventions |
 | `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions and feedback |
+| `agrarian_builder/people.py` | Public directory entries, roles and optional portrait/profile metadata |
 | `agrarian_builder/renderer.py` | Generates paths, pages, navigation and browser checking data |
 | `templates/` | HTML structure |
 | `static/styles.css` | Visual presentation |
@@ -40,6 +44,9 @@ There is no backend or database.
 | `static/fonts/` | Locally served font assets |
 | `tests/` | Parser, build and browser regression tests |
 | `_site/` | Generated website; do not edit it directly |
+
+Public directory entries use the shared `_person.html` component. Portrait paths
+are relative to `static/`; unverified fields remain absent.
 
 ## Content and authoring
 
@@ -154,7 +161,7 @@ option order and answer keys remain unchanged.
 The learning sequence contains module overviews, subsection overviews and
 exercise pages.
 
-Home is outside that sequence.
+Home and About are outside that sequence.
 
 Previous and Next move through the sequence once. The final Results exercise
 returns to Home rather than linking back to an earlier learning page.
@@ -195,6 +202,10 @@ Direct URLs, reloads, new tabs and ordinary navigation should still work
 without that enhancement. If partial navigation fails, the browser falls back
 to a normal page load.
 
+The shared header and footer remain mounted during these page swaps. Their
+links are resolved against the initial URL so changing course-page depth does
+not change their destinations.
+
 ## Where to make changes
 
 | Change | Start here |
@@ -204,6 +215,7 @@ to a normal page load.
 | Semantic entities and relationships | `agrarian_builder/model.py` |
 | Generated paths, course order or Previous/Next targets | `agrarian_builder/renderer.py` |
 | Page structure | `templates/` |
+| Public people, roles and optional portraits | `agrarian_builder/people.py` |
 | Typography, spacing or visual appearance | `static/styles.css` |
 | Checking, typed gaps, retry, persistence or progress | `static/exercises.js` |
 | Partial navigation or browser history | `static/navigation.js` |
@@ -267,4 +279,4 @@ altered:
 - saved-state identities.
 
 The canonical build currently produces 3 modules, 10 subsections, 30 exercises
-and 44 HTML pages.
+and 43 learning pages, plus Home and About (45 HTML pages in total).

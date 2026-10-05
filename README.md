@@ -24,7 +24,7 @@ The course covers the **Introduction**, **Methods** and **Results** sections
 of research articles.
 
 It currently contains **3 modules**, **10 subsections** and **30 exercises**,
-published as **44 generated HTML pages**.
+published as **43 learning pages**, alongside Home and About.
 
 ## Project context
 
@@ -34,13 +34,6 @@ aplicações pedagógicas*, FAPEMIG **APQ-01173-22**.
 
 **UFMG** is the executing institution; **FUNDEP** is the fund administrator.
 We acknowledge support from **FAPEMIG** and **CAPES**.
-
-## How it works
-
-Structured Markdown is built with Python and Jinja into static pages, with
-vanilla JavaScript providing the interactions. The site is entirely static,
-with no backend. Responses and learner progress are saved locally in the
-learner's browser.
 
 ## Development
 

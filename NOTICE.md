@@ -14,3 +14,7 @@ Source Serif 4 and Source Sans 3 remain licensed under the SIL Open Font
 License 1.1. Their original notices and licence texts accompany the assets in
 `static/fonts/source-serif-4/LICENSE.md` and
 `static/fonts/source-sans-3/LICENSE.md`.
+
+The inline GitHub mark is from GitHub Octicons, copyright (c) 2026 GitHub Inc.,
+and is licensed under MIT. Its terms are in `LICENSES/OCTICONS-MIT.txt`.
+Source: https://github.com/primer/octicons/blob/main/icons/mark-github-16.svg.

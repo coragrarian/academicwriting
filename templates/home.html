@@ -1,20 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="project-page project-page--home">
 <div class="page-head">
-  <p class="eyebrow">Self-study platform</p>
+  <p class="eyebrow">Interactive self-study</p>
   <h1>Academic Writing for Agrarian Sciences</h1>
-  <p class="lead">Explore academic writing through short, interactive exercises.</p>
+  <p class="lead">A self-study resource for students and researchers writing research articles in the Agrarian Sciences.</p>
 </div>
-<section aria-labelledby="modules-heading">
-  <h2 id="modules-heading" class="section-heading">Modules</h2>
-  <ul class="overview-list">
+<section id="course" class="resource-section" aria-labelledby="modules-heading">
+  <h2 id="modules-heading" class="section-heading">Explore the course</h2>
+  <ol class="course-programme">
   {% for module in documents %}
-    <li><a class="overview-link feature-link" href="{{ module_link(module) }}">
-      <span class="overview-copy"><strong>{{ module.title }}</strong><small>{{ module.sections | length }} subsections</small></span>
-      <span class="overview-progress"><span data-progress-other-module="{{ module.slug }}">0/{{ site_data.modules[module.slug] | length }}</span><small>completed</small></span>
-      {% include "_chevron_right.html" %}
-    </a></li>
+    {% set subsection_count = module.sections | length %}
+    {% set exercise_count = module_exercise_counts[module.slug] %}
+    {% set entry_label = 'Start here' if loop.first else 'Explore' %}
+    <li class="programme-module">
+      <span class="programme-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
+      <h3>{{ module.title }}</h3>
+      <p class="programme-counts"><span>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %}</span><span>{{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span></p>
+      <a class="programme-link action-link action-link--{{ 'primary' if loop.first else 'secondary' }}" href="{{ module_link(module) }}" aria-label="{{ entry_label }}: {{ module.title }}">{{ entry_label }} {% include "_chevron_right.html" %}</a>
+    </li>
   {% endfor %}
-  </ul>
+  </ol>
 </section>
+<section class="resource-section" aria-labelledby="project-heading">
+  <h2 id="project-heading" class="section-heading">The research project</h2>
+  <div class="prose">
+    <p>Research into academic English in the Agrarian Sciences examines lexical and syntactic features and their relationship to rhetorical functions in research articles.</p>
+    <p>CorAgrarian supplies disciplinary corpus data for this work. The research informs pedagogical materials for academic writing, presented here as interactive self-study activities.</p>
+  </div>
+  <a class="project-detail-link action-link action-link--tertiary" href="{{ about_url }}">About the research project {% include "_chevron_right.html" %}</a>
+</section>
+</div>
 {% endblock %}

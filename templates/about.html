@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_person.html" import entry with context %}
+{% block content %}
+<div class="project-page project-page--about">
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>About</span></nav>
+  <div class="page-head">
+    <h1>About Academic Writing for Agrarian Sciences</h1>
+    <p class="lead">Research on academic English in the Agrarian Sciences, corpus data and teaching materials.</p>
+    <div class="prose">
+      <p>Academic Writing for Agrarian Sciences is an interactive self-study resource for undergraduate and postgraduate students and researchers in the Agrarian Sciences who write research articles in English. The available modules cover the Introduction, Methods and Results sections.</p>
+      <p>Guided exercises let you practise the structure and language of academic writing, check your answers and review feedback. Responses and progress are saved locally in your browser, so you can return to your work and continue at your own pace.</p>
+    </div>
+  </div>
+  <div class="about-layout">
+    <div class="about-narrative">
+      <section class="resource-section" aria-labelledby="research-heading">
+        <h2 id="research-heading" class="section-heading">The research project</h2>
+        <div class="prose">
+          <p>The project investigates lexical and syntactic features of academic English in the Agrarian Sciences and their relationship to rhetorical functions. It examines how language used in disciplinary texts can inform materials for teaching academic writing.</p>
+          <p>The work addresses the academic English needs of Brazilian students and researchers, connecting linguistic analysis with pedagogical applications.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="corpus-heading">
+        <h2 id="corpus-heading" class="section-heading">CorAgrarian</h2>
+        <div class="prose">
+          <p>CorAgrarian is a specialised corpus of English-language journal articles in the Agrarian Sciences. It supplies disciplinary research data for examining how academic English is used in published research.</p>
+          <p>CorAgrarian provides texts for research; this website presents related learning activities.</p>
+        </div>
+      </section>
+      <section class="resource-section" aria-labelledby="materials-heading">
+        <h2 id="materials-heading" class="section-heading">Pedagogical materials</h2>
+        <div class="prose">
+          <p>Project documentation connects disciplinary linguistic research with the development and adaptation of teaching materials for classroom use and independent online study. Analysis of the language and rhetorical organisation of research articles informs that pedagogical work.</p>
+          <p>This site presents the activities as interactive self-study material. Learners examine choices in context, check responses and use feedback to revisit their answers.</p>
+        </div>
+      </section>
+    </div>
+    <section id="team" class="resource-section" aria-labelledby="team-heading">
+      <h2 id="team-heading" class="section-heading">Research team</h2>
+      <h3 id="coordinators-heading">Coordinators</h3>
+      <ul class="people-grid" aria-labelledby="coordinators-heading">
+        {% for person in coordinators %}{{ entry(person, heading_level=4) }}{% endfor %}
+      </ul>
+      <h3 id="members-heading" class="team-group-heading">Members</h3>
+      <ul class="people-grid" aria-labelledby="members-heading">
+        {% for person in research_team %}{{ entry(person, heading_level=4) }}{% endfor %}
+      </ul>
+    </section>
+    <section id="data-platform" class="resource-section" aria-labelledby="data-heading">
+      <h2 id="data-heading" class="section-heading">Data and platform</h2>
+      <ul class="people-grid people-grid--data">{{ entry(data_platform) }}</ul>
+    </section>
+    <aside id="project-information" class="project-facts" aria-labelledby="facts-heading">
+      <h2 id="facts-heading">Project information</h2>
+      <dl>
+        <dt>Official project</dt>
+        <dd lang="pt-BR">Escrita acadêmica em língua inglesa nas ciências agrárias: necessidades e insumos para aplicações pedagógicas</dd>
+        <dt>Executing institution</dt>
+        <dd>Universidade Federal de Minas Gerais (UFMG)</dd>
+        <dt>Fund administrator</dt>
+        <dd>Fundação de Desenvolvimento da Pesquisa (FUNDEP)</dd>
+        <dt>Support</dt>
+        <dd>FAPEMIG and CAPES</dd>
+        <dt>FAPEMIG reference</dt>
+        <dd>APQ-01173-22</dd>
+        <dt>Repository</dt>
+        <dd><a href="{{ repository_url }}">coragrarian/academicwriting</a></dd>
+      </dl>
+    </aside>
+    <section class="resource-section" aria-labelledby="licensing-heading">
+      <h2 id="licensing-heading" class="section-heading">Software and licensing</h2>
+      <div class="prose">
+        <p>The website source is publicly available in the <a href="{{ repository_url }}">Academic Writing repository</a>. Original software is licensed under MIT; original teaching content is licensed under CC BY-NC-SA 4.0.</p>
+        <p>Quoted or adapted passages, institutional marks and other third-party material retain their own rights. See the repository's <a href="{{ repository_url }}/blob/main/LICENSE">licence scope</a> for details.</p>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
