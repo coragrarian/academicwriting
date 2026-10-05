@@ -49,7 +49,7 @@
   --text-h2: 1.5625rem;
   --text-h3: 1.1875rem;
   --leading-body: 1.65;
-  --reading-measure: 72ch;
+  --reading-measure: 82ch;
   --space-small: .5rem;
   --space-text: 1rem;
   --space-block: 1.5rem;
@@ -78,7 +78,7 @@ a:hover { color: #12392f; }
 /* Site shell and course contents */
 .site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
 .site-header-inner { max-width: 90rem; margin: auto; padding: .95rem 2rem; display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; flex-wrap: wrap; }
-.site-header--public .site-header-inner { max-width: 72rem; padding-inline: clamp(1.35rem, 5vw, 4.5rem); }
+.site-header--public .site-header-inner { max-width: 80rem; padding-inline: clamp(1.35rem, 5vw, 4.5rem); }
 .site-name { font-size: var(--text-body); font-weight: 600; color: var(--ink); text-decoration: none; }
 .site-name span { font-weight: 400; color: var(--muted); }
 .site-links { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem 1.5rem; }
@@ -111,7 +111,7 @@ a:hover { color: #12392f; }
 [data-status="in-progress"] .state-dot { background: #c79354; border-color: #c79354; }
 [data-status="completed"] .state-dot { background: var(--accent); border-color: var(--accent); }
 /* Main region and partial-navigation transitions */
-.main-content { min-width: 0; max-width: 62rem; width: 100%; padding: 2.1rem clamp(1.35rem, 5vw, 4.5rem) 5rem; }
+.main-content { min-width: 0; width: 100%; padding: 2.1rem clamp(1.35rem, 5vw, 4.5rem) 5rem; }
 .enhanced-navigation [data-page-content] { transition: opacity 150ms ease, transform 150ms ease; }
 .enhanced-navigation [data-page-content][data-transition="leaving"] { opacity: 0; transform: translateY(-3px); }
 .enhanced-navigation [data-page-content][data-transition="entering"] { opacity: 0; transform: translateY(3px); }
@@ -134,10 +134,12 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .page-head > :last-child { margin-bottom: 0; }
 .section-heading { border-bottom: 1px solid var(--line); padding-bottom: var(--space-small); margin: 0 0 var(--space-text); }
 /* Public pages share the typography, but leave learner navigation in the course. */
-.layout.public-layout { display: block; max-width: 72rem; min-height: 0; }
-.public-layout .main-content { max-width: none; padding-block: var(--space-section); }
+.layout.public-layout { display: block; max-width: 80rem; min-height: 0; }
+.public-layout .main-content { padding-block: var(--space-section); }
 .public-layout .page-head { margin-bottom: var(--space-section); }
 .resource-section + .resource-section { margin-top: var(--space-group); }
+.project-page > .resource-section + .resource-section { margin-top: var(--space-section); }
+.project-detail-link { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; margin-top: var(--space-text); font-size: var(--text-ui); text-underline-offset: .2em; }
 .project-actions { display: flex; flex-wrap: wrap; gap: .25rem var(--space-block); margin-top: var(--space-text); }
 .project-actions a { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--text-ui); font-weight: 600; text-underline-offset: .2em; }
 .public-layout .project-start { gap: .55rem; padding: .55rem 1rem; border: 1px solid var(--accent); border-radius: .25rem; background: var(--accent); color: var(--surface); text-decoration: none; }
@@ -150,14 +152,32 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .programme-counts { margin: auto 0 0; color: var(--muted); font-size: var(--text-small); }
 .programme-counts span { display: block; }
 .programme-link { display: inline-flex; align-items: center; align-self: start; gap: .5rem; min-height: 2.75rem; margin-top: var(--space-text); font-size: var(--text-ui); font-weight: 600; text-underline-offset: .2em; }
-.about-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr); gap: var(--space-section); align-items: start; }
-.about-narrative .prose { max-inline-size: 66ch; }
+.about-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(14rem, 2fr); gap: var(--space-section) var(--space-group); align-items: start; }
+.project-page--about .prose { --reading-measure: 80ch; }
+.about-layout > .resource-section { grid-column: 1 / -1; }
+.about-layout > .resource-section + .resource-section { margin-top: 0; }
 .project-facts { border-left: 1px solid var(--line); padding-left: var(--space-group); }
+/* Keep facts after the team in reading order, alongside the narrative on desktop. */
+.about-layout > .project-facts { grid-column: 2; grid-row: 1; }
 .project-facts h2 { font-family: var(--font-sans); font-size-adjust: inherit; font-size: var(--text-h3); line-height: 1.4; letter-spacing: 0; margin: 0 0 var(--space-block); }
 .project-facts dl { margin: 0; }
 .project-facts dt { color: var(--muted); font-size: var(--text-small); font-weight: 600; }
 .project-facts dd { margin: .25rem 0 var(--space-block); font-size: var(--text-ui); line-height: 1.5; overflow-wrap: anywhere; }
 .project-facts dd:last-child { margin-bottom: 0; }
+/* Portraits reserve the same field with or without an approved image. */
+.people-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-group); margin: var(--space-block) 0 0; padding: 0; list-style: none; }
+.people-grid--preview { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.person { min-width: 0; }
+.person-portrait { display: flex; align-items: center; justify-content: center; width: 4.5rem; aspect-ratio: 1; margin-bottom: var(--space-text); border: 1px solid var(--line); background: var(--wash); color: var(--muted); font-size: var(--text-h3); }
+.person-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.person-name { margin: 0 0 .35rem; font-family: var(--font-sans); font-size: var(--text-h3); font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.person-role, .person-affiliation { margin: .25rem 0 0; color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
+.person-contribution { max-inline-size: var(--reading-measure); margin: var(--space-text) 0 0; }
+.person-profile { display: inline-flex; align-items: center; min-height: 2.75rem; margin-top: .5rem; font-size: var(--text-small); }
+.people-grid--data { grid-template-columns: minmax(0, 1fr); }
+.people-grid--data .person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-block); }
+.people-grid--data .person-portrait { margin: 0; }
+.team-group-heading { margin-top: var(--space-section); }
 /* Site chrome stays outside the course grid and the regions replaced by navigation. */
 .site-footer { border-top: 1px solid var(--line); background: var(--wash); }
 .site-footer-inner { max-width: 72rem; margin: auto; padding: var(--space-section) clamp(1.35rem, 5vw, 4.5rem); }
@@ -171,13 +191,18 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .institution-logo--capes { width: 6rem; }
 @media (max-width: 60rem) {
   .about-layout { grid-template-columns: minmax(0, 1fr); }
+  .about-layout > .project-facts { grid-column: 1; grid-row: auto; }
   .project-facts { border-left: 0; border-top: 1px solid var(--line); padding: var(--space-group) 0 0; }
+  .people-grid--preview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 48rem) { .programme-module h3 { font-size: var(--text-h3); } }
 @media (max-width: 44rem) {
   .course-programme { grid-template-columns: minmax(0, 1fr); }
   .programme-module + .programme-module { border-left: 0; border-top: 1px solid var(--line); padding: var(--space-group) 0 0; }
   .programme-module h3 { font-size: var(--text-h2); margin-bottom: var(--space-text); }
+  .people-grid { grid-template-columns: minmax(0, 1fr); }
+  .people-grid--data .person { display: block; }
+  .people-grid--data .person-portrait { margin-bottom: var(--space-text); }
 }
 .overview-list { margin: 0; padding: 0; list-style: none; }
 .overview-list li + li { border-top: 1px solid var(--line); }
@@ -216,7 +241,7 @@ a:hover .nav-chevron, a:focus-visible .nav-chevron { transform: translateX(var(-
 .exercise-item { padding: var(--space-block) 0; margin-top: var(--space-block); border-top: 1px solid var(--line); }
 /* Limit reading blocks rather than their container: tables and response
    structures retain the full available interaction width. */
-.prose p, .prose > ul, .prose > ol, .prose blockquote, .instructions, .lead, .item-feedback { max-inline-size: var(--reading-measure); }
+.prose p, .prose > ul, .prose > ol, .prose blockquote, .instructions p, .lead, .item-feedback { max-inline-size: var(--reading-measure); }
 .prose > :first-child { margin-top: 0; }
 .prose > :last-child { margin-bottom: 0; }
 .prose p { margin: 0 0 var(--space-text); }

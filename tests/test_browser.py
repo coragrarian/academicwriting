@@ -2,7 +2,9 @@
 
 import json
 import os
+import shutil
 import threading
+from dataclasses import replace
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from itertools import pairwise
@@ -11,6 +13,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
+from agrarian_builder import renderer
 from agrarian_builder.renderer import build_site
 
 pytestmark = pytest.mark.browser
@@ -646,6 +649,10 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     assert page.url == f"{site[0]}/index.html#course"
     navigation.get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
+    page.locator(".site-name").click()
+    page.locator('.project-detail-link[href$="#team"]').click()
+    assert page.url == f"{site[0]}/about/index.html#team"
+    expect(page.locator("#team .person--pending")).to_have_count(6)
     context.close()
 
 
@@ -658,6 +665,96 @@ def test_public_pages_do_not_load_course_runtime(page, site, path):
     assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
     assert any(url.endswith("/assets/styles.css") for url in requests)
     assert page.evaluate("JSON.stringify({...localStorage})") == "{}"
+
+
+@pytest.mark.parametrize("width", [1280, 1024, 768, 375, 320])
+def test_project_people_and_typography_at_required_widths(page, site, width):
+    page.set_viewport_size({"width": width, "height": 900})
+    names = ["Deise Prina Dutra", "Gustavo Leal Teixeira", "Danilo Duarte Costa", "Jhonatan H. Lopes"]
+    for path in ("/index.html", "/about/index.html"):
+        page.goto(site[0] + path)
+        page.evaluate("document.fonts.ready")
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        for portrait in page.locator(".person-portrait").all():
+            box = portrait.bounding_box()
+            assert box["width"] == pytest.approx(box["height"], abs=1)
+            assert box["width"] >= 64
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width
+            expect(portrait).to_have_attribute("aria-hidden", "true")
+        if path == "/index.html":
+            assert page.locator(".person-name").all_text_contents() == names
+            assert page.locator(".person-portrait span").all_text_contents() == ["DPD", "GLT", "DDC", "JHL"]
+            expect(page.locator(".person--pending")).to_have_count(0)
+            expect(page.locator('[aria-labelledby="project-heading"] .prose p')).to_have_count(2)
+            people = [person.bounding_box() for person in page.locator(".people-grid--preview .person").all()]
+            columns = len({round(box["x"]) for box in people})
+            assert columns == (4 if width >= 1024 else 2 if width >= 768 else 1)
+        else:
+            assert page.locator('#team [aria-labelledby="coordinators-heading"] .person-name').all_text_contents() == names[:3]
+            expect(page.locator("#team .person--pending")).to_have_count(6)
+            assert page.locator(".person--pending .person-name").all_text_contents() == ["Research team member"] * 6
+            assert all(not text.strip() for text in page.locator(".person--pending .person-portrait").all_text_contents())
+            expect(page.locator("#data-platform .person-name")).to_have_text(names[3])
+            expect(page.locator("#data-platform .person-role")).to_have_text("Data curation and web development")
+            narrative = page.locator(".about-narrative").bounding_box()
+            main = page.locator("main").evaluate("node => node.clientWidth - parseFloat(getComputedStyle(node).paddingLeft) - parseFloat(getComputedStyle(node).paddingRight)")
+            assert page.locator(".about-narrative").evaluate("node => getComputedStyle(node).maxInlineSize") == "none"
+            if width >= 1024:
+                assert narrative["width"] / main > 0.65
+            paragraph = page.locator(".about-narrative .prose p").first.bounding_box()
+            assert 0.75 <= paragraph["width"] / narrative["width"] <= 1
+
+
+@pytest.mark.parametrize("path", [
+    "/introduction/the-introduction-section-of-research-papers/index.html",
+    "/methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/index.html",
+    "/methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/index.html",
+])
+def test_course_main_uses_available_grid_width_with_bounded_prose(page, site, path):
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.goto(site[0] + path)
+    page.evaluate("document.fonts.ready")
+    layout = page.locator(".layout").bounding_box()
+    sidebar = page.locator(".course-panel").bounding_box()
+    main = page.locator("main").bounding_box()
+    assert main["width"] == pytest.approx(layout["width"] - sidebar["width"], abs=1)
+    usable = page.locator("main").evaluate("node => node.clientWidth - parseFloat(getComputedStyle(node).paddingLeft) - parseFloat(getComputedStyle(node).paddingRight)")
+    assert page.locator("h1").bounding_box()["width"] == pytest.approx(usable, abs=1)
+    text = page.locator(".lead, .instructions p:not(.eyebrow)").first
+    measure = text.evaluate("node => parseFloat(getComputedStyle(node).maxInlineSize)")
+    assert text.bounding_box()["width"] <= measure < usable
+    for table in page.locator(".matching-sentences").all():
+        assert table.bounding_box()["width"] == pytest.approx(usable, abs=1)
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
+def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site, documents, tmp_path, monkeypatch):
+    assets = tmp_path / "static"
+    shutil.copytree(Path(__file__).resolve().parents[1] / "static", assets)
+    (assets / "people").mkdir()
+    # Local PNG fixture only: no portrait is fetched or published by this test.
+    (assets / "people/test.png").write_bytes((assets / "institutions/logo-ufmg-fale.png").read_bytes())
+    first = replace(renderer.COORDINATORS[0], portrait="people/test.png", profile_url="https://example.org/profile")
+    monkeypatch.setattr(renderer, "COORDINATORS", (first, *renderer.COORDINATORS[1:]))
+    monkeypatch.setattr(renderer, "STATIC", assets)
+    output = site[1].parent / "portrait-component"
+    build_site(documents, output)
+    page.goto(site[0].removesuffix("/study") + "/portrait-component/about/index.html")
+    fields = page.locator(".person-portrait")
+    image = fields.first.locator("img")
+    image.scroll_into_view_if_needed()
+    expect(image).to_have_js_property("complete", True)
+    assert image.evaluate("node => node.naturalWidth > 0")
+    expect(image).to_have_attribute("alt", first.name)
+    real, fallback = fields.first.bounding_box(), fields.nth(1).bounding_box()
+    assert (real["width"], real["height"]) == pytest.approx((fallback["width"], fallback["height"]), abs=1)
+    assert fields.first.get_attribute("aria-hidden") is None
+    expect(fields.nth(1)).to_have_attribute("aria-hidden", "true")
+    profile = page.locator(".person-profile")
+    expect(profile).to_have_attribute("href", first.profile_url)
+    profile.focus()
+    assert profile.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    assert profile.bounding_box()["height"] >= 44
 
 
 def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
@@ -784,7 +881,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                 assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
         if path in {"/index.html", "/about/index.html"}:
             expect(page.locator(".public-layout")).to_have_count(1)
-            expect(page.locator("script, #site-data, main img")).to_have_count(0)
+            expect(page.locator("script, #site-data, main .institution-logo")).to_have_count(0)
             expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module], [data-progress-other-module]")).to_have_count(0)
             public_edge = page.locator("main").evaluate("node => node.getBoundingClientRect().x + parseFloat(getComputedStyle(node).paddingLeft)")
             assert page.locator(".site-name").bounding_box()["x"] == pytest.approx(public_edge, abs=0.02)

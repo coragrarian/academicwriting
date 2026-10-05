@@ -35,6 +35,7 @@ There is no backend or database.
 | `exercises/` | Canonical teaching content, answers and authored feedback |
 | `agrarian_builder/parser.py` | Interprets and validates the Markdown conventions |
 | `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions and feedback |
+| `agrarian_builder/people.py` | Public directory entries, roles and optional portrait/profile metadata |
 | `agrarian_builder/renderer.py` | Generates paths, pages, navigation and browser checking data |
 | `templates/` | HTML structure |
 | `static/styles.css` | Visual presentation |
@@ -43,6 +44,9 @@ There is no backend or database.
 | `static/fonts/` | Locally served font assets |
 | `tests/` | Parser, build and browser regression tests |
 | `_site/` | Generated website; do not edit it directly |
+
+Public directory entries use the shared `_person.html` component. Portrait paths
+are relative to `static/`; unverified fields remain absent.
 
 ## Content and authoring
 
@@ -211,6 +215,7 @@ not change their destinations.
 | Semantic entities and relationships | `agrarian_builder/model.py` |
 | Generated paths, course order or Previous/Next targets | `agrarian_builder/renderer.py` |
 | Page structure | `templates/` |
+| Public people, roles and optional portraits | `agrarian_builder/people.py` |
 | Typography, spacing or visual appearance | `static/styles.css` |
 | Checking, typed gaps, retry, persistence or progress | `static/exercises.js` |
 | Partial navigation or browser history | `static/navigation.js` |

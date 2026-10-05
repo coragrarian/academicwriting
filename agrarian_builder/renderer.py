@@ -26,6 +26,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .model import Block, Document, Exercise, Feedback, Question, Section
+from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
@@ -389,6 +390,10 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             public_page=document is None,
             document_title=(f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE),
             module_exercise_counts={slug: len(ids) for slug, ids in module_ids.items()},
+            coordinators=COORDINATORS,
+            research_team=RESEARCH_TEAM,
+            data_platform=DATA_PLATFORM,
+            people_preview=(*COORDINATORS, DATA_PLATFORM),
             site_data={
                 "module": document.slug,
                 "sections": {
@@ -413,6 +418,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             asset_js=link(Path("assets/exercises.js")),
             asset_navigation=link(Path("assets/navigation.js")),
             institution_asset=lambda filename: link(Path("assets/institutions") / filename),
+            person_asset=lambda filename: link(Path("assets") / filename),
             module_url=link(_path_for(document)) if document else None,
             module_link=lambda module: link(_path_for(module)),
             course_section_url=lambda module, section: link(_path_for(module, section)),

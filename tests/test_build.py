@@ -1,6 +1,7 @@
 """Verify the complete site, portable links, semantic markup and output safety."""
 
 import json
+import shutil
 import subprocess
 import sys
 from dataclasses import replace
@@ -12,6 +13,7 @@ from urllib.parse import unquote, urlsplit
 import pytest
 from conftest import ROOT
 
+from agrarian_builder import renderer
 from agrarian_builder.parser import parse_document
 from agrarian_builder.renderer import build_site
 
@@ -32,10 +34,13 @@ class Page(HTMLParser):
         self.scripts = {}
         self.regions = {"header": [], "main": [], "footer": []}
         self.title = ""
+        self.headings = []
         self._script = None
         self._link = None
         self._region = None
         self._title = False
+        self._heading = None
+        self._heading_text = ""
         self.feed(source)
 
     def handle_starttag(self, tag, attributes):
@@ -47,6 +52,9 @@ class Page(HTMLParser):
             self.regions[self._region].append((tag, attrs))
         if tag == "title":
             self._title = True
+        if tag in ("h1", "h2", "h3", "h4"):
+            self._heading = tag
+            self._heading_text = ""
         if tag == "a":
             self._link = attrs
         if tag == "img" and self._link:
@@ -67,6 +75,9 @@ class Page(HTMLParser):
             self._region = None
         if tag == "title":
             self._title = False
+        if tag == self._heading:
+            self.headings.append((tag, self._heading_text.strip()))
+            self._heading = None
         if tag == "a":
             self._link = None
         if tag == "script":
@@ -75,6 +86,8 @@ class Page(HTMLParser):
     def handle_data(self, data):
         if self._title:
             self.title += data
+        if self._heading:
+            self._heading_text += data
         if self._script:
             self.scripts[self._script] += data
 
@@ -313,14 +326,18 @@ def test_home_and_about_public_content(tmp_path, documents):
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
     assert {
-        "resource-heading", "research-heading", "corpus-heading",
-        "learning-heading", "repository-heading", "facts-heading",
+        "research-heading", "corpus-heading", "materials-heading",
+        "team", "data-platform", "licensing-heading", "facts-heading",
     } <= about.ids
-    for heading in (
-        "About the resource", "Research behind the resource", "CorAgrarian",
-        "From research to learning", "Source and reuse", "Project at a glance",
+    assert [text for tag, text in about.headings if tag == "h2"] == [
+        "The research project", "CorAgrarian", "Pedagogical materials", "Research team",
+        "Data and platform", "Project information", "Software and licensing",
+    ]
+    for old_heading in (
+        "About the resource", "Research behind the resource", "From research to learning",
+        "Project at a glance", "Source and reuse",
     ):
-        assert heading in about_source
+        assert old_heading not in about_source
     assert 'href="https://github.com/coragrarian/academicwriting"' in about_source
     assert (
         "Escrita acadêmica em língua inglesa nas ciências agrárias: "
@@ -338,7 +355,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert "third-party material retain their own rights" in about_source
     assert any(tag == "dl" for tag, _ in about.regions["main"])
     assert not any(tag == "img" for tag, _ in about.regions["main"])
-    assert not {"team", "people", "contact"} & about.ids
+    assert "contact" not in about.ids
     assert "mailto:" not in about_source and "Coming soon" not in about_source
     assert not any(
         attrs.get("class") == "nav-home" and "aria-current" in attrs
@@ -348,6 +365,67 @@ def test_home_and_about_public_content(tmp_path, documents):
         attrs.get("class") == "about-link" and attrs.get("aria-current") == "page"
         for _, attrs in about.elements
     )
+
+
+def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    names = ["Deise Prina Dutra", "Gustavo Leal Teixeira", "Danilo Duarte Costa", "Jhonatan H. Lopes"]
+    home_source = (output / "index.html").read_text()
+    about_source = (output / "about/index.html").read_text()
+    home, about = Page(home_source), Page(about_source)
+    assert [text for tag, text in home.headings if tag == "h3"][-4:] == names
+    assert [text for tag, text in about.headings if tag == "h4"] == names[:3] + ["Research team member"] * 6
+    assert ("h3", "Jhonatan H. Lopes") in about.headings
+    assert home_source.count('class="person-role">Coordinator') == 3
+    assert about_source.count('class="person-role">Coordinator') == 3
+    for source in (home_source, about_source):
+        assert "Data curation and web development" in source
+        assert 'class="person-affiliation"' not in source
+        assert 'class="person-profile"' not in source
+    assert "Details to be added" not in home_source
+    assert about_source.count("Details to be added") == 6
+    assert 'href="about/index.html#team"' in home_source
+    project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
+    assert project.count("<p>") == 2 and "CorAgrarian" in project
+    assert "pedagogical materials" in project and "self-study activities" in project
+    assert "cleans and organises research and corpus data" in about_source
+    assert "maintains structured project data" in about_source
+    assert "maintains its public repository" in about_source
+    for page, count in ((home, 4), (about, 10)):
+        portraits = [attrs for _, attrs in page.elements if attrs.get("class") == "person-portrait"]
+        assert len(portraits) == count and all(attrs.get("aria-hidden") == "true" for attrs in portraits)
+
+
+@pytest.mark.parametrize("path", ["index.html", "about/index.html"])
+def test_people_component_supports_optional_portrait_and_metadata(tmp_path, documents, monkeypatch, path):
+    assets = tmp_path / "static"
+    shutil.copytree(ROOT / "static", assets)
+    (assets / "people").mkdir()
+    # A local PNG fixture exercises asset routing, without fetching a person's image.
+    portrait = assets / "people/test-portrait.png"
+    portrait.write_bytes((ROOT / "static/institutions/logo-ufmg-fale.png").read_bytes())
+    person = replace(
+        renderer.COORDINATORS[0], portrait="people/test-portrait.png",
+        affiliation="Verified test affiliation", profile_url="https://example.org/profile",
+        contribution="Verified test contribution",
+    )
+    monkeypatch.setattr(renderer, "STATIC", assets)
+    monkeypatch.setattr(renderer, "COORDINATORS", (person, *renderer.COORDINATORS[1:]))
+    output = tmp_path / "site"
+    build_site(documents, output)
+    page_path = output / path
+    page = Page(page_path.read_text())
+    images = [attrs for tag, attrs in page.elements if tag == "img" and attrs.get("alt") == person.name]
+    assert len(images) == 1
+    image = images[0]
+    assert (page_path.parent / image["src"]).resolve().read_bytes() == portrait.read_bytes()
+    assert image["width"] == image["height"] == "144"
+    assert ("Verified test affiliation" in page_path.read_text()) == (path == "about/index.html")
+    assert ("Verified test contribution" in page_path.read_text()) == (path == "about/index.html")
+    assert any(attrs.get("class") == "person-portrait" and attrs.get("aria-hidden") == "true" for _, attrs in page.elements)
+    if path == "about/index.html":
+        assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 
 def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, documents):
@@ -390,7 +468,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, do
         page = Page(source)
         assert sum(tag == "footer" for tag, _ in page.elements) == 1
         assert source.index("</main>") < source.index('<footer class="site-footer">')
-        assert not any(tag == "img" for tag, _ in page.regions["main"])
+        assert not any(tag == "img" and "institution-logo" in attrs.get("class", "").split() for tag, attrs in page.regions["main"])
         assert len(page.image_links) == len(destinations)
         assert sum(tag == "img" for tag, _ in page.regions["footer"]) == 3
         for image, link in page.image_links:
@@ -417,7 +495,7 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, p
     build_site(documents, output)
     page_path = output / path
     page = Page(page_path.read_text())
-    images = [attrs for tag, attrs in page.elements if tag == "img"]
+    images = [attrs for tag, attrs in page.elements if tag == "img" and "institution-logo" in attrs.get("class", "").split()]
     assert {Path(attrs["src"]).name for attrs in images} == {
         "logo-ufmg-fale.png", "logo-fapemig.png", "logo-capes.png",
     }
