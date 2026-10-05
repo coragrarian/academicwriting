@@ -244,16 +244,16 @@ def _page_navigation(documents: list[Document], root: Path) -> dict[Path, dict[s
     -------
     dict
         Page paths mapped to relative targets, contextual labels and a
-        terminal flag for Jinja. Home is outside the learning sequence:
-        Previous on the first page and Next on the final page lead there.
+        terminal flag for Jinja. Home and About are outside the learning
+        sequence; its first Previous and final Next links lead to Home.
 
     Notes
     -----
     Next must never wrap to a module or subsection overview. Such a fallback
     would revisit a learning node instead of terminating at Home / contents.
     """
-    # One course sequence includes overviews as well as exercises. Home is
-    # outside it: the final link explicitly terminates at the contents page.
+    # Informational pages stay outside this sequence; its final link explicitly
+    # terminates at Home / contents.
     course_sequence = []
     module_paths = set()
     section_paths = set()
@@ -325,7 +325,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
     All asset and page links are relative, including single-module builds.
-    Home terminates the course rather than becoming another learning node.
+    Home and About are independent informational pages. Home terminates the
+    course rather than becoming another learning node.
 
     Rendering occurs in a marked sibling directory, leaving an existing site
     intact if rendering fails. Only after every page is written is recognised
@@ -402,6 +403,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             asset_css=link(Path("assets/styles.css")),
             asset_js=link(Path("assets/exercises.js")),
             asset_navigation=link(Path("assets/navigation.js")),
+            institution_asset=lambda filename: link(Path("assets/institutions") / filename),
             module_url=link(_path_for(document)) if document else None,
             module_link=lambda module: link(_path_for(module)),
             course_section_url=lambda module, section: link(_path_for(module, section)),
@@ -409,6 +411,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                 _path_for(module, section, exercise)
             ),
             home_url=link(Path("index.html")),
+            about_url=link(Path("about/index.html")),
+            repository_url="https://github.com/coragrarian/academicwriting",
             section_url=lambda section: link(_path_for(document, section)),
             exercise_url=lambda section, exercise: link(_path_for(document, section, exercise)),
             **page_navigation.get(path, {}),
@@ -419,6 +423,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     write_page(
         Path("index.html"), "home.html", page_title="Academic Writing for Agrarian Sciences"
     )
+    write_page(Path("about/index.html"), "about.html", page_title="About", is_about=True)
 
     for document in documents:
         write_page(_path_for(document), "module.html", document, page_title=document.title)

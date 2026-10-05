@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="project-page">
 <div class="page-head">
-  <p class="eyebrow">Self-study platform</p>
+  <p class="eyebrow">Interactive self-study</p>
   <h1>Academic Writing for Agrarian Sciences</h1>
-  <p class="lead">Explore academic writing through short, interactive exercises.</p>
+  <p class="lead">A resource for students and researchers writing research articles in the Agrarian Sciences.</p>
+  <div class="project-actions">
+    <a href="#course">Explore the course</a>
+    <a href="{{ about_url }}">About the project</a>
+  </div>
 </div>
-<section aria-labelledby="modules-heading">
-  <h2 id="modules-heading" class="section-heading">Modules</h2>
+<section class="resource-section" aria-labelledby="resource-heading">
+  <h2 id="resource-heading" class="section-heading">About this resource</h2>
+  <div class="prose">
+    <p>Use guided exercises to practise the structure and language of academic writing in research articles. Check your answers, review feedback and continue at your own pace. Your progress is saved locally in your browser.</p>
+  </div>
+</section>
+<section id="course" class="resource-section" aria-labelledby="modules-heading">
+  <h2 id="modules-heading" class="section-heading">Explore the course</h2>
   <ul class="overview-list">
   {% for module in documents %}
     <li><a class="overview-link feature-link" href="{{ module_link(module) }}">
@@ -17,4 +28,13 @@
   {% endfor %}
   </ul>
 </section>
+<section class="resource-section" aria-labelledby="research-heading">
+  <h2 id="research-heading" class="section-heading">Research context</h2>
+  <div class="prose">
+    <p>This educational resource was developed in connection with the project <em lang="pt-BR">Escrita acadêmica em língua inglesa nas ciências agrárias: necessidades e insumos para aplicações pedagógicas</em>, FAPEMIG <strong>APQ-01173-22</strong>.</p>
+    <p><a href="{{ about_url }}">Read about the project</a>.</p>
+  </div>
+</section>
+{% include "_institutional_context.html" %}
+</div>
 {% endblock %}

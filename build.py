@@ -36,7 +36,7 @@ def main() -> int:
         len(section.exercises) for document in documents for section in document.sections
     )
     print(f"Modules: {len(documents)}; subsections: {sections}; exercises: {exercises}")
-    print(f"HTML pages: {1 + len(documents) + sections + exercises}")
+    print(f"HTML pages: {2 + len(documents) + sections + exercises}")
     print(f"Output: {arguments.output}/")
     return 0
 

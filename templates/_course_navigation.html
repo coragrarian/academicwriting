@@ -3,7 +3,7 @@
   <summary class="course-toggle">Contents</summary>
   <nav aria-label="Contents">
     <p class="nav-eyebrow">Contents</p>
-    <a class="nav-home" href="{{ home_url }}" {% if not document %}aria-current="page"{% endif %}>Home</a>
+    <a class="nav-home" href="{{ home_url }}" {% if not document and not is_about %}aria-current="page"{% endif %}>Home</a>
     <div class="course-tree">
       {% for nav_module in documents %}
       {% set current_module = document and document.slug == nav_module.slug %}

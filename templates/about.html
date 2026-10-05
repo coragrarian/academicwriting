@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="project-page">
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>About</span></nav>
+  <div class="page-head">
+    <h1>About Academic Writing for Agrarian Sciences</h1>
+  </div>
+  <section class="resource-section" aria-labelledby="resource-heading">
+    <h2 id="resource-heading" class="section-heading">About the resource</h2>
+    <div class="prose">
+      <p>This website provides interactive self-study activities focused on academic writing in research articles in the Agrarian Sciences. The available modules cover the Introduction, Methods and Results sections.</p>
+      <p>Guided exercises let you check your answers and review feedback. Responses and progress are saved locally in your browser, so you can return to your work and continue at your own pace.</p>
+    </div>
+  </section>
+  <section class="resource-section" aria-labelledby="research-heading">
+    <h2 id="research-heading" class="section-heading">Research context</h2>
+    <div class="prose">
+      <p>The resource was developed in connection with the research project <em lang="pt-BR">Escrita acadêmica em língua inglesa nas ciências agrárias: necessidades e insumos para aplicações pedagógicas</em>.</p>
+      <p>Research on academic writing in the Agrarian Sciences informs the pedagogical activities presented here.</p>
+    </div>
+  </section>
+  {% include "_institutional_context.html" %}
+  <section class="resource-section" aria-labelledby="repository-heading">
+    <h2 id="repository-heading" class="section-heading">Open source / repository</h2>
+    <div class="prose">
+      <p>The website source is publicly available in the <a href="{{ repository_url }}">Academic Writing repository</a>. Original software is licensed under MIT; original teaching content is licensed under CC BY-NC-SA 4.0. See the repository for the full licence scope and third-party notices.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

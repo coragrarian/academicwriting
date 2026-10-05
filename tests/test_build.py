@@ -61,7 +61,7 @@ def test_complete_canonical_build(tmp_path, documents):
     }
     build_site(documents, output)
     pages = {path: Page(path.read_text()) for path in output.rglob("*.html")}
-    assert len(pages) == 44
+    assert len(pages) == 45
     assert len([page for page in pages.values() if "answer-key" in page.scripts]) == 30
     home = (output / "index.html").read_text()
     assert (
@@ -74,6 +74,12 @@ def test_complete_canonical_build(tmp_path, documents):
         source = path.read_text()
         assert source.count("data-site-navigation") == 1
         assert source.count("data-page-content") == 1
+        about_links = [
+            attrs for tag, attrs in page.elements
+            if tag == "a" and attrs.get("class") == "about-link"
+        ]
+        assert len(about_links) == 1
+        assert (path.parent / about_links[0]["href"]).resolve() == output / "about/index.html"
         assert "<!-- agrarian" not in source
         assert 'class="correct-answer"' not in source
         assert "[x]" not in source
@@ -197,10 +203,95 @@ def test_complete_canonical_build(tmp_path, documents):
     } == first_build
 
 
+def test_public_project_pages_preserve_course_state(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    home = Page((output / "index.html").read_text())
+    expected_data = json.loads(home.scripts["site-data"])
+    assert {module: len(ids) for module, ids in expected_data["modules"].items()} == {
+        "introduction": 14,
+        "methods": 7,
+        "results": 9,
+    }
+    assert sum(map(len, expected_data["modules"].values())) == 30
+    assert expected_data["module"] is None and expected_data["sections"] == {}
+    for path in (Path("index.html"), Path("about/index.html")):
+        page = Page((output / path).read_text())
+        assert json.loads(page.scripts["site-data"]) == expected_data
+        assert "answer-key" not in page.scripts
+        assert not any(
+            attrs.get("rel") in {"prev", "next"} or "data-course-terminal" in attrs
+            for _, attrs in page.elements
+        )
+        assert not any(attrs.get("id") == "exercise-form" for _, attrs in page.elements)
+
+
+def test_home_and_about_public_content(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    home_source = (output / "index.html").read_text()
+    home = Page(home_source)
+    assert "course" in home.ids
+    assert any(attrs.get("href") == "#course" for _, attrs in home.elements)
+    assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
+    assert home_source.index('id="resource-heading"') < home_source.index('id="modules-heading"')
+    assert home_source.index('id="modules-heading"') < home_source.index('id="research-heading"')
+    about_source = (output / "about/index.html").read_text()
+    about = Page(about_source)
+    assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
+    assert {
+        "resource-heading", "research-heading", "institutions-heading",
+        "support-heading", "repository-heading",
+    } <= about.ids
+    assert 'href="https://github.com/coragrarian/academicwriting"' in about_source
+    assert (
+        "Escrita acadêmica em língua inglesa nas ciências agrárias: "
+        "necessidades e insumos para aplicações pedagógicas"
+    ) in about_source
+    for fact in (
+        "APQ-01173-22", "executing institution", "fund administrator",
+        "Faculdade de Letras, UFMG", "FAPEMIG", "CAPES",
+    ):
+        assert fact in home_source and fact in about_source
+    assert not {"team", "people", "contact"} & about.ids
+    assert "mailto:" not in about_source and "Coming soon" not in about_source
+    assert not any(
+        attrs.get("class") == "nav-home" and "aria-current" in attrs
+        for _, attrs in about.elements
+    )
+    assert any(
+        attrs.get("class") == "about-link" and attrs.get("aria-current") == "page"
+        for _, attrs in about.elements
+    )
+
+
+@pytest.mark.parametrize("path", ["index.html", "about/index.html"])
+def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, path):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    page_path = output / path
+    page = Page(page_path.read_text())
+    images = [attrs for tag, attrs in page.elements if tag == "img"]
+    assert {Path(attrs["src"]).name for attrs in images} == {
+        "logo-ufmg-fale.png", "logo-fapemig.png", "logo-capes.png",
+    }
+    for attrs in images:
+        assert attrs["alt"]
+        image = (page_path.parent / attrs["src"]).resolve()
+        assert image.is_relative_to(output) and image.is_file()
+        source = ROOT / "static/institutions" / image.name
+        source_bytes = source.read_bytes()
+        assert image.read_bytes() == source_bytes
+        # PNG's IHDR stores intrinsic width and height as big-endian integers.
+        assert int(attrs["width"]) == int.from_bytes(source_bytes[16:20])
+        assert int(attrs["height"]) == int.from_bytes(source_bytes[20:24])
+
+
 def test_single_module_build_remains_available(tmp_path, methods):
     output = tmp_path / "site"
     build_site(methods, output)
-    assert len(list(output.rglob("*.html"))) == 11
+    assert len(list(output.rglob("*.html"))) == 12
+    assert (output / "about/index.html").is_file()
     last = methods.sections[-1].exercises[-1]
     path = output / methods.slug / methods.sections[-1].slug / last.slug / "index.html"
     page = Page(path.read_text())
@@ -212,7 +303,7 @@ def test_single_module_build_remains_available(tmp_path, methods):
 def course_sequence(documents):
     """Derive expected reading order without using renderer navigation helpers.
 
-    Home stays outside this list: reaching it terminates either direction.
+    Home and About stay outside this list; Home terminates either direction.
     """
     sequence = []
     for document in documents:
@@ -256,6 +347,7 @@ def test_whole_course_navigation_graph(tmp_path, documents):
     assert [document.slug for document in documents] == ["introduction", "methods", "results"]
     sequence = course_sequence(documents)
     assert len(sequence) == 43  # Three modules, ten subsections, thirty exercises.
+    assert Path("about/index.html") not in sequence
     home = Path("index.html")
     targets = {path: navigation_targets(output, path) for path in sequence}
     for index, path in enumerate(sequence):
@@ -361,7 +453,8 @@ def test_presentation_order_does_not_restrict_alternative_module_sources(tmp_pat
     )
     output = tmp_path / "site"
     build_site(parse_document(source), output)
-    assert len(list(output.rglob("*.html"))) == 4
+    assert len(list(output.rglob("*.html"))) == 5
+    assert (output / "about/index.html").is_file()
 
 
 def test_slash_title_breaks_keep_text_and_html_escaping(tmp_path):
@@ -394,8 +487,8 @@ def test_normal_cli_discovers_all_modules(tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert "HTML pages: 44" in result.stdout
-    assert len(list((tmp_path / "site").rglob("*.html"))) == 44
+    assert "HTML pages: 45" in result.stdout
+    assert len(list((tmp_path / "site").rglob("*.html"))) == 45
 
 
 def test_context_and_instructions_are_outside_cards(tmp_path, methods):

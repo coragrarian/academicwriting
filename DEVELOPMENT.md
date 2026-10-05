@@ -154,7 +154,7 @@ option order and answer keys remain unchanged.
 The learning sequence contains module overviews, subsection overviews and
 exercise pages.
 
-Home is outside that sequence.
+Home and About are outside that sequence.
 
 Previous and Next move through the sequence once. The final Results exercise
 returns to Home rather than linking back to an earlier learning page.
@@ -267,4 +267,4 @@ altered:
 - saved-state identities.
 
 The canonical build currently produces 3 modules, 10 subsections, 30 exercises
-and 44 HTML pages.
+and 43 learning pages, plus Home and About (45 HTML pages in total).
