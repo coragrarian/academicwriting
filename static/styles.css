@@ -187,6 +187,12 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .institution-logo--ufmg-fale { width: 18rem; }
 .institution-logo--fapemig { width: 7rem; }
 .institution-logo--capes { width: 6rem; }
+/* Footer-only filtering preserves the original artwork for institutional contexts. */
+.site-footer .institution-logo { filter: grayscale(1); opacity: .85; }
+.site-footer .footer-institutions a:hover .institution-logo, .site-footer .footer-institutions a:focus-visible .institution-logo { opacity: 1; }
+.site-footer .institution-logo--ufmg-fale { width: 14.5rem; }
+.site-footer .institution-logo--fapemig { width: 5.75rem; }
+.site-footer .institution-logo--capes { width: 5rem; }
 @media (max-width: 60rem) {
   .about-layout { grid-template-columns: minmax(0, 1fr); }
   .about-layout > .project-facts { grid-column: 1; grid-row: auto; }
