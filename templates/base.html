@@ -12,18 +12,18 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-name" href="{{ home_url }}">Academic Writing <span>for Agrarian Sciences</span></a>
+      <a class="site-name" href="{{ home_url }}"{% if public_page and not is_about %} aria-current="page"{% endif %}>Academic Writing <span>for Agrarian Sciences</span></a>
       {% if document %}<a class="module-link" href="{{ module_url }}">{{ document.title }}</a>{% endif %}
       <nav class="site-links" aria-label="Site">
         <a class="about-link" href="{{ about_url }}" {% if is_about %}aria-current="page"{% endif %}>About</a>
       </nav>
     </div>
   </header>
-  <div class="layout">
-    {# navigation.js replaces these two marked regions,
+  <div class="layout{% if public_page %} public-layout{% endif %}">
+    {% if not public_page %}{# navigation.js replaces these two marked regions,
        retaining the header and scripts. #}<aside class="course-panel" aria-label="Course navigation" data-site-navigation>
       {% include "_course_navigation.html" %}
-    </aside>
+    </aside>{% endif %}
     <main id="main" class="main-content" data-page-content>
       {% block content %}{% endblock %}
     </main>

@@ -263,7 +263,7 @@ def test_partial_navigation_history_focus_and_reinitialisation(page, site):
     assert active.evaluate("node => getComputedStyle(node).outlineColor") == "rgb(40, 94, 81)"
 
 
-def test_progress_is_independent_between_modules_and_visible_on_home(page, site):
+def test_public_gateway_preserves_independent_module_progress(page, site):
     for module, section, number in [CASES[0], CASES[3], CASES[-1]]:
         key = open_exercise(page, site, module, section, number)
         respond(page, key)
@@ -272,13 +272,13 @@ def test_progress_is_independent_between_modules_and_visible_on_home(page, site)
     page.locator(".nav-home").click()
     expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
     assert page.evaluate("window.fullNavigationProbe") is None
+    expect(page.locator(".course-panel, [data-progress-other-module], [data-progress-module]")).to_have_count(0)
+    page.get_by_role("link", name="Start the course", exact=True).click()
+    expect(page.locator("h1")).to_have_text("The Introduction section")
     for module, total in [("introduction", 14), ("methods", 7), ("results", 9)]:
-        expect(page.locator(f'[data-progress-other-module="{module}"]')).to_have_text(
+        expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(
             f"1/{total}"
         )
-    page.locator(".feature-link").first.click()
-    expect(page.locator("h1")).to_have_text("The Introduction section")
-    expect(page.locator('[data-progress-module="introduction"]')).to_have_text("1/14")
 
 
 def test_every_canonical_exercise_can_complete(page, site, documents):
@@ -531,14 +531,17 @@ def test_global_course_tree_defaults_and_current_page(page, site, level):
         "exercise": "/methods/purpose-of-the-methods-section/exercise-1",
     }[level]
     page.goto(f"{site[0]}{suffix}/index.html")
-    expect(page.locator(".nav-module-group")).to_have_count(3)
-    expect(page.locator(".nav-section-group")).to_have_count(10)
-    expect(page.locator(".course-panel [data-exercise-link]")).to_have_count(30)
-    expect(page.locator('.course-panel [aria-current="page"]')).to_have_count(0 if level == "about" else 1)
     expect(page.locator('[aria-current="page"]')).to_have_count(1)
-    assert page.locator(".nav-module-group[open]").count() == (0 if level in {"home", "about"} else 1)
-    assert page.locator(".nav-section-group[open]").count() == (1 if level in {"section", "exercise"} else 0)
-    if level not in {"home", "about"}:
+    if level in {"home", "about"}:
+        expect(page.locator(".course-panel, [data-site-navigation], [data-course-navigator]")).to_have_count(0)
+        expect(page.locator(".nav-module-group, .nav-section-group, [data-exercise-link]")).to_have_count(0)
+    else:
+        expect(page.locator(".nav-module-group")).to_have_count(3)
+        expect(page.locator(".nav-section-group")).to_have_count(10)
+        expect(page.locator(".course-panel [data-exercise-link]")).to_have_count(30)
+        expect(page.locator('.course-panel [aria-current="page"]')).to_have_count(1)
+        expect(page.locator(".nav-module-group[open]")).to_have_count(1)
+        assert page.locator(".nav-section-group[open]").count() == (1 if level in {"section", "exercise"} else 0)
         expect(page.locator('[data-nav-node="module:methods"]')).to_have_attribute("open", "")
 
 
@@ -579,6 +582,7 @@ def test_global_course_tree_remains_usable_without_javascript(browser, site):
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
     page.goto(site[0] + "/index.html")
+    page.get_by_role("link", name="Start the course", exact=True).click()
     page.locator('[data-nav-node="module:results"] > summary').click()
     page.locator('[data-nav-node="section:results:grammar-and-vocabulary-in-the-results-section"] > summary').click()
     page.locator('.course-panel [data-exercise-link="results--grammar-and-vocabulary-in-the-results-section--exercise-3"]').click()
@@ -608,9 +612,12 @@ def test_about_uses_full_navigation_and_preserves_learner_state(page, site):
     assert page.locator("html").get_attribute("class") is None
     expect(about).to_have_attribute("aria-current", "page")
     expect(page.locator("#exercise-form, .page-navigation")).to_have_count(0)
-    expect(page.locator('[data-progress-module="methods"]')).to_have_text("1/7")
+    expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module]")).to_have_count(0)
     page.locator(".site-name").click()
-    expect(page.locator('[data-progress-other-module="methods"]')).to_have_text("1/7")
+    expect(page.locator(".course-panel, [data-progress-other-module]")).to_have_count(0)
+    assert page.evaluate("JSON.stringify({...localStorage})") == storage
+    page.get_by_role("link", name="Start the course", exact=True).click()
+    expect(page.locator('[data-progress-module="methods"]')).to_have_text("1/7")
     assert page.evaluate("JSON.stringify({...localStorage})") == storage
 
 
@@ -622,16 +629,20 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
     page.keyboard.press("Enter")
     assert page.url.endswith("#main")
-    page.get_by_role("link", name="Explore the course", exact=True).click()
-    assert page.url.endswith("#course")
-    expect(page.locator("#course")).to_be_in_viewport()
-    page.get_by_role("link", name="About the project", exact=True).click()
+    page.get_by_role("link", name="Start the course", exact=True).click()
+    assert page.url == f"{site[0]}/introduction/index.html"
+    expect(page.locator("h1")).to_have_text("The Introduction section")
+    expect(page.locator(".course-panel")).to_be_visible()
+    page.get_by_role("navigation", name="Site", exact=True).get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
+    expect(page.locator(".course-panel")).to_have_count(0)
     expect(page.get_by_role("link", name="Academic Writing repository")).to_have_attribute(
         "href", "https://github.com/coragrarian/academicwriting"
     )
     page.locator(".site-name").click()
     expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
+    page.get_by_role("link", name="About the project", exact=True).click()
+    expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     context.close()
 
 
@@ -676,7 +687,37 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             for action in page.locator(".project-actions a").all():
                 assert action.bounding_box()["height"] >= 44
             expect(page.locator("#course .overview-link")).to_have_count(3)
-        if path not in {"/index.html", "/about/index.html"}:
+            assert page.locator(".catalogue-number").all_text_contents() == ["01", "02", "03"]
+            assert page.locator(".course-catalogue small").all_text_contents() == [
+                "6 subsections · 14 exercises", "2 subsections · 7 exercises", "2 subsections · 9 exercises",
+            ]
+            start = page.get_by_role("link", name="Start the course", exact=True)
+            expect(start).to_have_attribute("href", "introduction/index.html")
+            secondary = page.get_by_role("link", name="About the project", exact=True)
+            assert start.evaluate("node => getComputedStyle(node).backgroundColor") == "rgb(40, 94, 81)"
+            assert secondary.evaluate("node => getComputedStyle(node).backgroundColor") == "rgba(0, 0, 0, 0)"
+            for name, href in (
+                ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
+                ("FAPEMIG", "https://fapemig.br/"),
+                ("CAPES", "https://www.gov.br/capes/pt-br/"),
+            ):
+                mark = page.get_by_role("link", name=name, exact=True)
+                expect(mark).to_have_attribute("href", href)
+                assert mark.get_attribute("target") is None
+                assert mark.bounding_box()["height"] >= 44
+            if width >= 768:
+                marks = [mark.bounding_box() for mark in page.locator(".institution-signature a").all()]
+                assert all(
+                    following["x"] >= current["x"] + current["width"]
+                    for current, following in pairwise(marks)
+                )
+                centres = [mark["y"] + mark["height"] / 2 for mark in marks]
+                assert centres == pytest.approx([centres[0]] * 3)
+        if path in {"/index.html", "/about/index.html"}:
+            expect(page.locator(".public-layout")).to_have_count(1)
+            expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module], [data-progress-other-module]")).to_have_count(0)
+        else:
+            expect(page.locator(".course-panel, [data-site-navigation]")).to_have_count(1)
             expect(page.locator(".module-link")).to_be_visible()
 
 
@@ -695,8 +736,9 @@ def test_authorised_content_changes_preserve_existing_progress(page, site):
       }));
     }""")
     page.reload()
+    page.get_by_role("link", name="Start the course", exact=True).click()
     expect(page.locator('[data-progress-module="introduction"]')).to_have_text("2/14")
-    expect(page.locator('[data-progress-section="grammar-and-vocabulary-in-the-introduction-section"]')).to_have_text("1/3")
+    expect(page.locator('.course-panel [data-progress-section="grammar-and-vocabulary-in-the-introduction-section"]')).to_have_text("1/3")
     saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:introduction'))")
     current = "introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-1"
     assert saved["progress"][current] == "completed"
@@ -751,6 +793,7 @@ def test_every_sequential_course_page_forward_and_backward(page, site, documents
         expect(page).to_have_url(target)
     assert visited == sequence
     expect(page.locator('.page-navigation a[rel="next"]')).to_have_count(0)
+    expect(page.locator(".course-panel, [data-site-navigation]")).to_have_count(0)
 
     page.goto(site[0] + sequence[-1])
     backwards = []
@@ -783,11 +826,15 @@ def test_editorial_components_and_contents_at_required_widths(page, site, width)
         page.goto(site[0] + path)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
         navigator = page.locator("[data-course-navigator]")
-        assert navigator.evaluate("node => node.open") == (width > 768)
-        if width <= 768:
-            page.locator(".course-toggle").click()
-            expect(navigator).to_have_attribute("open", "")
-            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        if path in {"/index.html", "/about/index.html"}:
+            expect(page.locator(".course-panel, [data-site-navigation], .course-toggle")).to_have_count(0)
+            expect(navigator).to_have_count(0)
+        else:
+            assert navigator.evaluate("node => node.open") == (width > 768)
+            if width <= 768:
+                page.locator(".course-toggle").click()
+                expect(navigator).to_have_attribute("open", "")
+                assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
         for control in page.locator("select, input[type=text], button").all():
             box = control.bounding_box()
             assert box["x"] >= 0 and box["x"] + box["width"] <= width, path

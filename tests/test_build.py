@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from hashlib import sha256
 from html.parser import HTMLParser
 from pathlib import Path
@@ -27,13 +28,19 @@ class Page(HTMLParser):
         self.elements = []
         self.ids = set()
         self.links = []
+        self.image_links = []
         self.scripts = {}
         self._script = None
+        self._link = None
         self.feed(source)
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
         self.elements.append((tag, attrs))
+        if tag == "a":
+            self._link = attrs
+        if tag == "img" and self._link:
+            self.image_links.append((attrs, self._link))
         if attrs.get("id"):
             assert attrs["id"] not in self.ids, f"Duplicate HTML id {attrs['id']}"
             self.ids.add(attrs["id"])
@@ -46,6 +53,8 @@ class Page(HTMLParser):
                 self.links.append(attrs[key])
 
     def handle_endtag(self, tag):
+        if tag == "a":
+            self._link = None
         if tag == "script":
             self._script = None
 
@@ -72,7 +81,8 @@ def test_complete_canonical_build(tmp_path, documents):
     assert json.loads(pages[output / "index.html"].scripts["site-data"])["module"] is None
     for path, page in pages.items():
         source = path.read_text()
-        assert source.count("data-site-navigation") == 1
+        public_page = path.relative_to(output) in {Path("index.html"), Path("about/index.html")}
+        assert source.count("data-site-navigation") == (0 if public_page else 1)
         assert source.count("data-page-content") == 1
         about_links = [
             attrs for tag, attrs in page.elements
@@ -89,14 +99,18 @@ def test_complete_canonical_build(tmp_path, documents):
             for _, attrs in page.elements
             if "data-nav-node" in attrs
         }
-        assert len(nav_nodes) == 13  # Three modules and ten subsections on every page.
-        for document in documents:
-            assert f"module:{document.slug}" in nav_nodes
-            for section in document.sections:
-                assert f"section:{document.slug}:{section.slug}" in nav_nodes
-        assert sum(
-            1 for _, attrs in page.elements if "data-exercise-link" in attrs
-        ) >= 30
+        if public_page:
+            assert not nav_nodes
+            assert not any("data-exercise-link" in attrs for _, attrs in page.elements)
+        else:
+            assert len(nav_nodes) == 13  # Three modules and ten subsections in the course.
+            for document in documents:
+                assert f"module:{document.slug}" in nav_nodes
+                for section in document.sections:
+                    assert f"section:{document.slug}:{section.slug}" in nav_nodes
+            assert sum(
+                1 for _, attrs in page.elements if "data-exercise-link" in attrs
+            ) >= 30
         assert sum(
             1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
         ) == 1
@@ -224,6 +238,12 @@ def test_public_project_pages_preserve_course_state(tmp_path, documents):
             for _, attrs in page.elements
         )
         assert not any(attrs.get("id") == "exercise-form" for _, attrs in page.elements)
+        assert not any(
+            tag == "aside" or "data-site-navigation" in attrs
+            or any(name.startswith("data-progress-") for name in attrs)
+            for tag, attrs in page.elements
+        )
+        assert any("public-layout" in attrs.get("class", "").split() for _, attrs in page.elements)
 
 
 def test_home_and_about_public_content(tmp_path, documents):
@@ -232,10 +252,21 @@ def test_home_and_about_public_content(tmp_path, documents):
     home_source = (output / "index.html").read_text()
     home = Page(home_source)
     assert "course" in home.ids
-    assert any(attrs.get("href") == "#course" for _, attrs in home.elements)
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
+    first = min(documents, key=lambda document: (document.order, document.slug))
+    assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
-    assert home_source.index('id="resource-heading"') < home_source.index('id="modules-heading"')
-    assert home_source.index('id="modules-heading"') < home_source.index('id="research-heading"')
+    assert "Start the course" in home_source
+    assert "A self-study resource for students and researchers" in home_source
+    for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
+        exercise_count = sum(len(section.exercises) for section in document.sections)
+        assert f'>{number:02d}</span>' in home_source
+        assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
+    for detail in (
+        "About this resource", "Research context", "Institutional context", "Funding and support",
+        "APQ-01173-22", "FUNDEP", "Escrita acadêmica em língua inglesa nas ciências agrárias",
+    ):
+        assert detail not in home_source
     about_source = (output / "about/index.html").read_text()
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
@@ -249,10 +280,12 @@ def test_home_and_about_public_content(tmp_path, documents):
         "necessidades e insumos para aplicações pedagógicas"
     ) in about_source
     for fact in (
-        "APQ-01173-22", "executing institution", "fund administrator",
+        "APQ-01173-22", "UFMG", "FUNDEP", "executing institution", "fund administrator",
         "Faculdade de Letras, UFMG", "FAPEMIG", "CAPES",
     ):
-        assert fact in home_source and fact in about_source
+        assert fact in about_source
+    assert "Original software is licensed under MIT" in about_source
+    assert "original teaching content is licensed under CC BY-NC-SA 4.0" in about_source
     assert not {"team", "people", "contact"} & about.ids
     assert "mailto:" not in about_source and "Coming soon" not in about_source
     assert not any(
@@ -263,6 +296,50 @@ def test_home_and_about_public_content(tmp_path, documents):
         attrs.get("class") == "about-link" and attrs.get("aria-current") == "page"
         for _, attrs in about.elements
     )
+
+
+def test_home_catalogue_and_entry_follow_the_supplied_modules(tmp_path, documents):
+    # A reduced, reordered course catches canonical paths or counts baked into Home.
+    introduction, methods, _ = documents
+    modules = [
+        replace(introduction, order=10, sections=introduction.sections[:2]),
+        replace(methods, order=0, sections=methods.sections[:1]),
+    ]
+    output = tmp_path / "site"
+    build_site(modules, output)
+    source = (output / "index.html").read_text()
+    home = Page(source)
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
+    assert start["href"] == "methods/index.html"
+    rows = source.split('<ol class="overview-list course-catalogue">', 1)[1].split("</ol>", 1)[0]
+    rows = rows.split("<li>")[1:]
+    assert len(rows) == 2
+    for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
+        assert f'>{number:02d}</span>' in row
+        assert f'href="{module.slug}/index.html"' in row
+        assert f"<strong>{module.title}</strong>" in row
+        subsection_count = len(module.sections)
+        subsection_label = "subsection" if subsection_count == 1 else "subsections"
+        exercise_count = sum(len(section.exercises) for section in module.sections)
+        assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
+
+
+def test_home_institutional_marks_link_to_official_sites(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    home = Page((output / "index.html").read_text())
+    destinations = {
+        "logo-ufmg-fale.png": ("https://www.letras.ufmg.br/site/", "Faculdade de Letras da UFMG"),
+        "logo-fapemig.png": ("https://fapemig.br/", "FAPEMIG"),
+        "logo-capes.png": ("https://www.gov.br/capes/pt-br/", "CAPES"),
+    }
+    assert len(home.image_links) == len(destinations)
+    for image, link in home.image_links:
+        href, name = destinations[Path(image["src"]).name]
+        assert link["href"] == href
+        assert "target" not in link
+        assert image["alt"] == name
+    assert not any(tag == "figcaption" for tag, _ in home.elements)
 
 
 @pytest.mark.parametrize("path", ["index.html", "about/index.html"])

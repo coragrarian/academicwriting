@@ -132,11 +132,21 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .page-head .lead, .page-head .prose { margin-top: var(--space-block); }
 .page-head > :last-child { margin-bottom: 0; }
 .section-heading { border-bottom: 1px solid var(--line); padding-bottom: var(--space-small); margin: 0 0 var(--space-text); }
-/* Public context shares the course's editorial spacing and reading measure. */
+/* Public pages share the typography, but leave learner navigation in the course. */
+.layout.public-layout { display: block; max-width: 72rem; }
+.public-layout .main-content { max-width: none; padding-top: var(--space-section); }
+.public-layout .project-page--about { max-width: 52rem; margin-inline: auto; }
 .project-page .page-head { margin-bottom: var(--space-group); }
+.public-layout .page-head { margin-bottom: var(--space-section); }
 .resource-section + .resource-section { margin-top: var(--space-group); }
 .project-actions { display: flex; flex-wrap: wrap; gap: .25rem var(--space-block); margin-top: var(--space-text); }
 .project-actions a { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--text-ui); font-weight: 600; text-underline-offset: .2em; }
+.public-layout .project-start { gap: .55rem; padding: .55rem 1rem; border: 1px solid var(--accent); border-radius: .25rem; background: var(--accent); color: var(--surface); text-decoration: none; }
+.public-layout .project-start:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.public-layout .course-catalogue .overview-link { grid-template-columns: 2rem minmax(0, 1fr) .85rem; align-items: center; padding: 1.2rem .25rem; }
+.catalogue-number { color: var(--muted); font-size: var(--text-small); }
+.institution-signature { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-group) var(--space-section); margin-top: var(--space-section); padding-top: var(--space-group); border-top: 1px solid var(--line); }
+.institution-signature a { display: flex; align-items: center; min-width: 0; min-height: 2.75rem; }
 .institution-marks { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-group); margin-top: var(--space-block); }
 .institution-mark { margin: 0; }
 .institution-mark figcaption { margin-top: var(--space-small); color: var(--muted); font-size: var(--text-small); }

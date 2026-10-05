@@ -325,8 +325,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
     All asset and page links are relative, including single-module builds.
-    Home and About are independent informational pages. Home terminates the
-    course rather than becoming another learning node.
+    Home and About use the public shell without course navigation. Home
+    terminates the course rather than becoming another learning node.
 
     Rendering occurs in a marked sibling directory, leaving an existing site
     intact if rendering fails. Only after every page is written is recognised
@@ -380,6 +380,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         rendered = env.get_template(template).render(
             document=document,
             documents=documents,
+            public_page=document is None,
             site_data={
                 "module": document.slug if document else None,
                 "sections": {
