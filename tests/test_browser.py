@@ -521,10 +521,11 @@ def test_inline_selects_adapt_to_the_answer_and_column(page, site, native_fallba
     assert all(control.bounding_box()["width"] < 220 for control in page.locator(".inline-select").all())
 
 
-@pytest.mark.parametrize("level", ["home", "module", "section", "exercise"])
+@pytest.mark.parametrize("level", ["home", "about", "module", "section", "exercise"])
 def test_global_course_tree_defaults_and_current_page(page, site, level):
     suffix = {
         "home": "",
+        "about": "/about",
         "module": "/methods",
         "section": "/methods/purpose-of-the-methods-section",
         "exercise": "/methods/purpose-of-the-methods-section/exercise-1",
@@ -533,10 +534,11 @@ def test_global_course_tree_defaults_and_current_page(page, site, level):
     expect(page.locator(".nav-module-group")).to_have_count(3)
     expect(page.locator(".nav-section-group")).to_have_count(10)
     expect(page.locator(".course-panel [data-exercise-link]")).to_have_count(30)
-    expect(page.locator('.course-panel [aria-current="page"]')).to_have_count(1)
-    assert page.locator(".nav-module-group[open]").count() == (0 if level == "home" else 1)
+    expect(page.locator('.course-panel [aria-current="page"]')).to_have_count(0 if level == "about" else 1)
+    expect(page.locator('[aria-current="page"]')).to_have_count(1)
+    assert page.locator(".nav-module-group[open]").count() == (0 if level in {"home", "about"} else 1)
     assert page.locator(".nav-section-group[open]").count() == (1 if level in {"section", "exercise"} else 0)
-    if level != "home":
+    if level not in {"home", "about"}:
         expect(page.locator('[data-nav-node="module:methods"]')).to_have_attribute("open", "")
 
 
@@ -583,6 +585,99 @@ def test_global_course_tree_remains_usable_without_javascript(browser, site):
     expect(page.locator("h1")).to_have_text("Exercise 3")
     expect(page.locator(".worked-model")).to_be_visible()
     context.close()
+
+
+def test_about_uses_full_navigation_and_preserves_learner_state(page, site):
+    key = open_exercise(page, site, "methods", "purpose-of-the-methods-section", 1)
+    respond(page, key)
+    page.locator("button[type=submit]").click()
+    storage = page.evaluate("JSON.stringify({...localStorage})")
+    # A same-module swap retains the heap probe; About must load a new document.
+    page.evaluate("window.publicPageProbe = 23")
+    page.get_by_role("link", name="Next", exact=True).click()
+    expect(page.locator("h1")).to_have_text("Exercise 2")
+    assert page.evaluate("window.publicPageProbe") == 23
+    about = page.get_by_role("navigation", name="Site", exact=True).get_by_role(
+        "link", name="About", exact=True
+    )
+    assert about.evaluate("node => node.href") == f"{site[0]}/about/index.html"
+    about.click()
+    expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
+    assert page.evaluate("window.publicPageProbe") is None
+    assert page.evaluate("JSON.stringify({...localStorage})") == storage
+    assert page.locator("html").get_attribute("class") is None
+    expect(about).to_have_attribute("aria-current", "page")
+    expect(page.locator("#exercise-form, .page-navigation")).to_have_count(0)
+    expect(page.locator('[data-progress-module="methods"]')).to_have_text("1/7")
+    page.locator(".site-name").click()
+    expect(page.locator('[data-progress-other-module="methods"]')).to_have_text("1/7")
+    assert page.evaluate("JSON.stringify({...localStorage})") == storage
+
+
+def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
+    context = browser.new_context(java_script_enabled=False)
+    page = context.new_page()
+    page.goto(site[0] + "/index.html")
+    page.keyboard.press("Tab")
+    expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
+    page.keyboard.press("Enter")
+    assert page.url.endswith("#main")
+    page.get_by_role("link", name="Explore the course", exact=True).click()
+    assert page.url.endswith("#course")
+    expect(page.locator("#course")).to_be_in_viewport()
+    page.get_by_role("link", name="About the project", exact=True).click()
+    expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
+    expect(page.get_by_role("link", name="Academic Writing repository")).to_have_attribute(
+        "href", "https://github.com/coragrarian/academicwriting"
+    )
+    page.locator(".site-name").click()
+    expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
+    context.close()
+
+
+@pytest.mark.parametrize("width", [1280, 768, 375, 320])
+def test_public_pages_and_shared_header_at_required_widths(page, site, width):
+    page.set_viewport_size({"width": width, "height": 900})
+    for path in (
+        "/index.html", "/about/index.html", "/introduction/index.html",
+        "/methods/index.html",
+        "/results/grammar-and-vocabulary-in-the-results-section/exercise-7/index.html",
+    ):
+        page.goto(site[0] + path)
+        page.evaluate("document.fonts.ready")
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        about = page.locator(".about-link")
+        expect(about).to_be_visible()
+        assert about.bounding_box()["height"] >= 44
+        about.focus()
+        assert about.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+        links = page.locator(".site-header a").all()
+        for index, link in enumerate(links):
+            box = link.bounding_box()
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width
+            for other in links[index + 1:]:
+                other_box = other.bounding_box()
+                assert (
+                    box["x"] + box["width"] <= other_box["x"]
+                    or other_box["x"] + other_box["width"] <= box["x"]
+                    or box["y"] + box["height"] <= other_box["y"]
+                    or other_box["y"] + other_box["height"] <= box["y"]
+                ), path
+        for image in page.locator(".institution-logo").all():
+            image.scroll_into_view_if_needed()
+            expect(image).to_be_visible()
+            expect(image).to_have_js_property("complete", True)
+            assert image.evaluate("node => node.naturalWidth > 0")
+            box = image.bounding_box()
+            natural_ratio = image.evaluate("node => node.naturalWidth / node.naturalHeight")
+            assert box["width"] / box["height"] == pytest.approx(natural_ratio, rel=0.01)
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width
+        if path == "/index.html":
+            for action in page.locator(".project-actions a").all():
+                assert action.bounding_box()["height"] >= 44
+            expect(page.locator("#course .overview-link")).to_have_count(3)
+        if path not in {"/index.html", "/about/index.html"}:
+            expect(page.locator(".module-link")).to_be_visible()
 
 
 def test_authorised_content_changes_preserve_existing_progress(page, site):
@@ -675,6 +770,7 @@ def test_editorial_components_and_contents_at_required_widths(page, site, width)
     page.set_viewport_size({"width": width, "height": 900})
     paths = [
         "/index.html",
+        "/about/index.html",
         "/introduction/index.html",
         "/introduction/the-introduction-section-of-research-papers/index.html",
         "/introduction/giving-a-context-background/index.html",
