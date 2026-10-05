@@ -1,18 +1,61 @@
 # Academic Writing for Agrarian Sciences
 
-This repository contains the source for the **Academic Writing for Agrarian Sciences** GitHub Pages website, a self-study resource for students and researchers who want guided practice with the structure and language of research articles in the Agrarian Sciences.
+[![Course: live](https://img.shields.io/badge/Course-live-2b6f50)](https://coragrarian.github.io/academicwriting/)
+[![Validate](https://github.com/coragrarian/academicwriting/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/coragrarian/academicwriting/actions/workflows/ci.yml)
+[![Publish Pages](https://github.com/coragrarian/academicwriting/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/coragrarian/academicwriting/actions/workflows/pages.yml)
+[![Code: MIT](https://img.shields.io/badge/Code-MIT-555555)](LICENSES/MIT.txt)
+[![Content: CC BY-NC-SA 4.0](https://img.shields.io/badge/Content-CC_BY--NC--SA_4.0-555555)](LICENSES/CC-BY-NC-SA-4.0.txt)
 
-The teaching materials were originally prepared by the research team in shared Google Docs. The website provides a way of turning those materials into a consistent, interactive learning resource: after the exercises are given a small amount of Markdown structure and metadata, a lightweight build process generates the published pages, including answer checking, feedback, progress tracking and navigation.
+An interactive self-study resource for students and researchers writing
+research articles in the Agrarian Sciences.
 
-The current site covers three sections of the research article:
+## [Open the course →](https://coragrarian.github.io/academicwriting/)
 
-- [Introduction](./exercises/introduction.md)
-- [Methods](./exercises/methods.md)
-- [Results](./exercises/results.md)
+## About
 
-Together, they currently comprise 10 subsections and 30 exercises across 44 generated HTML pages.
+The course offers guided practice with the structure and language of research
+articles, including answer checking, feedback and progress tracking. This
+repository contains the teaching sources and software used to build the
+website.
 
-The site is published through GitHub Pages and remains entirely static. Python and Jinja are used during the build process, while vanilla JavaScript handles the interactive behaviour in the browser. There is no backend, account system or database.
+## Course content
 
-For local development, build instructions and maintenance details, see
-[DEVELOPMENT.md](DEVELOPMENT.md).
+The course covers the **Introduction**, **Methods** and **Results** sections
+of research articles.
+
+It currently contains **3 modules**, **10 subsections** and **30 exercises**,
+published as **44 generated HTML pages**.
+
+## Project context
+
+The resource was developed in connection with the project *Escrita acadêmica
+em língua inglesa nas ciências agrárias: necessidades e insumos para
+aplicações pedagógicas*, FAPEMIG **APQ-01173-22**.
+
+**UFMG** is the executing institution; **FUNDEP** is the fund administrator.
+We acknowledge support from **FAPEMIG** and **CAPES**.
+
+## How it works
+
+Structured Markdown is built with Python and Jinja into static pages, with
+vanilla JavaScript providing the interactions. The site is entirely static,
+with no backend. Responses and learner progress are saved locally in the
+learner's browser.
+
+## Development
+
+For build instructions, architecture and maintenance guidance, see
+[DEVELOPMENT.md](DEVELOPMENT.md). Read [CONTRIBUTING.md](CONTRIBUTING.md)
+before proposing changes.
+
+## Licensing
+
+- Original software is licensed under the [MIT License](LICENSES/MIT.txt).
+- Original teaching material is licensed under
+  [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+  (CC BY-NC-SA 4.0)](LICENSES/CC-BY-NC-SA-4.0.txt).
+
+Quoted or adapted scholarly passages, institutional logos and marks,
+trademarks, third-party images and other third-party assets retain their
+original rights. See [LICENSE](LICENSE) for the licence scope and
+[NOTICE.md](NOTICE.md) for third-party notices, including the bundled fonts.
