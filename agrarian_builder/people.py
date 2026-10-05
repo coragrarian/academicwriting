@@ -35,10 +35,5 @@ RESEARCH_TEAM = tuple(Person(placeholder=True) for _ in range(6))
 
 DATA_PLATFORM = Person(
     name="Jhonatan H. Lopes",
-    role="Data curation and web development",
-    contribution=(
-        "Jhonatan cleans and organises research and corpus data, prepares and "
-        "maintains structured project data, develops the website and maintains "
-        "its public repository."
-    ),
+    role="Data processing and web development",
 )

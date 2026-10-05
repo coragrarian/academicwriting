@@ -393,7 +393,6 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             coordinators=COORDINATORS,
             research_team=RESEARCH_TEAM,
             data_platform=DATA_PLATFORM,
-            people_preview=(*COORDINATORS, DATA_PLATFORM),
             site_data={
                 "module": document.slug,
                 "sections": {

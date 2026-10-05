@@ -293,13 +293,16 @@ def test_home_and_about_public_content(tmp_path, documents):
     home_source = (output / "index.html").read_text()
     home = Page(home_source)
     assert "course" in home.ids
-    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
-    assert sum(attrs.get("class") == "project-start" for _, attrs in home.elements) == 1
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "programme-link")
+    assert "project-start" not in home_source and "project-actions" not in home_source
+    hero = home_source.split('<div class="page-head">', 1)[1].split("</div>", 1)[0]
+    assert "<a " not in hero
     assert "About the project" not in home_source
     first = min(documents, key=lambda document: (document.order, document.slug))
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
-    assert "Start the course" in home_source
+    assert "Start the course" not in home_source
+    assert "About the research project" in home_source
     assert "A self-study resource for students and researchers" in home_source
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
@@ -374,25 +377,31 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     home_source = (output / "index.html").read_text()
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
-    assert [text for tag, text in home.headings if tag == "h3"][-4:] == names
+    assert [text for tag, text in home.headings if tag == "h2"] == [
+        "Explore the course", "The research project",
+    ]
+    assert not any(name in home_source for name in names)
+    assert not {"people-heading", "team", "data-platform"} & home.ids
+    assert "person-portrait" not in home_source
     assert [text for tag, text in about.headings if tag == "h4"] == names[:3] + ["Research team member"] * 6
-    assert ("h3", "Jhonatan H. Lopes") in about.headings
-    assert home_source.count('class="person-role">Coordinator') == 3
+    assert [text for tag, text in about.headings if tag == "h3"] == [
+        "Coordinators", "Members", "Jhonatan H. Lopes",
+    ]
     assert about_source.count('class="person-role">Coordinator') == 3
+    assert "Data processing and web development" in about_source
     for source in (home_source, about_source):
-        assert "Data curation and web development" in source
+        assert "Data curation and web development" not in source
         assert 'class="person-affiliation"' not in source
         assert 'class="person-profile"' not in source
     assert "Details to be added" not in home_source
     assert about_source.count("Details to be added") == 6
-    assert 'href="about/index.html#team"' in home_source
+    assert 'href="about/index.html#team"' not in home_source
     project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
     assert project.count("<p>") == 2 and "CorAgrarian" in project
     assert "pedagogical materials" in project and "self-study activities" in project
-    assert "cleans and organises research and corpus data" in about_source
-    assert "maintains structured project data" in about_source
-    assert "maintains its public repository" in about_source
-    for page, count in ((home, 4), (about, 10)):
+    assert "Jhonatan cleans and organises" not in about_source
+    assert "person-contribution" not in about_source
+    for page, count in ((home, 0), (about, 10)):
         portraits = [attrs for _, attrs in page.elements if attrs.get("class") == "person-portrait"]
         assert len(portraits) == count and all(attrs.get("aria-hidden") == "true" for attrs in portraits)
 
@@ -417,15 +426,19 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, docu
     page_path = output / path
     page = Page(page_path.read_text())
     images = [attrs for tag, attrs in page.elements if tag == "img" and attrs.get("alt") == person.name]
+    if path == "index.html":
+        assert not images
+        for value in (person.name, person.affiliation, person.contribution, person.profile_url):
+            assert value not in page_path.read_text()
+        return
     assert len(images) == 1
     image = images[0]
     assert (page_path.parent / image["src"]).resolve().read_bytes() == portrait.read_bytes()
     assert image["width"] == image["height"] == "144"
-    assert ("Verified test affiliation" in page_path.read_text()) == (path == "about/index.html")
-    assert ("Verified test contribution" in page_path.read_text()) == (path == "about/index.html")
+    assert "Verified test affiliation" in page_path.read_text()
+    assert "Verified test contribution" in page_path.read_text()
     assert any(attrs.get("class") == "person-portrait" and attrs.get("aria-hidden") == "true" for _, attrs in page.elements)
-    if path == "about/index.html":
-        assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
+    assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 
 def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, documents):
@@ -439,14 +452,18 @@ def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, document
     build_site(modules, output)
     source = (output / "index.html").read_text()
     home = Page(source)
-    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "project-start")
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "programme-link")
     assert start["href"] == "methods/index.html"
+    assert start["aria-label"] == "Start here: " + methods.title
     rows = source.split('<ol class="course-programme">', 1)[1].split("</ol>", 1)[0]
     rows = rows.split('<li class="programme-module">')[1:]
     assert len(rows) == 2
     for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
         assert f'>{number:02d}</span>' in row
         assert f'href="{module.slug}/index.html"' in row
+        label = "Start here" if number == 1 else "Explore"
+        assert f'aria-label="{label}: {module.title}"' in row
+        assert f'>{label} ' in row
         assert f"<h3>{module.title}</h3>" in row
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
@@ -477,11 +494,10 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, do
             assert "target" not in link
             assert image["alt"] == name
         utility_links = [attrs["href"] for tag, attrs in page.regions["footer"] if tag == "a"]
-        assert "https://github.com/coragrarian/academicwriting" in utility_links
-        assert any(
-            not urlsplit(href).scheme and (path.parent / href).resolve() == output / "about/index.html"
-            for href in utility_links
-        )
+        assert len(utility_links) == 4
+        assert set(utility_links) == {href for href, _ in destinations.values()} | {
+            "https://github.com/coragrarian/academicwriting",
+        }
         assert not any(tag == "figcaption" for tag, _ in page.elements)
 
 

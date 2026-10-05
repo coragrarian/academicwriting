@@ -1,14 +1,10 @@
 {% extends "base.html" %}
-{% from "_person.html" import entry with context %}
 {% block content %}
-<div class="project-page">
+<div class="project-page project-page--home">
 <div class="page-head">
   <p class="eyebrow">Interactive self-study</p>
   <h1>Academic Writing for Agrarian Sciences</h1>
   <p class="lead">A self-study resource for students and researchers writing research articles in the Agrarian Sciences.</p>
-  <div class="project-actions">
-    <a class="project-start" href="{{ module_link(documents[0]) }}">Start the course {% include "_chevron_right.html" %}</a>
-  </div>
 </div>
 <section id="course" class="resource-section" aria-labelledby="modules-heading">
   <h2 id="modules-heading" class="section-heading">Explore the course</h2>
@@ -16,11 +12,12 @@
   {% for module in documents %}
     {% set subsection_count = module.sections | length %}
     {% set exercise_count = module_exercise_counts[module.slug] %}
+    {% set entry_label = 'Start here' if loop.first else 'Explore' %}
     <li class="programme-module">
       <span class="programme-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
       <h3>{{ module.title }}</h3>
       <p class="programme-counts"><span>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %}</span><span>{{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span></p>
-      <a class="programme-link" href="{{ module_link(module) }}" aria-label="Explore {{ module.title }}">Explore {% include "_chevron_right.html" %}</a>
+      <a class="programme-link" href="{{ module_link(module) }}" aria-label="{{ entry_label }}: {{ module.title }}">{{ entry_label }} {% include "_chevron_right.html" %}</a>
     </li>
   {% endfor %}
   </ol>
@@ -31,14 +28,7 @@
     <p>Research into academic English in the Agrarian Sciences examines lexical and syntactic features and their relationship to rhetorical functions in research articles.</p>
     <p>CorAgrarian supplies disciplinary corpus data for this work. The research informs pedagogical materials for academic writing, presented here as interactive self-study activities.</p>
   </div>
-  <a class="project-detail-link" href="{{ about_url }}">Project details {% include "_chevron_right.html" %}</a>
-</section>
-<section class="resource-section" aria-labelledby="people-heading">
-  <h2 id="people-heading" class="section-heading">People</h2>
-  <ul class="people-grid people-grid--preview">
-    {% for person in people_preview %}{{ entry(person, preview=true) }}{% endfor %}
-  </ul>
-  <a class="project-detail-link" href="{{ about_url }}#team">Research team {% include "_chevron_right.html" %}</a>
+  <a class="project-detail-link" href="{{ about_url }}">About the research project {% include "_chevron_right.html" %}</a>
 </section>
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% macro entry(person, heading_level=3, preview=false) -%}
+{% macro entry(person, heading_level=3) -%}
 <li class="person{% if person.placeholder %} person--pending{% endif %}">
   <div class="person-portrait"{% if not person.portrait %} aria-hidden="true"{% endif %}>
     {% if person.portrait %}<img src="{{ person_asset(person.portrait) }}" alt="{{ person.name }}" width="144" height="144" loading="lazy">
@@ -8,10 +8,10 @@
     <h{{ heading_level }} class="person-name">{{ person.name if not person.placeholder else 'Research team member' }}</h{{ heading_level }}>
     {% if person.placeholder %}<p class="person-role">Details to be added</p>
     {% else %}
-      {% if person.affiliation and not preview %}<p class="person-affiliation">{{ person.affiliation }}</p>{% endif %}
+      {% if person.affiliation %}<p class="person-affiliation">{{ person.affiliation }}</p>{% endif %}
       {% if person.role %}<p class="person-role">{{ person.role }}</p>{% endif %}
-      {% if person.contribution and not preview %}<p class="person-contribution">{{ person.contribution }}</p>{% endif %}
-      {% if person.profile_url and not preview %}<a class="person-profile" href="{{ person.profile_url }}">Profile<span class="sr-only">: {{ person.name }}</span></a>{% endif %}
+      {% if person.contribution %}<p class="person-contribution">{{ person.contribution }}</p>{% endif %}
+      {% if person.profile_url %}<a class="person-profile" href="{{ person.profile_url }}">Profile<span class="sr-only">: {{ person.name }}</span></a>{% endif %}
     {% endif %}
   </div>
 </li>

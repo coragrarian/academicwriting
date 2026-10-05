@@ -138,12 +138,11 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .public-layout .main-content { padding-block: var(--space-section); }
 .public-layout .page-head { margin-bottom: var(--space-section); }
 .resource-section + .resource-section { margin-top: var(--space-group); }
-.project-page > .resource-section + .resource-section { margin-top: var(--space-section); }
+/* Home separates major regions; shared main padding supplies part of the final gap. */
+.project-page--home { --home-region-gap: clamp(3rem, 7vw, 5rem); display: grid; gap: var(--home-region-gap); padding-bottom: calc(var(--home-region-gap) - var(--space-section)); }
+.project-page--home .page-head { margin-bottom: 0; }
+.project-page--home > .resource-section + .resource-section { margin-top: 0; }
 .project-detail-link { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; margin-top: var(--space-text); font-size: var(--text-ui); text-underline-offset: .2em; }
-.project-actions { display: flex; flex-wrap: wrap; gap: .25rem var(--space-block); margin-top: var(--space-text); }
-.project-actions a { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--text-ui); font-weight: 600; text-underline-offset: .2em; }
-.public-layout .project-start { gap: .55rem; padding: .55rem 1rem; border: 1px solid var(--accent); border-radius: .25rem; background: var(--accent); color: var(--surface); text-decoration: none; }
-.public-layout .project-start:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
 .course-programme { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--space-group); margin: 0; padding: var(--space-text) 0 0; list-style: none; }
 .programme-module { display: flex; flex-direction: column; min-width: 0; }
 .programme-module + .programme-module { border-left: 1px solid var(--line); padding-left: var(--space-block); }
@@ -166,7 +165,6 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .project-facts dd:last-child { margin-bottom: 0; }
 /* Portraits reserve the same field with or without an approved image. */
 .people-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-group); margin: var(--space-block) 0 0; padding: 0; list-style: none; }
-.people-grid--preview { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .person { min-width: 0; }
 .person-portrait { display: flex; align-items: center; justify-content: center; width: 4.5rem; aspect-ratio: 1; margin-bottom: var(--space-text); border: 1px solid var(--line); background: var(--wash); color: var(--muted); font-size: var(--text-h3); }
 .person-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -180,10 +178,10 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .team-group-heading { margin-top: var(--space-section); }
 /* Site chrome stays outside the course grid and the regions replaced by navigation. */
 .site-footer { border-top: 1px solid var(--line); background: var(--wash); }
-.site-footer-inner { max-width: 72rem; margin: auto; padding: var(--space-section) clamp(1.35rem, 5vw, 4.5rem); }
-.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-group) var(--space-section); }
+.site-footer-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-group); max-width: 80rem; margin: auto; padding: var(--space-group) clamp(1.35rem, 5vw, 4.5rem); }
+.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; max-width: 100%; gap: var(--space-group) var(--space-section); }
 .footer-institutions a { display: flex; align-items: center; min-width: 0; max-width: 100%; min-height: 2.75rem; }
-.footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-block); margin-top: var(--space-group); }
+.footer-links { display: flex; align-items: center; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--text-small); text-underline-offset: .2em; }
 .institution-logo { display: block; max-width: 100%; height: auto; }
 .institution-logo--ufmg-fale { width: 18rem; }
@@ -193,7 +191,8 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
   .about-layout { grid-template-columns: minmax(0, 1fr); }
   .about-layout > .project-facts { grid-column: 1; grid-row: auto; }
   .project-facts { border-left: 0; border-top: 1px solid var(--line); padding: var(--space-group) 0 0; }
-  .people-grid--preview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .site-footer-inner { flex-direction: column; gap: var(--space-block); }
+  .footer-institutions { justify-content: center; }
 }
 @media (max-width: 48rem) { .programme-module h3 { font-size: var(--text-h3); } }
 @media (max-width: 44rem) {
