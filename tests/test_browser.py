@@ -775,7 +775,7 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     page.goto(site[0] + "/methods/index.html")
     page.evaluate("window.footerProbe = document.querySelector('.site-footer')")
     footer = page.get_by_role("contentinfo")
-    source = footer.get_by_role("link", name="Source code", exact=True)
+    source = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
     expected_source = "https://github.com/coragrarian/academicwriting"
     expect(source).to_have_attribute("href", expected_source)
     expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
@@ -849,22 +849,23 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
         expect(footer.locator(".footer-links a")).to_have_count(1)
         institution_group = footer.locator(".footer-institutions").bounding_box()
-        source_link = footer.get_by_role("link", name="Source code", exact=True).bounding_box()
-        if width >= 1024:
-            assert source_link["x"] > institution_group["x"] + institution_group["width"]
-            assert source_link["y"] + source_link["height"] / 2 == pytest.approx(
-                institution_group["y"] + institution_group["height"] / 2, abs=1
-            )
-        else:
-            assert source_link["y"] > institution_group["y"] + institution_group["height"]
-            assert source_link["x"] + source_link["width"] / 2 == pytest.approx(width / 2, abs=1)
+        provenance = footer.locator(".footer-provenance")
+        expect(provenance).to_have_text("Developed at UFMG · Supported by FAPEMIG and CAPES · APQ-01173-22")
+        provenance_box = provenance.bounding_box()
+        repository = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
+        expect(repository).to_have_text("coragrarian/academicwriting")
+        expect(footer.get_by_role("link", name="Source code", exact=True)).to_have_count(0)
+        expect(repository.locator("svg")).to_have_attribute("aria-hidden", "true")
+        source_link = repository.bounding_box()
+        assert provenance_box["y"] >= institution_group["y"] + institution_group["height"]
+        assert source_link["y"] >= provenance_box["y"] + provenance_box["height"]
         layout = page.locator(".layout").bounding_box()
         assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
         for name, href in (
             ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
-            ("Source code", "https://github.com/coragrarian/academicwriting"),
+            ("GitHub repository: coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
         ):
             link = footer.get_by_role("link", name=name, exact=True)
             expect(link).to_have_attribute("href", href)

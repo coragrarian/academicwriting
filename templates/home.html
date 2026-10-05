@@ -17,7 +17,7 @@
       <span class="programme-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
       <h3>{{ module.title }}</h3>
       <p class="programme-counts"><span>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %}</span><span>{{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span></p>
-      <a class="programme-link" href="{{ module_link(module) }}" aria-label="{{ entry_label }}: {{ module.title }}">{{ entry_label }} {% include "_chevron_right.html" %}</a>
+      <a class="programme-link action-link action-link--{{ 'primary' if loop.first else 'secondary' }}" href="{{ module_link(module) }}" aria-label="{{ entry_label }}: {{ module.title }}">{{ entry_label }} {% include "_chevron_right.html" %}</a>
     </li>
   {% endfor %}
   </ol>
@@ -28,7 +28,7 @@
     <p>Research into academic English in the Agrarian Sciences examines lexical and syntactic features and their relationship to rhetorical functions in research articles.</p>
     <p>CorAgrarian supplies disciplinary corpus data for this work. The research informs pedagogical materials for academic writing, presented here as interactive self-study activities.</p>
   </div>
-  <a class="project-detail-link" href="{{ about_url }}">About the research project {% include "_chevron_right.html" %}</a>
+  <a class="project-detail-link action-link action-link--tertiary" href="{{ about_url }}">About the research project {% include "_chevron_right.html" %}</a>
 </section>
 </div>
 {% endblock %}

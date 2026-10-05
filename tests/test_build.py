@@ -293,7 +293,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     home_source = (output / "index.html").read_text()
     home = Page(home_source)
     assert "course" in home.ids
-    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "programme-link")
+    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="page-head">', 1)[1].split("</div>", 1)[0]
     assert "<a " not in hero
@@ -324,7 +324,7 @@ def test_home_and_about_public_content(tmp_path, documents):
         "About this resource", "Research context", "Institutional context", "Funding and support",
         "APQ-01173-22", "FUNDEP", "Escrita acadêmica em língua inglesa nas ciências agrárias",
     ):
-        assert detail not in home_source
+        assert detail not in home_source.split("<main", 1)[1].split("</main>", 1)[0]
     about_source = (output / "about/index.html").read_text()
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
@@ -452,7 +452,7 @@ def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, document
     build_site(modules, output)
     source = (output / "index.html").read_text()
     home = Page(source)
-    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "programme-link")
+    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
     assert start["href"] == "methods/index.html"
     assert start["aria-label"] == "Start here: " + methods.title
     rows = source.split('<ol class="course-programme">', 1)[1].split("</ol>", 1)[0]
@@ -498,6 +498,18 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, do
         assert set(utility_links) == {href for href, _ in destinations.values()} | {
             "https://github.com/coragrarian/academicwriting",
         }
+        footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
+        for text in ("Developed at UFMG", "Supported by FAPEMIG and CAPES", "APQ-01173-22", "coragrarian/academicwriting"):
+            assert text in footer
+        for excluded in ("Source code", "FUNDEP", "Contact", "Escrita acadêmica", "licence"):
+            assert excluded not in footer
+        repository = next(
+            attrs for tag, attrs in page.regions["footer"]
+            if tag == "a" and attrs["href"] == "https://github.com/coragrarian/academicwriting"
+        )
+        assert repository["aria-label"] == "GitHub repository: coragrarian/academicwriting"
+        icon = next(attrs for tag, attrs in page.regions["footer"] if tag == "svg")
+        assert icon["aria-hidden"] == "true" and icon["focusable"] == "false"
         assert not any(tag == "figcaption" for tag, _ in page.elements)
 
 
