@@ -671,6 +671,37 @@ def test_home_contents_keyboard_focus_and_module_entry(page, site):
         expect(page.locator("h1")).to_have_text(f"The {module.title()} section")
 
 
+def test_publication_metadata_follows_history_navigation(page, site):
+    page.goto(site[0] + "/methods/index.html")
+    page.evaluate("window.metadataNavigationProbe = 29")
+    for path in (
+        "methods/purpose-of-the-methods-section/",
+        "methods/purpose-of-the-methods-section/exercise-1/",
+        "methods/purpose-of-the-methods-section/exercise-2/",
+    ):
+        page.locator('.page-navigation a[rel="next"]').click()
+        expect(page.locator('link[rel="canonical"]')).to_have_attribute(
+            "href", "https://coragrarian.github.io/academicwriting/" + path
+        )
+        assert page.evaluate("window.metadataNavigationProbe") == 29
+        for selector in ('meta[property="og:title"]', 'meta[name="twitter:title"]'):
+            expect(page.locator(selector)).to_have_attribute("content", page.title())
+        expect(page.locator('link[rel="icon"]')).to_have_attribute(
+            "href", site[0] + "/assets/favicon.svg"
+        )
+    page.go_back()
+    expect(page.locator('link[rel="canonical"]')).to_have_attribute(
+        "href", "https://coragrarian.github.io/academicwriting/methods/purpose-of-the-methods-section/exercise-1/"
+    )
+    expect(page.locator('meta[name="description"]')).to_have_attribute(
+        "content", "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”."
+    )
+    page.go_forward()
+    expect(page.locator('meta[property="og:url"]')).to_have_attribute(
+        "content", "https://coragrarian.github.io/academicwriting/methods/purpose-of-the-methods-section/exercise-2/"
+    )
+
+
 @pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
 def test_public_pages_do_not_load_course_runtime(page, site, path):
     requests = []

@@ -21,6 +21,7 @@ import html
 import os
 import re
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -32,6 +33,69 @@ ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 STATIC = ROOT / "static"
 SITE_TITLE = "Academic Writing for Agrarian Sciences"
+SITE_URL = "https://coragrarian.github.io/academicwriting/"
+
+
+@dataclass(frozen=True)
+class PageMetadata:
+    """Publication identity shared by search and social previews."""
+
+    title: str
+    description: str
+    canonical_url: str
+    image_url: str
+    image_alt: str = (
+        "Academic Writing for Agrarian Sciences. Interactive self-study activities "
+        "for academic writing in the Agrarian Sciences. UFMG · FAPEMIG · CAPES."
+    )
+
+
+def _page_metadata(
+    path: Path,
+    *,
+    page_title: str | None,
+    document: Document | None,
+    section: Section | None,
+    exercise: Exercise | None,
+) -> PageMetadata:
+    """Describe semantic page content without inspecting rendered HTML.
+
+    Canonicals always name the production deployment, including local builds.
+    Index pages use their directory URL; exercise titles include their section
+    so repeated exercise numbers remain meaningful outside the course UI.
+    """
+    if exercise and section and document:
+        page_title = f"{exercise.title}: {section.title}"
+        description = (
+            f"Interactive {exercise.title.lower()} on “{section.title}” "
+            f"in the module “{document.title}”."
+        )
+    elif section and document:
+        description = (
+            f"Academic-writing activities on “{section.title}” "
+            f"in the module “{document.title}”."
+        )
+    elif document:
+        description = (
+            f"{document.title}: interactive academic-writing activities "
+            "for Agrarian Sciences research articles."
+        )
+    elif path == Path("about/index.html"):
+        description = (
+            "Research, CorAgrarian, pedagogical materials, project information and "
+            "the research team behind Academic Writing for Agrarian Sciences."
+        )
+    else:
+        description = (
+            "Interactive self-study activities for academic writing in research "
+            "articles in the Agrarian Sciences."
+        )
+    return PageMetadata(
+        title=f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE,
+        description=description,
+        canonical_url=SITE_URL + path.as_posix().removesuffix("index.html"),
+        image_url=SITE_URL + "assets/social-preview.png",
+    )
 
 
 def _home_module_title(title: str) -> str:
@@ -375,6 +439,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         document: Document | None = None,
         *,
         page_title: str | None = None,
+        section: Section | None = None,
+        exercise: Exercise | None = None,
         **content: object,
     ) -> None:
         """Combine shared course context with page-specific semantic content.
@@ -390,11 +456,21 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         def link(target: Path) -> str:
             return os.path.relpath(temp / target, destination.parent).replace(os.sep, "/")
 
+        # Course templates distinguish absent levels from defined objects when
+        # marking the current overview. Preserve that undefined-variable contract.
+        if section is not None:
+            content["section"] = section
+        if exercise is not None:
+            content["exercise"] = exercise
         rendered = env.get_template(template).render(
             document=document,
             documents=documents,
             public_page=document is None,
-            document_title=(f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE),
+            site_title=SITE_TITLE,
+            metadata=_page_metadata(
+                path, page_title=page_title, document=document,
+                section=section, exercise=exercise,
+            ),
             module_exercise_counts={slug: len(ids) for slug, ids in module_ids.items()},
             home_module_title=_home_module_title,
             coordinators=COORDINATORS,
@@ -423,6 +499,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             asset_css=link(Path("assets/styles.css")),
             asset_js=link(Path("assets/exercises.js")),
             asset_navigation=link(Path("assets/navigation.js")),
+            asset_favicon=link(Path("assets/favicon.svg")),
+            asset_touch_icon=link(Path("assets/apple-touch-icon.png")),
             institution_asset=lambda filename: link(Path("assets/institutions") / filename),
             person_asset=lambda filename: link(Path("assets") / filename),
             module_url=link(_path_for(document)) if document else None,

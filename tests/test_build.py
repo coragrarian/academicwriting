@@ -2,8 +2,10 @@
 
 import json
 import shutil
+import struct
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import replace
 from hashlib import sha256
 from html.parser import HTMLParser
@@ -16,6 +18,8 @@ from conftest import ROOT
 from agrarian_builder import renderer
 from agrarian_builder.parser import parse_document
 from agrarian_builder.renderer import build_site
+
+PRODUCTION_URL = "https://coragrarian.github.io/academicwriting/"
 
 
 class Page(HTMLParser):
@@ -484,6 +488,83 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)
         assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
+
+
+@pytest.mark.parametrize(("path", "title", "description"), [
+    (
+        "index.html", "Academic Writing for Agrarian Sciences",
+        "Interactive self-study activities for academic writing in research articles in the Agrarian Sciences.",
+    ),
+    (
+        "about/index.html", "About · Academic Writing for Agrarian Sciences",
+        "Research, CorAgrarian, pedagogical materials, project information and the research team behind Academic Writing for Agrarian Sciences.",
+    ),
+    (
+        "methods/index.html", "The Methods section · Academic Writing for Agrarian Sciences",
+        "The Methods section: interactive academic-writing activities for Agrarian Sciences research articles.",
+    ),
+    (
+        "methods/purpose-of-the-methods-section/index.html",
+        "Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Academic-writing activities on “Purpose of the Methods section” in the module “The Methods section”.",
+    ),
+    (
+        "methods/purpose-of-the-methods-section/exercise-1/index.html",
+        "Exercise 1: Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”.",
+    ),
+])
+def test_publication_metadata_for_each_page_type(tmp_path, documents, path, title, description):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    page = Page((output / path).read_text())
+    assert page.title == title
+    metadata = {}
+    for tag, attrs in page.elements:
+        if tag != "meta":
+            continue
+        key = attrs.get("name") or attrs.get("property")
+        if key:
+            assert key not in metadata, f"Duplicate metadata: {key}"
+            metadata[key] = attrs["content"]
+    canonical = PRODUCTION_URL + path.removesuffix("index.html")
+    links = [attrs for tag, attrs in page.elements if tag == "link"]
+    assert [link["href"] for link in links if link["rel"] == "canonical"] == [canonical]
+    assert metadata["description"] == metadata["og:description"] == metadata["twitter:description"] == description
+    assert metadata["og:title"] == metadata["twitter:title"] == title
+    assert metadata["og:url"] == canonical
+    assert metadata["og:type"] == "website"
+    assert metadata["og:site_name"] == "Academic Writing for Agrarian Sciences"
+    assert metadata["og:image"] == metadata["twitter:image"] == PRODUCTION_URL + "assets/social-preview.png"
+    assert metadata["og:image:width"] == "1200" and metadata["og:image:height"] == "630"
+    assert metadata["og:image:alt"] == metadata["twitter:image:alt"]
+    assert "Academic Writing for Agrarian Sciences" in metadata["og:image:alt"]
+    assert metadata["twitter:card"] == "summary_large_image"
+    assert "twitter:site" not in metadata and "author" not in metadata
+    assert "robots" not in metadata
+    for rel, filename in (("icon", "favicon.svg"), ("apple-touch-icon", "apple-touch-icon.png")):
+        icons = [link for link in links if link["rel"] == rel]
+        assert len(icons) == 1
+        assert (output / path).parent.joinpath(icons[0]["href"]).resolve() == output / "assets" / filename
+    assert f'--accent: {metadata["theme-color"]};' in (output / "assets/styles.css").read_text()
+
+
+def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    favicon = ET.parse(output / "assets/favicon.svg").getroot()
+    assert favicon.attrib["viewBox"] == "0 0 64 64"
+    assert favicon.find("{http://www.w3.org/2000/svg}text").text == "AW"
+    for filename, dimensions, limit in (
+        ("social-preview.png", (1200, 630), 200_000),
+        ("apple-touch-icon.png", (180, 180), 20_000),
+    ):
+        data = (output / "assets" / filename).read_bytes()
+        assert data[:8] == b"\x89PNG\r\n\x1a\n"
+        assert struct.unpack(">II", data[16:24]) == dimensions
+        assert len(data) < limit
+    assert not (output / "tools").exists()
+    assert not list(output.rglob("*.webmanifest"))
 
 
 def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):

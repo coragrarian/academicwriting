@@ -120,6 +120,15 @@
       }
       renderedUrl = new URL(window.location.href);
       document.title = fetched.title;
+      // Search/social identity follows History API navigation. Resolve icon
+      // links against the fetched page before moving them into the live head.
+      document.head.querySelectorAll('[data-page-metadata]').forEach((node) => node.remove());
+      fetched.head.querySelectorAll('[data-page-metadata]').forEach((node) => {
+        if (node.hasAttribute('href')) {
+          node.setAttribute('href', new URL(node.getAttribute('href'), target.href).href);
+        }
+        document.head.append(node);
+      });
       // answer-key travels inside main; initialise() reads it from the new
       // form and restores responses without re-executing either script.
       window.AgrarianExercises?.initialise();

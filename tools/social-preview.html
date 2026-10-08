@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Social preview source</title>
+<!-- Local source for static/social-preview.png; no remote assets.
+     Run: uv run --frozen python tools/render_publication_assets.py
+     This source is not copied into the site. -->
+<style>
+  @font-face {
+    font-family: "Source Serif 4";
+    src: url("../static/fonts/source-serif-4/SourceSerif4Variable-Roman.ttf.woff2");
+    font-weight: 200 900;
+  }
+  @font-face {
+    font-family: "Source Sans 3";
+    src: url("../static/fonts/source-sans-3/SourceSans3VF-Upright.ttf.woff2");
+    font-weight: 200 900;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main {
+    width: 1200px;
+    height: 630px;
+    padding: 72px 88px 64px;
+    display: flex;
+    flex-direction: column;
+    background: #fbfcfa;
+    color: #263331;
+  }
+  .rule { width: 72px; height: 6px; flex: none; background: #285e51; }
+  h1 {
+    margin: 34px 0 0;
+    font: 600 68px/1.1 "Source Serif 4", Georgia, serif;
+    letter-spacing: -1.3px;
+  }
+  p {
+    max-width: 850px;
+    margin: 30px 0 0;
+    font: 400 29px/1.4 "Source Sans 3", sans-serif;
+    color: #4a5a53;
+  }
+  footer {
+    margin-top: auto;
+    font: 400 22px/1.4 "Source Sans 3", sans-serif;
+    color: #285e51;
+  }
+</style>
+<main>
+  <div class="rule" aria-hidden="true"></div>
+  <h1>Academic Writing<br>for Agrarian Sciences</h1>
+  <p>Interactive self-study activities for academic writing<br>in the Agrarian Sciences</p>
+  <footer>UFMG · FAPEMIG · CAPES</footer>
+</main>
+</html>
