@@ -226,6 +226,7 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .overview-number { color: var(--muted); font-size: var(--text-small); }
 .overview-progress { color: var(--muted); font-size: var(--text-small); text-align: right; white-space: nowrap; }
 .overview-progress small { display: block; font-size: var(--text-meta); }
+.course-overview > #exercises-heading { border-bottom: 0; }
 .exercise-list { margin: 0; padding: 0; list-style: none; }
 .exercise-list li + li { border-top: 1px solid var(--line); }
 .exercise-list a { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; padding: var(--space-text) .25rem; font-size: var(--text-ui); text-decoration: none; color: var(--ink); }
@@ -291,12 +292,14 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid #a9b8af; bor
 .item-feedback { margin: var(--space-text) 0 0; font-size: var(--text-small); }
 .item-feedback strong { display: block; }
 .gap-feedback { display: block; margin-top: .65rem; }
-.matching-question { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, 14rem); gap: var(--space-text); align-items: center; border-top: 1px solid var(--line); padding: var(--space-text) 0; font-size: var(--text-ui); }
+.matching-question { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, 14rem); gap: var(--space-text); align-items: center; padding: var(--space-text) 0; font-size: var(--text-ui); }
+.matching-question + .matching-question { border-top: 1px solid var(--line); }
 .matching-question label { line-height: 1.45; }
 .matching-sentences { width: 100%; table-layout: fixed; border-collapse: collapse; margin: var(--space-block) 0; font-size: var(--text-small); line-height: 1.5; }
-.matching-sentences th, .matching-sentences td { border-bottom: 1px solid var(--line); padding: .7rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.matching-sentences th, .matching-sentences td { padding: .7rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 .matching-sentences th:first-child { width: 4.5rem; white-space: nowrap; }
 .matching-sentences thead { background: var(--wash); }
+.matching-sentences thead th { border-bottom: 1px solid var(--line); }
 /* Exercise actions and page navigation */
 .form-actions { padding: 1rem 0 1.5rem; display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
 .button { padding: .7rem 1rem; border-radius: .35rem; border: 1px solid var(--accent); cursor: pointer; font-weight: 600; }
@@ -310,7 +313,7 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid #a9b8af; bor
 .page-navigation { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 1rem; }
 .page-navigation a { font-size: var(--text-ui); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
 .page-navigation a:last-child { text-align: right; margin-left: auto; }
-/* Overview lists already have a heading rule and separators between entries. */
+/* Use whitespace to separate overview lists from course traversal. */
 .course-overview + .page-navigation { border-top: 0; margin-top: var(--space-group); padding-top: var(--space-small); }
 /* Responsive layout and contents disclosure */
 @media (max-width: 48rem) {
