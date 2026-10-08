@@ -773,6 +773,76 @@ def test_not_found_assets_and_reflow_at_required_widths(page, site, width):
     expect(page.locator(".public-layout")).to_have_count(1)
 
 
+PUBLICATION_PAGES = (
+    "index.html", "about/index.html", "404.html", "methods/index.html",
+    "methods/purpose-of-the-methods-section/index.html",
+    "methods/purpose-of-the-methods-section/exercise-1/index.html",
+    "introduction/indicating-a-research-gap/exercise-1/index.html",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/index.html",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/index.html",
+    "introduction/the-introduction-section-of-research-papers/exercise-1/index.html",
+)
+
+
+@pytest.mark.parametrize("path", PUBLICATION_PAGES)
+def test_publication_headings_accessible_names_and_skip_target(page, site, path):
+    serve_not_found_candidate(page, site)
+    page.goto(site[0] + "/" + path)
+    headings = page.locator("h1,h2,h3,h4,h5,h6").evaluate_all(
+        "nodes => nodes.map(node => ({level: +node.tagName[1], text: node.textContent.trim()}))"
+    )
+    levels = [heading["level"] for heading in headings]
+    assert levels.count(1) == 1 and levels[0] == 1
+    assert all(heading["text"] for heading in headings)
+    assert all(current <= previous + 1 for previous, current in pairwise(levels))
+    # Chromium's accessibility tree checks computed names, including native
+    # labels/legends and aria-labels, rather than guessing from HTML attributes.
+    session = page.context.new_cdp_session(page)
+    tree = session.send("Accessibility.getFullAXTree")["nodes"]
+    session.detach()
+    named_roles = {"link", "button", "textbox", "combobox", "radio", "checkbox", "image"}
+    for node in tree:
+        if not node.get("ignored") and node.get("role", {}).get("value") in named_roles:
+            assert node.get("name", {}).get("value", "").strip(), node
+    assert page.locator("[aria-describedby]").evaluate_all(
+        r"nodes => nodes.every(node => node.getAttribute('aria-describedby').split(/\s+/).every(id => document.getElementById(id)))"
+    )
+    expect(page.locator(".github-mark")).to_have_attribute("aria-hidden", "true")
+    expect(page.locator(".github-mark")).to_have_attribute("focusable", "false")
+    assert page.locator(".nav-chevron").evaluate_all(
+        "nodes => nodes.every(node => getComputedStyle(node).transitionDuration === '0s')"
+    )
+    if page.locator("#exercise-form").count():
+        expect(page.locator("#exercise-feedback")).to_have_attribute("role", "status")
+        expect(page.locator("#exercise-feedback")).to_have_attribute("aria-live", "polite")
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    page.keyboard.press("Tab")
+    assert page.locator(":focus").evaluate("node => !!node.closest('main')")
+
+
+@pytest.mark.parametrize(("width", "text_scale"), [
+    (1440, 1), (1280, 1), (1024, 1), (768, 1), (375, 1), (320, 1),
+    (1280, 2), (320, 2),
+])
+def test_publication_reflow_including_enlarged_text(page, site, width, text_scale):
+    serve_not_found_candidate(page, site)
+    page.set_viewport_size({"width": width, "height": 900})
+    for path in PUBLICATION_PAGES:
+        page.goto(site[0] + "/" + path)
+        if text_scale == 2:
+            page.add_style_tag(content="html { font-size: 200%; }")
+        page.evaluate("document.fonts.ready")
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        repository = page.locator(".footer-links").bounding_box()
+        assert repository["x"] >= 0 and repository["x"] + repository["width"] <= width
+        for option in page.locator(".choice-option").all():
+            label = option.bounding_box()
+            text = option.locator("span").first.bounding_box()
+            assert text["x"] + text["width"] <= label["x"] + label["width"] + 1, path
+
+
 @pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
 def test_public_pages_do_not_load_course_runtime(page, site, path):
     requests = []
