@@ -23,6 +23,7 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -42,8 +43,9 @@ class PageMetadata:
 
     title: str
     description: str
-    canonical_url: str
+    canonical_url: str | None
     image_url: str
+    robots: str | None = None
     image_alt: str = (
         "Academic Writing for Agrarian Sciences. Interactive self-study activities "
         "for academic writing in the Agrarian Sciences. UFMG · FAPEMIG · CAPES."
@@ -64,7 +66,10 @@ def _page_metadata(
     Index pages use their directory URL; exercise titles include their section
     so repeated exercise numbers remain meaningful outside the course UI.
     """
-    if exercise and section and document:
+    not_found = path == Path("404.html")
+    if not_found:
+        description = "The page you requested does not exist or may have moved."
+    elif exercise and section and document:
         page_title = f"{exercise.title}: {section.title}"
         description = (
             f"Interactive {exercise.title.lower()} on “{section.title}” "
@@ -93,8 +98,10 @@ def _page_metadata(
     return PageMetadata(
         title=f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE,
         description=description,
-        canonical_url=SITE_URL + path.as_posix().removesuffix("index.html"),
+        # A fallback can be served at any missing URL; none is canonical content.
+        canonical_url=None if not_found else SITE_URL + path.as_posix().removesuffix("index.html"),
         image_url=SITE_URL + "assets/social-preview.png",
+        robots="noindex" if not_found else None,
     )
 
 
@@ -396,9 +403,10 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     -----
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
-    All asset and page links are relative, including single-module builds.
-    Home and About use the public shell without course navigation or runtime
-    data. Home terminates the course rather than becoming another learning node.
+    Normal content pages use relative asset/page links, including single-module builds.
+    Home, About and the 404 fallback use the public shell without course runtime
+    data. Only normal content URLs enter the sitemap. Home terminates the course
+    rather than becoming another learning node.
 
     Rendering occurs in a marked sibling directory, leaving an existing site
     intact if rendering fails. Only after every page is written is recognised
@@ -432,6 +440,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         for document in documents
     }
     page_navigation = _page_navigation(documents, temp)
+    content_urls: list[str] = []
 
     def write_page(
         path: Path,
@@ -454,6 +463,10 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
 
         def link(target: Path) -> str:
+            # GitHub Pages serves 404.html at the requested missing path, which
+            # may be nested. Its assets and recovery links need a fixed base.
+            if path == Path("404.html"):
+                return SITE_URL + target.as_posix().removesuffix("index.html")
             return os.path.relpath(temp / target, destination.parent).replace(os.sep, "/")
 
         # Course templates distinguish absent levels from defined objects when
@@ -462,15 +475,17 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             content["section"] = section
         if exercise is not None:
             content["exercise"] = exercise
+        metadata = _page_metadata(
+            path, page_title=page_title, document=document,
+            section=section, exercise=exercise,
+        )
         rendered = env.get_template(template).render(
             document=document,
             documents=documents,
             public_page=document is None,
+            is_home=path == Path("index.html"),
             site_title=SITE_TITLE,
-            metadata=_page_metadata(
-                path, page_title=page_title, document=document,
-                section=section, exercise=exercise,
-            ),
+            metadata=metadata,
             module_exercise_counts={slug: len(ids) for slug, ids in module_ids.items()},
             home_module_title=_home_module_title,
             coordinators=COORDINATORS,
@@ -519,9 +534,12 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             **content,
         )
         destination.write_text(rendered, encoding="utf-8")
+        if metadata.canonical_url:
+            content_urls.append(metadata.canonical_url)
 
     write_page(Path("index.html"), "home.html")
     write_page(Path("about/index.html"), "about.html", page_title="About", is_about=True)
+    write_page(Path("404.html"), "not_found.html", page_title="Page not found")
 
     for document in documents:
         write_page(_path_for(document), "module.html", document, page_title=document.title)
@@ -587,6 +605,12 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                     position=position,
                     total=len(section.exercises),
                 )
+
+    sitemap = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+    for url in content_urls:
+        ET.SubElement(ET.SubElement(sitemap, "url"), "loc").text = url
+    ET.indent(sitemap, space="  ")
+    ET.ElementTree(sitemap).write(temp / "sitemap.xml", encoding="utf-8", xml_declaration=True)
 
     if output.exists():
         shutil.rmtree(output)

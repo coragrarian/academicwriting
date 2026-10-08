@@ -23,8 +23,8 @@ turns it into the pages that are published.
 On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
 
-Home and About use ordinary links and only the shared stylesheet. They do not
-receive course scripts or learner-state JSON.
+Home, About and the generated 404 fallback use ordinary links and only the shared
+stylesheet. They do not receive course scripts or learner-state JSON.
 
 There is no backend or database.
 
@@ -124,8 +124,23 @@ The parser converts the authored structure into the dataclasses defined in
 The browser performs the actual answer checking. Python prepares the checking
 data; `static/exercises.js` evaluates learner responses.
 
-Generated pages use relative links, so the site works under a GitHub Pages
+Normal content pages use relative links, so the site works under a GitHub Pages
 project path.
+
+`renderer.py` owns `SITE_URL`, the production identity for canonical URLs,
+Open Graph metadata and `sitemap.xml`. Normal `index.html` pages use directory
+canonicals with a trailing slash, including in local builds. The 404 fallback
+uses absolute production links so assets and recovery actions work from nested
+missing URLs; it has `noindex` and no canonical. The sitemap lists normal content
+only. No project-local `robots.txt` is generated: crawlers read it at the host root.
+
+The AW favicon is a browser identity, not a project logo. The social card and
+touch icon are committed PNGs; the production build only copies them. To render
+them again with local fonts and the existing development toolchain, run:
+
+```sh
+uv run --frozen python tools/render_publication_assets.py
+```
 
 ## Things that are easy to break
 
@@ -161,7 +176,7 @@ option order and answer keys remain unchanged.
 The learning sequence contains module overviews, subsection overviews and
 exercise pages.
 
-Home and About are outside that sequence.
+Home, About and the 404 fallback are outside that sequence.
 
 Previous and Next move through the sequence once. The final Results exercise
 returns to Home rather than linking back to an earlier learning page.
@@ -279,4 +294,6 @@ altered:
 - saved-state identities.
 
 The canonical build currently produces 3 modules, 10 subsections, 30 exercises
-and 43 learning pages, plus Home and About (45 HTML pages in total).
+and 43 learning pages, plus Home and About (45 content pages in the sitemap).
+The generated `404.html` fallback brings the total to 46 HTML files; it is outside
+course traversal and progress.

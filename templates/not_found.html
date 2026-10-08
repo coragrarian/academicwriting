@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="project-page">
+  <div class="page-head">
+    <h1>Page not found</h1>
+    <p class="lead">The page you requested does not exist or may have moved.</p>
+  </div>
+  <nav class="not-found-actions" aria-label="Recovery">
+    <a class="action-link action-link--tertiary" href="{{ home_url }}">Return home {% include "_chevron_right.html" %}</a>
+    <a href="{{ course_url }}">Course contents</a>
+  </nav>
+</div>
+{% endblock %}

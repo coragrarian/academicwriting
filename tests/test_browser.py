@@ -702,6 +702,77 @@ def test_publication_metadata_follows_history_navigation(page, site):
     )
 
 
+def serve_not_found_candidate(page, site):
+    """Serve the fallback at a missing URL and map production assets locally.
+
+    GitHub Pages retains the missing request's URL when returning 404.html.
+    Production links must work there without contacting the deployed site.
+    """
+    page.route(site[0] + "/missing/**", lambda route: route.fulfill(
+        status=404, content_type="text/html", body=(site[1] / "404.html").read_bytes()
+    ))
+
+    def production(route):
+        relative = route.request.url.removeprefix(renderer.SITE_URL)
+        route.fulfill(response=page.request.get(site[0] + "/" + relative))
+
+    page.route(renderer.SITE_URL + "**", production)
+
+
+@pytest.mark.parametrize("javascript", [True, False])
+def test_not_found_keyboard_recovery_at_a_nested_missing_url(browser, site, javascript):
+    context = browser.new_context(java_script_enabled=javascript, reduced_motion="reduce")
+    page = context.new_page()
+    serve_not_found_candidate(page, site)
+    response = page.goto(site[0] + "/missing/deep/page")
+    assert response.status == 404
+    expect(page.locator("h1")).to_have_text("Page not found")
+    expect(page.locator("script, .course-panel, #site-data, [aria-current=page]")).to_have_count(0)
+    expect(page.locator('meta[name="robots"]')).to_have_attribute("content", "noindex")
+    expect(page.locator('link[rel="canonical"], meta[property="og:url"]')).to_have_count(0)
+    for selector in (
+        ".skip-link", ".site-name", ".course-link", ".about-link",
+        ".not-found-actions a:first-child", ".not-found-actions a:last-child",
+    ):
+        page.keyboard.press("Tab")
+        link = page.locator(selector)
+        expect(link).to_be_focused()
+        assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(renderer.SITE_URL + "#course")
+    expect(page.get_by_role("heading", name="Course contents", exact=True)).to_be_visible()
+    page.goto(site[0] + "/missing/deep/page")
+    for _ in range(5):
+        page.keyboard.press("Tab")
+    expect(page.get_by_role("link", name="Return home", exact=True)).to_be_focused()
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(renderer.SITE_URL)
+    expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
+    context.close()
+
+
+@pytest.mark.parametrize("width", [1440, 1280, 1024, 768, 375, 320])
+def test_not_found_assets_and_reflow_at_required_widths(page, site, width):
+    serve_not_found_candidate(page, site)
+    page.set_viewport_size({"width": width, "height": 900})
+    requests = []
+    page.on("request", lambda request: requests.append(request.url))
+    page.goto(site[0] + "/missing/deep/page")
+    page.evaluate("document.fonts.ready")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    for link in page.locator(".not-found-actions a").all():
+        assert link.bounding_box()["height"] >= 44
+        link.focus()
+        assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    for image in page.locator(".institution-logo").all():
+        image.scroll_into_view_if_needed()
+        expect(image).to_have_js_property("complete", True)
+        assert image.evaluate("node => node.naturalWidth > 0")
+    assert renderer.SITE_URL + "assets/styles.css" in requests
+    assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
+    expect(page.locator(".public-layout")).to_have_count(1)
+
+
 @pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
 def test_public_pages_do_not_load_course_runtime(page, site, path):
     requests = []

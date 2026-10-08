@@ -96,6 +96,21 @@ class Page(HTMLParser):
             self.scripts[self._script] += data
 
 
+def local_link_target(output: Path, page: Path, href: str) -> Path | None:
+    """Map production URLs back to output, retaining relative-link checks."""
+    target = urlsplit(href)
+    if href.startswith(PRODUCTION_URL):
+        resolved = output / unquote(urlsplit(href[len(PRODUCTION_URL):]).path)
+    elif target.scheme or target.netloc:
+        return None
+    else:
+        assert not target.path.startswith("/"), f"Unexpected host-root link: {href}"
+        resolved = page.parent / unquote(target.path) if target.path else page
+    resolved = resolved.resolve()
+    assert resolved.is_relative_to(output.resolve())
+    return resolved / "index.html" if resolved.is_dir() else resolved
+
+
 def test_complete_canonical_build(tmp_path, documents):
     output = tmp_path / "study"
     sources = {
@@ -103,7 +118,7 @@ def test_complete_canonical_build(tmp_path, documents):
     }
     build_site(documents, output)
     pages = {path: Page(path.read_text()) for path in output.rglob("*.html")}
-    assert len(pages) == 45
+    assert len(pages) == 46
     assert len([page for page in pages.values() if "answer-key" in page.scripts]) == 30
     home = (output / "index.html").read_text()
     assert (
@@ -114,7 +129,10 @@ def test_complete_canonical_build(tmp_path, documents):
     assert "site-data" not in pages[output / "index.html"].scripts
     for path, page in pages.items():
         source = path.read_text()
-        public_page = path.relative_to(output) in {Path("index.html"), Path("about/index.html")}
+        not_found = path.relative_to(output) == Path("404.html")
+        public_page = path.relative_to(output) in {
+            Path("index.html"), Path("about/index.html"), Path("404.html"),
+        }
         assert source.count("data-site-navigation") == (0 if public_page else 1)
         assert source.count("data-page-content") == 1
         about_links = [
@@ -122,7 +140,7 @@ def test_complete_canonical_build(tmp_path, documents):
             if tag == "a" and attrs.get("class") == "about-link"
         ]
         assert len(about_links) == 1
-        assert (path.parent / about_links[0]["href"]).resolve() == output / "about/index.html"
+        assert local_link_target(output, path, about_links[0]["href"]) == output / "about/index.html"
         assert "<!-- agrarian" not in source
         assert 'class="correct-answer"' not in source
         assert "[x]" not in source
@@ -146,7 +164,7 @@ def test_complete_canonical_build(tmp_path, documents):
             ) >= 30
         assert sum(
             1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
-        ) == 1
+        ) == (0 if not_found else 1)
         data = {}
         if public_page:
             assert "site-data" not in page.scripts
@@ -167,11 +185,9 @@ def test_complete_canonical_build(tmp_path, documents):
                 assert ("open" in attrs) == (node_id == f"module:{data['module']}")
         for link in page.links:
             target = urlsplit(link)
-            if target.scheme or target.netloc:
+            resolved = local_link_target(output, path, link)
+            if resolved is None:
                 continue
-            assert not target.path.startswith("/")
-            resolved = (path.parent / unquote(target.path)).resolve() if target.path else path
-            assert resolved.is_relative_to(output.resolve())
             assert resolved.is_file(), f"{path}: unresolved link {link}"
             if target.fragment:
                 assert target.fragment in pages[resolved].ids, f"{path}: missing fragment {link}"
@@ -269,7 +285,7 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
     }
     assert sum(map(len, expected_data["modules"].values())) == 30
     assert expected_data["module"] == "introduction"
-    for path in (Path("index.html"), Path("about/index.html")):
+    for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
         assert "site-data" not in page.scripts
         assert not any(tag == "script" for tag, _ in page.elements)
@@ -288,6 +304,8 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
         expected_title = "Academic Writing for Agrarian Sciences"
         if path.parent.name == "about":
             expected_title = "About · " + expected_title
+        elif path.name == "404.html":
+            expected_title = "Page not found · " + expected_title
         assert page.title == expected_title
 
 
@@ -567,6 +585,61 @@ def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, docu
     assert not list(output.rglob("*.webmanifest"))
 
 
+def test_not_found_is_a_public_fallback_with_safe_recovery_links(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    path = output / "404.html"
+    page = Page(path.read_text())
+    assert page.headings == [("h1", "Page not found")]
+    assert "The page you requested does not exist or may have moved." in path.read_text()
+    assert not page.scripts
+    assert not any(tag == "script" or "course-panel" in attrs.get("class", "").split() for tag, attrs in page.elements)
+    assert any(attrs.get("name") == "robots" and attrs.get("content") == "noindex" for _, attrs in page.elements)
+    assert not any(attrs.get("rel") == "canonical" or attrs.get("property") == "og:url" for _, attrs in page.elements)
+    assert not any(attrs.get("aria-current") == "page" for _, attrs in page.elements)
+    actions = [attrs["href"] for tag, attrs in page.regions["main"] if tag == "a"]
+    assert actions == [PRODUCTION_URL, PRODUCTION_URL + "#course"]
+    # Fixed production paths also protect the shell at arbitrary missing depths.
+    for tag, attrs in page.elements:
+        if tag in {"img", "link"}:
+            href = attrs.get("href") or attrs.get("src")
+            assert href.startswith(PRODUCTION_URL + "assets/")
+            assert local_link_target(output, path, href).is_file()
+
+
+def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    root = ET.parse(output / "sitemap.xml").getroot()
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    assert root.tag == namespace + "urlset"
+    urls = [node.find(namespace + "loc").text for node in root]
+    paths = ["", "about/"]
+    for document in sorted(documents, key=lambda doc: (doc.order, doc.slug)):
+        paths.append(f"{document.slug}/")
+        for section in document.sections:
+            paths.append(f"{document.slug}/{section.slug}/")
+            paths.extend(f"{document.slug}/{section.slug}/{exercise.slug}/" for exercise in section.exercises)
+    assert len(urls) == len(set(urls)) == 45
+    assert urls == [PRODUCTION_URL + path for path in paths]
+    for node in root:
+        assert node.tag == namespace + "url"
+        assert [child.tag for child in node] == [namespace + "loc"]
+    assert not any("404" in url or "localhost" in url or "127.0.0.1" in url for url in urls)
+    for url in urls:
+        assert url.startswith(PRODUCTION_URL) and url.endswith("/")
+        assert local_link_target(output, output / "index.html", url).is_file()
+    assert not (output / "robots.txt").exists()
+
+
+def test_sitemap_follows_a_reduced_course_without_adding_the_fallback(tmp_path, methods):
+    output = tmp_path / "site"
+    build_site(methods, output)
+    urls = [node.text for node in ET.parse(output / "sitemap.xml").iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    assert len(urls) == 2 + 1 + len(methods.sections) + sum(len(section.exercises) for section in methods.sections)
+    assert not any("introduction/" in url or "results/" in url or "404" in url for url in urls)
+
+
 def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):
     output = tmp_path / "site"
     build_site(documents, output)
@@ -637,7 +710,7 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, p
 def test_single_module_build_remains_available(tmp_path, methods):
     output = tmp_path / "site"
     build_site(methods, output)
-    assert len(list(output.rglob("*.html"))) == 12
+    assert len(list(output.rglob("*.html"))) == 13
     assert (output / "about/index.html").is_file()
     last = methods.sections[-1].exercises[-1]
     path = output / methods.slug / methods.sections[-1].slug / last.slug / "index.html"
@@ -800,7 +873,7 @@ def test_presentation_order_does_not_restrict_alternative_module_sources(tmp_pat
     )
     output = tmp_path / "site"
     build_site(parse_document(source), output)
-    assert len(list(output.rglob("*.html"))) == 5
+    assert len(list(output.rglob("*.html"))) == 6
     assert (output / "about/index.html").is_file()
 
 
@@ -834,8 +907,9 @@ def test_normal_cli_discovers_all_modules(tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert "HTML pages: 45" in result.stdout
-    assert len(list((tmp_path / "site").rglob("*.html"))) == 45
+    assert "Learning pages: 43" in result.stdout
+    assert "Content pages: 45; HTML files including 404: 46" in result.stdout
+    assert len(list((tmp_path / "site").rglob("*.html"))) == 46
 
 
 def test_context_and_instructions_are_outside_cards(tmp_path, methods):

@@ -157,6 +157,8 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .contents-copy { min-width: 0; }
 .contents-title { display: block; font-family: var(--font-serif); font-size-adjust: none; font-size: var(--text-h2); line-height: 1.25; overflow-wrap: anywhere; }
 .contents-counts { display: block; margin-top: .25rem; color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
+.not-found-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-text); }
+.not-found-actions > a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .about-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(14rem, 2fr); gap: var(--space-section) var(--space-group); align-items: start; }
 .project-page--about .prose { --reading-measure: 80ch; }
 .about-layout > .resource-section { grid-column: 1 / -1; }
