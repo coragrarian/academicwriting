@@ -226,10 +226,11 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .overview-number { color: var(--muted); font-size: var(--text-small); }
 .overview-progress { color: var(--muted); font-size: var(--text-small); text-align: right; white-space: nowrap; }
 .overview-progress small { display: block; font-size: var(--text-meta); }
-.exercise-list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: .5rem; overflow: hidden; }
+.exercise-list { margin: 0; padding: 0; list-style: none; }
 .exercise-list li + li { border-top: 1px solid var(--line); }
-.exercise-list a { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.2rem; font-size: var(--text-ui); text-decoration: none; color: var(--ink); }
-.exercise-list a:hover { background: var(--wash); }
+.exercise-list a { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; padding: var(--space-text) .25rem; font-size: var(--text-ui); text-decoration: none; color: var(--ink); }
+.exercise-list a > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+.exercise-list a:hover, .exercise-list a:focus-visible { background: var(--wash); }
 .list-arrow { margin-left: auto; }
 .nav-chevron { --chevron-shift: 2px; display: inline-block; width: .85em; height: .85em; flex: none; align-self: center; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms ease; }
 .nav-chevron--left { --chevron-shift: -2px; }
@@ -309,6 +310,8 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid #a9b8af; bor
 .page-navigation { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 1rem; }
 .page-navigation a { font-size: var(--text-ui); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
 .page-navigation a:last-child { text-align: right; margin-left: auto; }
+/* Overview lists already have a heading rule and separators between entries. */
+.course-overview + .page-navigation { border-top: 0; margin-top: var(--space-group); padding-top: var(--space-small); }
 /* Responsive layout and contents disclosure */
 @media (max-width: 48rem) {
   /* Allow enlarged header text to wrap before it can overlap adjacent links. */

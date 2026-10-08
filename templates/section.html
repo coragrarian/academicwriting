@@ -8,7 +8,7 @@
   <div class="prose lead">{{ section.introduction_html | safe }}</div>
   <p class="section-count"><span data-progress-section="{{ section.slug }}" data-progress-module-id="{{ document.slug }}">0/{{ section.exercises | length }}</span> exercises completed</p>
 </div>
-<section aria-labelledby="exercises-heading">
+<section class="course-overview" aria-labelledby="exercises-heading">
   <h2 id="exercises-heading" class="section-heading">Exercises</h2>
   <ol class="exercise-list">
     {% for current in section.exercises %}

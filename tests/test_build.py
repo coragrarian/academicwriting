@@ -199,6 +199,17 @@ def test_complete_canonical_build(tmp_path, documents):
         assert (output / document.slug / "index.html").is_file()
         for section in document.sections:
             overview = pages[output / document.slug / section.slug / "index.html"]
+            exercise_links = [
+                attrs for tag, attrs in overview.regions["main"]
+                if tag == "a" and "data-exercise-link" in attrs
+            ]
+            assert [
+                (link["data-exercise-link"], link["data-module-id"], link["href"])
+                for link in exercise_links
+            ] == [
+                (exercise.id, document.slug, f"{exercise.slug}/index.html")
+                for exercise in section.exercises
+            ]
             assert any(
                 attrs.get("aria-current") == "page" and attrs.get("href") == "index.html"
                 for _, attrs in overview.elements

@@ -594,6 +594,65 @@ def test_global_course_tree_remains_usable_without_javascript(browser, site):
     context.close()
 
 
+@pytest.mark.parametrize(("module", "section", "count"), [
+    ("introduction", "the-introduction-section-of-research-papers", 1),
+    ("methods", "grammar-and-vocabulary-in-the-methods-section", 4),
+])
+def test_overview_rows_preserve_keyboard_progress_and_history(page, site, module, section, count):
+    overview = f"{site[0]}/{module}/{section}/index.html"
+    page.goto(overview)
+    rows = page.locator(".exercise-list a")
+    expect(rows).to_have_count(count)
+    for number, row in enumerate(rows.all(), 1):
+        expect(row).to_have_attribute("data-exercise-link", f"{module}--{section}--exercise-{number}")
+        expect(row).to_have_attribute("data-module-id", module)
+        expect(row).to_have_attribute("href", f"exercise-{number}/index.html")
+        expect(row.locator(".state-dot")).to_have_attribute("aria-hidden", "true")
+    navigation = page.locator(".page-navigation a").evaluate_all(
+        "nodes => nodes.map(n => [n.href, n.rel, n.textContent.trim()])"
+    )
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    for _ in range(12):
+        page.keyboard.press("Tab")
+        if rows.first.evaluate("node => node === document.activeElement"):
+            break
+    expect(rows.first).to_be_focused()
+    assert rows.first.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    page.evaluate("window.overviewProbe = 29")
+    first_exercise = rows.first.evaluate("node => node.href")
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(first_exercise)
+    expect(page.locator("#exercise-form")).to_have_attribute("data-exercise-initialised", "true")
+    respond(page, json.loads(page.locator("#answer-key").text_content()))
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.locator('.page-navigation a[rel="prev"]').click()
+    expect(page).to_have_url(overview)
+    assert page.evaluate("window.overviewProbe") == 29
+    expect(rows.first).to_have_attribute("data-status", "completed")
+    expect(rows.first).to_have_accessible_name("Exercise 1: Completed")
+    expect(page.locator(".section-count")).to_have_text(f"1/{count} exercises completed")
+    assert page.locator(".page-navigation a").evaluate_all(
+        "nodes => nodes.map(n => [n.href, n.rel, n.textContent.trim()])"
+    ) == navigation
+    page.go_back()
+    expect(page).to_have_url(first_exercise)
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.go_forward()
+    expect(page).to_have_url(overview)
+    expect(rows.first).to_have_attribute("data-status", "completed")
+    for width in (1280, 1024, 768, 375, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        assert page.locator(".page-navigation").bounding_box()["y"] > (
+            rows.last.bounding_box()["y"] + rows.last.bounding_box()["height"]
+        )
+        for row in rows.all():
+            assert row.bounding_box()["height"] >= 44
+
+
 def test_about_uses_full_navigation_and_preserves_learner_state(page, site):
     key = open_exercise(page, site, "methods", "purpose-of-the-methods-section", 1)
     respond(page, key)
