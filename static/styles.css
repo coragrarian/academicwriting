@@ -264,16 +264,16 @@ a:hover .nav-chevron, a:focus-visible .nav-chevron { transform: translateX(var(-
 /* Response controls and correctness states */
 .choice-question { min-width: 0; border: 0; padding: 0; margin: var(--space-block) 0 .4rem; }
 .choice-question legend { font-weight: 600; font-size: var(--text-small); color: var(--muted); margin-bottom: var(--space-small); }
-.choice-option { display: flex; gap: .8rem; align-items: start; border: 1px solid var(--line); border-radius: .4rem; padding: .75rem .9rem; margin-bottom: .5rem; cursor: pointer; font-size: var(--text-ui); line-height: 1.45; }
+.choice-option { display: flex; gap: .8rem; align-items: start; padding: .75rem .9rem; margin-bottom: .5rem; cursor: pointer; font-size: var(--text-ui); line-height: 1.45; }
 .choice-option > span { min-width: 0; overflow-wrap: anywhere; }
-.choice-option:hover { border-color: #a9b8af; background: #f5f7f5; }
-.choice-option:has(input:checked) { border-color: #8e9d96; background: #edf1f0; }
+.choice-option:hover { background: #f5f7f5; }
+.choice-option:has(input:checked) { background: #edf1f0; }
 .choice-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 .choice-option input { accent-color: #64716c; margin-top: .27rem; flex: 0 0 auto; }
-.exercise-item .choice-option { border: 0; padding: .65rem .55rem; margin-bottom: .35rem; }
-.choice-question[data-result="correct"] .choice-option:has(input:checked) { border-color: #78a293; background: #f3f8f5; }
+.exercise-item .choice-option { padding: .65rem .55rem; margin-bottom: .35rem; }
+.choice-question[data-result="correct"] .choice-option:has(input:checked) { background: #f3f8f5; }
 .choice-question[data-result="correct"] input:checked { accent-color: var(--accent); }
-.choice-question[data-result="incorrect"] .choice-option:has(input:checked) { border-color: #8b4926; background: #fff0e5; }
+.choice-question[data-result="incorrect"] .choice-option:has(input:checked) { background: #fff0e5; }
 .choice-question[data-result="incorrect"] input:checked { accent-color: #8b4926; }
 select { max-width: 100%; padding: .44rem .65rem; border: 1px solid #a9b8af; border-radius: .3rem; color: var(--ink); background: white; }
 .inline-select { display: inline-block; vertical-align: baseline; width: auto; min-width: 0; max-width: calc(100% - .3rem); font-size: .93em; margin: .08rem .15rem; }
