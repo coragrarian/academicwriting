@@ -919,6 +919,14 @@ def test_publication_reflow_including_enlarged_text(page, site, width, text_scal
             label = option.bounding_box()
             text = option.locator("span").first.bounding_box()
             assert text["x"] + text["width"] <= label["x"] + label["width"] + 1, path
+        for question in page.locator(".matching-question").all():
+            row = question.bounding_box()
+            label = question.locator("label").bounding_box()
+            assert label["width"] >= row["width"] / 2, path
+        for table in page.locator(".matching-sentences").all():
+            width_available = table.bounding_box()["width"]
+            text = table.locator("tbody td:nth-child(2)").first.bounding_box()
+            assert text["width"] >= 0.6 * width_available, path
 
 
 @pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
