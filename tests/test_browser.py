@@ -9,6 +9,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from itertools import pairwise
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -58,8 +59,10 @@ def page(browser):
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     yield page
-    assert not errors, errors
-    context.close()
+    try:
+        assert not errors, errors
+    finally:
+        context.close()
 
 
 def open_exercise(page, site, module, section, number):
@@ -772,8 +775,13 @@ def serve_not_found_candidate(page, site):
     ))
 
     def production(route):
-        relative = route.request.url.removeprefix(renderer.SITE_URL)
-        route.fulfill(response=page.request.get(site[0] + "/" + relative))
+        # Avoid request-context APIResponse objects outliving 404 recovery.
+        relative = unquote(urlsplit(route.request.url.removeprefix(renderer.SITE_URL)).path)
+        target = (site[1] / relative).resolve()
+        assert target.is_relative_to(site[1].resolve())
+        if target.is_dir():
+            target /= "index.html"
+        route.fulfill(path=target)
 
     page.route(renderer.SITE_URL + "**", production)
 
