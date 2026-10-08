@@ -9,6 +9,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from itertools import pairwise
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -58,8 +59,10 @@ def page(browser):
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     yield page
-    assert not errors, errors
-    context.close()
+    try:
+        assert not errors, errors
+    finally:
+        context.close()
 
 
 def open_exercise(page, site, module, section, number):
@@ -276,7 +279,7 @@ def test_public_gateway_preserves_independent_module_progress(page, site):
     expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
     assert page.evaluate("window.fullNavigationProbe") is None
     expect(page.locator(".course-panel, [data-progress-other-module], [data-progress-module]")).to_have_count(0)
-    page.locator(".programme-link").first.click()
+    page.locator(".contents-link").first.click()
     expect(page.locator("h1")).to_have_text("The Introduction section")
     for module, total in [("introduction", 14), ("methods", 7), ("results", 9)]:
         expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(
@@ -585,13 +588,72 @@ def test_global_course_tree_remains_usable_without_javascript(browser, site):
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
     page.goto(site[0] + "/index.html")
-    page.locator(".programme-link").first.click()
+    page.locator(".contents-link").first.click()
     page.locator('[data-nav-node="module:results"] > summary').click()
     page.locator('[data-nav-node="section:results:grammar-and-vocabulary-in-the-results-section"] > summary').click()
     page.locator('.course-panel [data-exercise-link="results--grammar-and-vocabulary-in-the-results-section--exercise-3"]').click()
     expect(page.locator("h1")).to_have_text("Exercise 3")
     expect(page.locator(".worked-model")).to_be_visible()
     context.close()
+
+
+@pytest.mark.parametrize(("module", "section", "count"), [
+    ("introduction", "the-introduction-section-of-research-papers", 1),
+    ("methods", "grammar-and-vocabulary-in-the-methods-section", 4),
+])
+def test_overview_rows_preserve_keyboard_progress_and_history(page, site, module, section, count):
+    overview = f"{site[0]}/{module}/{section}/index.html"
+    page.goto(overview)
+    rows = page.locator(".exercise-list a")
+    expect(rows).to_have_count(count)
+    for number, row in enumerate(rows.all(), 1):
+        expect(row).to_have_attribute("data-exercise-link", f"{module}--{section}--exercise-{number}")
+        expect(row).to_have_attribute("data-module-id", module)
+        expect(row).to_have_attribute("href", f"exercise-{number}/index.html")
+        expect(row.locator(".state-dot")).to_have_attribute("aria-hidden", "true")
+    navigation = page.locator(".page-navigation a").evaluate_all(
+        "nodes => nodes.map(n => [n.href, n.rel, n.textContent.trim()])"
+    )
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    for _ in range(12):
+        page.keyboard.press("Tab")
+        if rows.first.evaluate("node => node === document.activeElement"):
+            break
+    expect(rows.first).to_be_focused()
+    assert rows.first.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    page.evaluate("window.overviewProbe = 29")
+    first_exercise = rows.first.evaluate("node => node.href")
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(first_exercise)
+    expect(page.locator("#exercise-form")).to_have_attribute("data-exercise-initialised", "true")
+    respond(page, json.loads(page.locator("#answer-key").text_content()))
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.locator('.page-navigation a[rel="prev"]').click()
+    expect(page).to_have_url(overview)
+    assert page.evaluate("window.overviewProbe") == 29
+    expect(rows.first).to_have_attribute("data-status", "completed")
+    expect(rows.first).to_have_accessible_name("Exercise 1: Completed")
+    expect(page.locator(".section-count")).to_have_text(f"1/{count} exercises completed")
+    assert page.locator(".page-navigation a").evaluate_all(
+        "nodes => nodes.map(n => [n.href, n.rel, n.textContent.trim()])"
+    ) == navigation
+    page.go_back()
+    expect(page).to_have_url(first_exercise)
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.go_forward()
+    expect(page).to_have_url(overview)
+    expect(rows.first).to_have_attribute("data-status", "completed")
+    for width in (1280, 1024, 768, 375, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        assert page.locator(".page-navigation").bounding_box()["y"] > (
+            rows.last.bounding_box()["y"] + rows.last.bounding_box()["height"]
+        )
+        for row in rows.all():
+            assert row.bounding_box()["height"] >= 44
 
 
 def test_about_uses_full_navigation_and_preserves_learner_state(page, site):
@@ -619,7 +681,7 @@ def test_about_uses_full_navigation_and_preserves_learner_state(page, site):
     page.locator(".site-name").click()
     expect(page.locator(".course-panel, [data-progress-other-module]")).to_have_count(0)
     assert page.evaluate("JSON.stringify({...localStorage})") == storage
-    page.locator(".programme-link").first.click()
+    page.locator(".contents-link").first.click()
     expect(page.locator('[data-progress-module="methods"]')).to_have_text("1/7")
     assert page.evaluate("JSON.stringify({...localStorage})") == storage
 
@@ -632,7 +694,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
     page.keyboard.press("Enter")
     assert page.url.endswith("#main")
-    page.locator(".programme-link").first.click()
+    page.locator(".contents-link").first.click()
     assert page.url == f"{site[0]}/introduction/index.html"
     expect(page.locator("h1")).to_have_text("The Introduction section")
     expect(page.locator(".course-panel")).to_be_visible()
@@ -654,6 +716,217 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     assert page.url == f"{site[0]}/about/index.html"
     expect(page.locator("#team .person--pending")).to_have_count(6)
     context.close()
+
+
+def test_home_contents_keyboard_focus_and_module_entry(page, site):
+    for index, module in enumerate(("introduction", "methods", "results")):
+        page.goto(site[0] + "/index.html")
+        # The skip link and three header links precede the ordered course rows.
+        for _ in range(5 + index):
+            page.keyboard.press("Tab")
+        row = page.locator(".contents-link").nth(index)
+        expect(row).to_be_focused()
+        assert row.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+        expect(row.locator(".nav-chevron")).to_be_visible()
+        page.keyboard.press("Enter")
+        expect(page).to_have_url(f"{site[0]}/{module}/index.html")
+        expect(page.locator("h1")).to_have_text(f"The {module.title()} section")
+
+
+def test_publication_metadata_follows_history_navigation(page, site):
+    page.goto(site[0] + "/methods/index.html")
+    page.evaluate("window.metadataNavigationProbe = 29")
+    for path in (
+        "methods/purpose-of-the-methods-section/",
+        "methods/purpose-of-the-methods-section/exercise-1/",
+        "methods/purpose-of-the-methods-section/exercise-2/",
+    ):
+        page.locator('.page-navigation a[rel="next"]').click()
+        expect(page.locator('link[rel="canonical"]')).to_have_attribute(
+            "href", "https://coragrarian.github.io/academicwriting/" + path
+        )
+        assert page.evaluate("window.metadataNavigationProbe") == 29
+        for selector in ('meta[property="og:title"]', 'meta[name="twitter:title"]'):
+            expect(page.locator(selector)).to_have_attribute("content", page.title())
+        expect(page.locator('link[rel="icon"]')).to_have_attribute(
+            "href", site[0] + "/assets/favicon.svg"
+        )
+    page.go_back()
+    expect(page.locator('link[rel="canonical"]')).to_have_attribute(
+        "href", "https://coragrarian.github.io/academicwriting/methods/purpose-of-the-methods-section/exercise-1/"
+    )
+    expect(page.locator('meta[name="description"]')).to_have_attribute(
+        "content", "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”."
+    )
+    page.go_forward()
+    expect(page.locator('meta[property="og:url"]')).to_have_attribute(
+        "content", "https://coragrarian.github.io/academicwriting/methods/purpose-of-the-methods-section/exercise-2/"
+    )
+
+
+def serve_not_found_candidate(page, site):
+    """Serve the fallback at a missing URL and map production assets locally.
+
+    GitHub Pages retains the missing request's URL when returning 404.html.
+    Production links must work there without contacting the deployed site.
+    """
+    page.route(site[0] + "/missing/**", lambda route: route.fulfill(
+        status=404, content_type="text/html", body=(site[1] / "404.html").read_bytes()
+    ))
+
+    def production(route):
+        # Avoid request-context APIResponse objects outliving 404 recovery.
+        relative = unquote(urlsplit(route.request.url.removeprefix(renderer.SITE_URL)).path)
+        target = (site[1] / relative).resolve()
+        assert target.is_relative_to(site[1].resolve())
+        if target.is_dir():
+            target /= "index.html"
+        route.fulfill(path=target)
+
+    page.route(renderer.SITE_URL + "**", production)
+
+
+@pytest.mark.parametrize("javascript", [True, False])
+def test_not_found_keyboard_recovery_at_a_nested_missing_url(browser, site, javascript):
+    context = browser.new_context(java_script_enabled=javascript, reduced_motion="reduce")
+    page = context.new_page()
+    serve_not_found_candidate(page, site)
+    response = page.goto(site[0] + "/missing/deep/page")
+    assert response.status == 404
+    expect(page.locator("h1")).to_have_text("Page not found")
+    expect(page.locator("script, .course-panel, #site-data, [aria-current=page]")).to_have_count(0)
+    expect(page.locator('meta[name="robots"]')).to_have_attribute("content", "noindex")
+    expect(page.locator('link[rel="canonical"], meta[property="og:url"]')).to_have_count(0)
+    for selector in (
+        ".skip-link", ".site-name", ".course-link", ".about-link",
+        ".not-found-actions a:first-child", ".not-found-actions a:last-child",
+    ):
+        page.keyboard.press("Tab")
+        link = page.locator(selector)
+        expect(link).to_be_focused()
+        assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(renderer.SITE_URL + "#course")
+    expect(page.get_by_role("heading", name="Course contents", exact=True)).to_be_visible()
+    page.goto(site[0] + "/missing/deep/page")
+    for _ in range(5):
+        page.keyboard.press("Tab")
+    expect(page.get_by_role("link", name="Return home", exact=True)).to_be_focused()
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(renderer.SITE_URL)
+    expect(page.locator("h1")).to_have_text("Academic Writing for Agrarian Sciences")
+    context.close()
+
+
+@pytest.mark.parametrize("width", [1440, 1280, 1024, 768, 375, 320])
+def test_not_found_assets_and_reflow_at_required_widths(page, site, width):
+    serve_not_found_candidate(page, site)
+    page.set_viewport_size({"width": width, "height": 900})
+    requests = []
+    page.on("request", lambda request: requests.append(request.url))
+    page.goto(site[0] + "/missing/deep/page")
+    page.evaluate("document.fonts.ready")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    for link in page.locator(".not-found-actions a").all():
+        assert link.bounding_box()["height"] >= 44
+        link.focus()
+        assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    for image in page.locator(".institution-logo").all():
+        image.scroll_into_view_if_needed()
+        expect(image).to_have_js_property("complete", True)
+        assert image.evaluate("node => node.naturalWidth > 0")
+    assert renderer.SITE_URL + "assets/styles.css" in requests
+    assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
+    expect(page.locator(".public-layout")).to_have_count(1)
+
+
+PUBLICATION_PAGES = (
+    "index.html", "about/index.html", "404.html", "methods/index.html",
+    "methods/purpose-of-the-methods-section/index.html",
+    "methods/purpose-of-the-methods-section/exercise-1/index.html",
+    "introduction/indicating-a-research-gap/exercise-1/index.html",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-3/index.html",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/index.html",
+    "introduction/the-introduction-section-of-research-papers/exercise-1/index.html",
+)
+
+
+@pytest.mark.parametrize("path", PUBLICATION_PAGES)
+def test_publication_headings_accessible_names_and_skip_target(page, site, path):
+    serve_not_found_candidate(page, site)
+    page.goto(site[0] + "/" + path)
+    headings = page.locator("h1,h2,h3,h4,h5,h6").evaluate_all(
+        "nodes => nodes.map(node => ({level: +node.tagName[1], text: node.textContent.trim()}))"
+    )
+    levels = [heading["level"] for heading in headings]
+    assert levels.count(1) == 1 and levels[0] == 1
+    assert all(heading["text"] for heading in headings)
+    assert all(current <= previous + 1 for previous, current in pairwise(levels))
+    # Chromium's accessibility tree checks computed names, including native
+    # labels/legends and aria-labels, rather than guessing from HTML attributes.
+    session = page.context.new_cdp_session(page)
+    tree = session.send("Accessibility.getFullAXTree")["nodes"]
+    session.detach()
+    named_roles = {"link", "button", "textbox", "combobox", "radio", "checkbox", "image"}
+    for node in tree:
+        if not node.get("ignored") and node.get("role", {}).get("value") in named_roles:
+            assert node.get("name", {}).get("value", "").strip(), node
+    assert page.locator("[aria-describedby]").evaluate_all(
+        r"nodes => nodes.every(node => node.getAttribute('aria-describedby').split(/\s+/).every(id => document.getElementById(id)))"
+    )
+    expect(page.locator(".github-mark")).to_have_attribute("aria-hidden", "true")
+    expect(page.locator(".github-mark")).to_have_attribute("focusable", "false")
+    assert page.locator(".nav-chevron").evaluate_all(
+        "nodes => nodes.every(node => getComputedStyle(node).transitionDuration === '0s')"
+    )
+    if page.locator("#exercise-form").count():
+        expect(page.locator("#exercise-feedback")).to_have_attribute("role", "status")
+        expect(page.locator("#exercise-feedback")).to_have_attribute("aria-live", "polite")
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    page.keyboard.press("Tab")
+    assert page.locator(":focus").evaluate("node => !!node.closest('main')")
+
+
+@pytest.mark.parametrize(("width", "text_scale"), [
+    (1440, 1), (1280, 1), (1024, 1), (768, 1), (375, 1), (320, 1),
+    (1280, 2), (320, 2),
+])
+def test_publication_reflow_including_enlarged_text(page, site, width, text_scale):
+    serve_not_found_candidate(page, site)
+    page.set_viewport_size({"width": width, "height": 900})
+    for path in PUBLICATION_PAGES:
+        page.goto(site[0] + "/" + path)
+        if text_scale == 2:
+            page.add_style_tag(content="html { font-size: 200%; }")
+        page.evaluate("document.fonts.ready")
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        header_links = [link.bounding_box() for link in page.locator(".site-header a").all()]
+        for index, first in enumerate(header_links):
+            assert first["width"] > 0 and first["height"] > 0, path
+            assert first["x"] >= 0 and first["x"] + first["width"] <= width, path
+            for second in header_links[index + 1:]:
+                assert (
+                    first["x"] + first["width"] <= second["x"]
+                    or second["x"] + second["width"] <= first["x"]
+                    or first["y"] + first["height"] <= second["y"]
+                    or second["y"] + second["height"] <= first["y"]
+                ), path
+        repository = page.locator(".footer-links").bounding_box()
+        assert repository["x"] >= 0 and repository["x"] + repository["width"] <= width
+        for option in page.locator(".choice-option").all():
+            label = option.bounding_box()
+            text = option.locator("span").first.bounding_box()
+            assert text["x"] + text["width"] <= label["x"] + label["width"] + 1, path
+        for question in page.locator(".matching-question").all():
+            row = question.bounding_box()
+            label = question.locator("label").bounding_box()
+            assert label["width"] >= row["width"] / 2, path
+        for table in page.locator(".matching-sentences").all():
+            width_available = table.bounding_box()["width"]
+            text = table.locator("tbody td:nth-child(2)").first.bounding_box()
+            assert text["width"] >= 0.6 * width_available, path
 
 
 @pytest.mark.parametrize("path", ["/index.html", "/about/index.html"])
@@ -803,7 +1076,7 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     assert page.evaluate("window.footerProbe") is None
 
 
-@pytest.mark.parametrize("width", [1280, 1024, 768, 375, 320])
+@pytest.mark.parametrize("width", [1440, 1280, 1024, 768, 375, 320])
 def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
@@ -883,33 +1156,31 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             expect(page.locator(".project-actions, .project-start, .page-head a")).to_have_count(0)
             expect(page.get_by_role("link", name="Start the course", exact=True)).to_have_count(0)
             expect(page.get_by_role("link", name="About the project", exact=True)).to_have_count(0)
-            expect(page.locator("#course .programme-link")).to_have_count(3)
-            assert [link.inner_text().strip() for link in page.locator(".programme-link").all()] == [
-                "Start here", "Explore", "Explore",
+            expect(page.locator("#course .contents-link")).to_have_count(3)
+            assert page.locator(".contents-title").all_text_contents() == [
+                "Introduction", "Methods", "Results",
             ]
+            expect(page.locator("#course button, #course .action-link, .page-head .eyebrow")).to_have_count(0)
+            expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
+            expect(page.locator(".page-head .lead")).to_have_text(
+                "An interactive self-study resource for students and researchers writing research articles in the Agrarian Sciences."
+            )
             expect(page.get_by_role("link", name="About the research project", exact=True)).to_have_attribute(
                 "href", "about/index.html"
             )
-            assert page.locator(".programme-number").all_text_contents() == ["01", "02", "03"]
-            assert page.locator(".programme-counts span").all_text_contents() == [
-                "6 subsections", "14 exercises", "2 subsections", "7 exercises", "2 subsections", "9 exercises",
+            assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03"]
+            assert page.locator(".contents-counts").all_text_contents() == [
+                "6 subsections · 14 exercises", "2 subsections · 7 exercises", "2 subsections · 9 exercises",
             ]
-            start = page.locator(".programme-link").first
+            start = page.locator(".contents-link").first
             expect(start).to_have_attribute("href", "introduction/index.html")
             assert start.bounding_box()["height"] >= 44
-            columns = [column.bounding_box() for column in page.locator(".programme-module").all()]
-            if width >= 768:
-                assert [column["y"] for column in columns] == pytest.approx([columns[0]["y"]] * 3)
-                assert all(
-                    following["x"] >= current["x"] + current["width"]
-                    for current, following in pairwise(columns)
-                )
-            else:
-                assert all(
-                    following["y"] >= current["y"] + current["height"]
-                    for current, following in pairwise(columns)
-                )
-            for link in page.locator(".programme-link").all():
+            rows = [row.bounding_box() for row in page.locator(".contents-link").all()]
+            assert all(
+                following["y"] >= current["y"] + current["height"]
+                for current, following in pairwise(rows)
+            )
+            for link in page.locator(".contents-link").all():
                 assert link.bounding_box()["height"] >= 44
                 link.focus()
                 assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
@@ -949,7 +1220,7 @@ def test_authorised_content_changes_preserve_existing_progress(page, site):
       }));
     }""")
     page.reload()
-    page.locator(".programme-link").first.click()
+    page.locator(".contents-link").first.click()
     expect(page.locator('[data-progress-module="introduction"]')).to_have_text("2/14")
     expect(page.locator('.course-panel [data-progress-section="grammar-and-vocabulary-in-the-introduction-section"]')).to_have_text("1/3")
     saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:introduction'))")

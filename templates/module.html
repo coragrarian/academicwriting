@@ -6,7 +6,7 @@
   <h1>{{ document.title }}</h1>
   {% if document.introduction_html %}<div class="prose">{{ document.introduction_html | safe }}</div>{% endif %}
 </div>
-<section aria-labelledby="subsections-heading">
+<section class="course-overview" aria-labelledby="subsections-heading">
   <h2 id="subsections-heading" class="section-heading">Subsections</h2>
   <ol class="overview-list overview-list--numbered">
     {% for section in document.sections %}

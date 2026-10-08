@@ -2,22 +2,24 @@
 {% block content %}
 <div class="project-page project-page--home">
 <div class="page-head">
-  <p class="eyebrow">Interactive self-study</p>
   <h1>Academic Writing for Agrarian Sciences</h1>
-  <p class="lead">A self-study resource for students and researchers writing research articles in the Agrarian Sciences.</p>
+  <p class="lead">An interactive self-study resource for students and researchers writing research articles in the Agrarian Sciences.</p>
 </div>
 <section id="course" class="resource-section" aria-labelledby="modules-heading">
-  <h2 id="modules-heading" class="section-heading">Explore the course</h2>
-  <ol class="course-programme">
+  <h2 id="modules-heading" class="section-heading">Course contents</h2>
+  <ol class="course-contents" role="list">
   {% for module in documents %}
     {% set subsection_count = module.sections | length %}
     {% set exercise_count = module_exercise_counts[module.slug] %}
-    {% set entry_label = 'Start here' if loop.first else 'Explore' %}
-    <li class="programme-module">
-      <span class="programme-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
-      <h3>{{ module.title }}</h3>
-      <p class="programme-counts"><span>{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %}</span><span>{{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span></p>
-      <a class="programme-link action-link action-link--{{ 'primary' if loop.first else 'secondary' }}" href="{{ module_link(module) }}" aria-label="{{ entry_label }}: {{ module.title }}">{{ entry_label }} {% include "_chevron_right.html" %}</a>
+    <li>
+      <a class="contents-link" href="{{ module_link(module) }}">
+        <span class="contents-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
+        <span class="contents-copy">
+          <strong class="contents-title">{{ home_module_title(module.title) }}</strong>
+          <span class="contents-counts">{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %} · {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span>
+        </span>
+        {% include "_chevron_right.html" %}
+      </a>
     </li>
   {% endfor %}
   </ol>

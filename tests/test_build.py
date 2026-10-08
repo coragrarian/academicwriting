@@ -2,8 +2,10 @@
 
 import json
 import shutil
+import struct
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import replace
 from hashlib import sha256
 from html.parser import HTMLParser
@@ -16,6 +18,8 @@ from conftest import ROOT
 from agrarian_builder import renderer
 from agrarian_builder.parser import parse_document
 from agrarian_builder.renderer import build_site
+
+PRODUCTION_URL = "https://coragrarian.github.io/academicwriting/"
 
 
 class Page(HTMLParser):
@@ -92,6 +96,21 @@ class Page(HTMLParser):
             self.scripts[self._script] += data
 
 
+def local_link_target(output: Path, page: Path, href: str) -> Path | None:
+    """Map production URLs back to output, retaining relative-link checks."""
+    target = urlsplit(href)
+    if href.startswith(PRODUCTION_URL):
+        resolved = output / unquote(urlsplit(href[len(PRODUCTION_URL):]).path)
+    elif target.scheme or target.netloc:
+        return None
+    else:
+        assert not target.path.startswith("/"), f"Unexpected host-root link: {href}"
+        resolved = page.parent / unquote(target.path) if target.path else page
+    resolved = resolved.resolve()
+    assert resolved.is_relative_to(output.resolve())
+    return resolved / "index.html" if resolved.is_dir() else resolved
+
+
 def test_complete_canonical_build(tmp_path, documents):
     output = tmp_path / "study"
     sources = {
@@ -99,7 +118,7 @@ def test_complete_canonical_build(tmp_path, documents):
     }
     build_site(documents, output)
     pages = {path: Page(path.read_text()) for path in output.rglob("*.html")}
-    assert len(pages) == 45
+    assert len(pages) == 46
     assert len([page for page in pages.values() if "answer-key" in page.scripts]) == 30
     home = (output / "index.html").read_text()
     assert (
@@ -110,7 +129,10 @@ def test_complete_canonical_build(tmp_path, documents):
     assert "site-data" not in pages[output / "index.html"].scripts
     for path, page in pages.items():
         source = path.read_text()
-        public_page = path.relative_to(output) in {Path("index.html"), Path("about/index.html")}
+        not_found = path.relative_to(output) == Path("404.html")
+        public_page = path.relative_to(output) in {
+            Path("index.html"), Path("about/index.html"), Path("404.html"),
+        }
         assert source.count("data-site-navigation") == (0 if public_page else 1)
         assert source.count("data-page-content") == 1
         about_links = [
@@ -118,7 +140,7 @@ def test_complete_canonical_build(tmp_path, documents):
             if tag == "a" and attrs.get("class") == "about-link"
         ]
         assert len(about_links) == 1
-        assert (path.parent / about_links[0]["href"]).resolve() == output / "about/index.html"
+        assert local_link_target(output, path, about_links[0]["href"]) == output / "about/index.html"
         assert "<!-- agrarian" not in source
         assert 'class="correct-answer"' not in source
         assert "[x]" not in source
@@ -142,7 +164,7 @@ def test_complete_canonical_build(tmp_path, documents):
             ) >= 30
         assert sum(
             1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
-        ) == 1
+        ) == (0 if not_found else 1)
         data = {}
         if public_page:
             assert "site-data" not in page.scripts
@@ -163,11 +185,9 @@ def test_complete_canonical_build(tmp_path, documents):
                 assert ("open" in attrs) == (node_id == f"module:{data['module']}")
         for link in page.links:
             target = urlsplit(link)
-            if target.scheme or target.netloc:
+            resolved = local_link_target(output, path, link)
+            if resolved is None:
                 continue
-            assert not target.path.startswith("/")
-            resolved = (path.parent / unquote(target.path)).resolve() if target.path else path
-            assert resolved.is_relative_to(output.resolve())
             assert resolved.is_file(), f"{path}: unresolved link {link}"
             if target.fragment:
                 assert target.fragment in pages[resolved].ids, f"{path}: missing fragment {link}"
@@ -179,6 +199,17 @@ def test_complete_canonical_build(tmp_path, documents):
         assert (output / document.slug / "index.html").is_file()
         for section in document.sections:
             overview = pages[output / document.slug / section.slug / "index.html"]
+            exercise_links = [
+                attrs for tag, attrs in overview.regions["main"]
+                if tag == "a" and "data-exercise-link" in attrs
+            ]
+            assert [
+                (link["data-exercise-link"], link["data-module-id"], link["href"])
+                for link in exercise_links
+            ] == [
+                (exercise.id, document.slug, f"{exercise.slug}/index.html")
+                for exercise in section.exercises
+            ]
             assert any(
                 attrs.get("aria-current") == "page" and attrs.get("href") == "index.html"
                 for _, attrs in overview.elements
@@ -265,7 +296,7 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
     }
     assert sum(map(len, expected_data["modules"].values())) == 30
     assert expected_data["module"] == "introduction"
-    for path in (Path("index.html"), Path("about/index.html")):
+    for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
         assert "site-data" not in page.scripts
         assert not any(tag == "script" for tag, _ in page.elements)
@@ -284,6 +315,8 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
         expected_title = "Academic Writing for Agrarian Sciences"
         if path.parent.name == "about":
             expected_title = "About · " + expected_title
+        elif path.name == "404.html":
+            expected_title = "Page not found · " + expected_title
         assert page.title == expected_title
 
 
@@ -293,22 +326,38 @@ def test_home_and_about_public_content(tmp_path, documents):
     home_source = (output / "index.html").read_text()
     home = Page(home_source)
     assert "course" in home.ids
-    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
+    rows = [attrs for _, attrs in home.elements if attrs.get("class") == "contents-link"]
+    assert len(rows) == 3
+    start = rows[0]
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="page-head">', 1)[1].split("</div>", 1)[0]
     assert "<a " not in hero
+    assert "eyebrow" not in hero and "Interactive self-study" not in hero
+    assert '<ol class="course-contents" role="list">' in home_source
+    assert "Course contents" in home_source and "Explore the course" not in home_source
+    assert "Start here" not in home_source and ">Explore" not in home_source
+    assert 'class="programme-' not in home_source
     assert "About the project" not in home_source
     first = min(documents, key=lambda document: (document.order, document.slug))
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
     assert "Start the course" not in home_source
     assert "About the research project" in home_source
-    assert "A self-study resource for students and researchers" in home_source
+    assert (
+        "An interactive self-study resource for students and researchers writing "
+        "research articles in the Agrarian Sciences."
+    ) in hero
+    assert [row["href"] for row in rows] == [
+        "introduction/index.html", "methods/index.html", "results/index.html",
+    ]
+    for label in ("Introduction", "Methods", "Results"):
+        assert f'<strong class="contents-title">{label}</strong>' in home_source
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
         assert f'>{number:02d}</span>' in home_source
-        assert f"<span>{len(document.sections)} subsections</span>" in home_source
-        assert f"<span>{exercise_count} exercises</span>" in home_source
+        assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
+        module_page = Page((output / document.slug / "index.html").read_text())
+        assert ("h1", document.title) in module_page.headings
     public_pages = (
         (output / "index.html", home),
         (output / "about/index.html", Page((output / "about/index.html").read_text())),
@@ -378,7 +427,7 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
     assert [text for tag, text in home.headings if tag == "h2"] == [
-        "Explore the course", "The research project",
+        "Course contents", "The research project",
     ]
     assert not any(name in home_source for name in names)
     assert not {"people-heading", "team", "data-platform"} & home.ids
@@ -441,35 +490,165 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, docu
     assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 
-def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, documents):
+def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(tmp_path, documents):
     # A reduced, reordered course catches canonical paths or counts baked into Home.
     introduction, methods, _ = documents
     modules = [
         replace(introduction, order=10, sections=introduction.sections[:2]),
-        replace(methods, order=0, sections=methods.sections[:1]),
+        replace(methods, title="Methods and materials", order=0, sections=methods.sections[:1]),
     ]
     output = tmp_path / "site"
     build_site(modules, output)
     source = (output / "index.html").read_text()
     home = Page(source)
-    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
     assert start["href"] == "methods/index.html"
-    assert start["aria-label"] == "Start here: " + methods.title
-    rows = source.split('<ol class="course-programme">', 1)[1].split("</ol>", 1)[0]
-    rows = rows.split('<li class="programme-module">')[1:]
+    rows = source.split('<ol class="course-contents" role="list">', 1)[1].split("</ol>", 1)[0]
+    rows = rows.split("<li>")[1:]
     assert len(rows) == 2
     for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
         assert f'>{number:02d}</span>' in row
         assert f'href="{module.slug}/index.html"' in row
-        label = "Start here" if number == 1 else "Explore"
-        assert f'aria-label="{label}: {module.title}"' in row
-        assert f'>{label} ' in row
-        assert f"<h3>{module.title}</h3>" in row
+        label = "Methods and materials" if number == 1 else "Introduction"
+        assert f'<strong class="contents-title">{label}</strong>' in row
+        assert row.count("<a ") == 1 and "<button" not in row
+        assert row.index("<a ") < row.index("contents-title") < row.index("</a>")
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)
-        assert f"<span>{subsection_count} {subsection_label}</span>" in row
-        assert f"<span>{exercise_count} exercises</span>" in row
+        assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
+
+
+@pytest.mark.parametrize(("path", "title", "description"), [
+    (
+        "index.html", "Academic Writing for Agrarian Sciences",
+        "Interactive self-study activities for academic writing in research articles in the Agrarian Sciences.",
+    ),
+    (
+        "about/index.html", "About · Academic Writing for Agrarian Sciences",
+        "Research, CorAgrarian, pedagogical materials, project information and the research team behind Academic Writing for Agrarian Sciences.",
+    ),
+    (
+        "methods/index.html", "The Methods section · Academic Writing for Agrarian Sciences",
+        "The Methods section: interactive academic-writing activities for Agrarian Sciences research articles.",
+    ),
+    (
+        "methods/purpose-of-the-methods-section/index.html",
+        "Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Academic-writing activities on “Purpose of the Methods section” in the module “The Methods section”.",
+    ),
+    (
+        "methods/purpose-of-the-methods-section/exercise-1/index.html",
+        "Exercise 1: Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”.",
+    ),
+])
+def test_publication_metadata_for_each_page_type(tmp_path, documents, path, title, description):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    page = Page((output / path).read_text())
+    assert page.title == title
+    metadata = {}
+    for tag, attrs in page.elements:
+        if tag != "meta":
+            continue
+        key = attrs.get("name") or attrs.get("property")
+        if key:
+            assert key not in metadata, f"Duplicate metadata: {key}"
+            metadata[key] = attrs["content"]
+    canonical = PRODUCTION_URL + path.removesuffix("index.html")
+    links = [attrs for tag, attrs in page.elements if tag == "link"]
+    assert [link["href"] for link in links if link["rel"] == "canonical"] == [canonical]
+    assert metadata["description"] == metadata["og:description"] == metadata["twitter:description"] == description
+    assert metadata["og:title"] == metadata["twitter:title"] == title
+    assert metadata["og:url"] == canonical
+    assert metadata["og:type"] == "website"
+    assert metadata["og:site_name"] == "Academic Writing for Agrarian Sciences"
+    assert metadata["og:image"] == metadata["twitter:image"] == PRODUCTION_URL + "assets/social-preview.png"
+    assert metadata["og:image:width"] == "1200" and metadata["og:image:height"] == "630"
+    assert metadata["og:image:alt"] == metadata["twitter:image:alt"]
+    assert "Academic Writing for Agrarian Sciences" in metadata["og:image:alt"]
+    assert metadata["twitter:card"] == "summary_large_image"
+    assert "twitter:site" not in metadata and "author" not in metadata
+    assert "robots" not in metadata
+    for rel, filename in (("icon", "favicon.svg"), ("apple-touch-icon", "apple-touch-icon.png")):
+        icons = [link for link in links if link["rel"] == rel]
+        assert len(icons) == 1
+        assert (output / path).parent.joinpath(icons[0]["href"]).resolve() == output / "assets" / filename
+    assert f'--accent: {metadata["theme-color"]};' in (output / "assets/styles.css").read_text()
+
+
+def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    favicon = ET.parse(output / "assets/favicon.svg").getroot()
+    assert favicon.attrib["viewBox"] == "0 0 64 64"
+    assert favicon.find("{http://www.w3.org/2000/svg}text").text == "AW"
+    for filename, dimensions, limit in (
+        ("social-preview.png", (1200, 630), 200_000),
+        ("apple-touch-icon.png", (180, 180), 20_000),
+    ):
+        data = (output / "assets" / filename).read_bytes()
+        assert data[:8] == b"\x89PNG\r\n\x1a\n"
+        assert struct.unpack(">II", data[16:24]) == dimensions
+        assert len(data) < limit
+    assert not (output / "tools").exists()
+    assert not list(output.rglob("*.webmanifest"))
+
+
+def test_not_found_is_a_public_fallback_with_safe_recovery_links(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    path = output / "404.html"
+    page = Page(path.read_text())
+    assert page.headings == [("h1", "Page not found")]
+    assert "The page you requested does not exist or may have moved." in path.read_text()
+    assert not page.scripts
+    assert not any(tag == "script" or "course-panel" in attrs.get("class", "").split() for tag, attrs in page.elements)
+    assert any(attrs.get("name") == "robots" and attrs.get("content") == "noindex" for _, attrs in page.elements)
+    assert not any(attrs.get("rel") == "canonical" or attrs.get("property") == "og:url" for _, attrs in page.elements)
+    assert not any(attrs.get("aria-current") == "page" for _, attrs in page.elements)
+    actions = [attrs["href"] for tag, attrs in page.regions["main"] if tag == "a"]
+    assert actions == [PRODUCTION_URL, PRODUCTION_URL + "#course"]
+    # Fixed production paths also protect the shell at arbitrary missing depths.
+    for tag, attrs in page.elements:
+        if tag in {"img", "link"}:
+            href = attrs.get("href") or attrs.get("src")
+            assert href.startswith(PRODUCTION_URL + "assets/")
+            assert local_link_target(output, path, href).is_file()
+
+
+def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    root = ET.parse(output / "sitemap.xml").getroot()
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    assert root.tag == namespace + "urlset"
+    urls = [node.find(namespace + "loc").text for node in root]
+    paths = ["", "about/"]
+    for document in sorted(documents, key=lambda doc: (doc.order, doc.slug)):
+        paths.append(f"{document.slug}/")
+        for section in document.sections:
+            paths.append(f"{document.slug}/{section.slug}/")
+            paths.extend(f"{document.slug}/{section.slug}/{exercise.slug}/" for exercise in section.exercises)
+    assert len(urls) == len(set(urls)) == 45
+    assert urls == [PRODUCTION_URL + path for path in paths]
+    for node in root:
+        assert node.tag == namespace + "url"
+        assert [child.tag for child in node] == [namespace + "loc"]
+    assert not any("404" in url or "localhost" in url or "127.0.0.1" in url for url in urls)
+    for url in urls:
+        assert url.startswith(PRODUCTION_URL) and url.endswith("/")
+        assert local_link_target(output, output / "index.html", url).is_file()
+    assert not (output / "robots.txt").exists()
+
+
+def test_sitemap_follows_a_reduced_course_without_adding_the_fallback(tmp_path, methods):
+    output = tmp_path / "site"
+    build_site(methods, output)
+    urls = [node.text for node in ET.parse(output / "sitemap.xml").iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    assert len(urls) == 2 + 1 + len(methods.sections) + sum(len(section.exercises) for section in methods.sections)
+    assert not any("introduction/" in url or "results/" in url or "404" in url for url in urls)
 
 
 def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):
@@ -542,7 +721,7 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, p
 def test_single_module_build_remains_available(tmp_path, methods):
     output = tmp_path / "site"
     build_site(methods, output)
-    assert len(list(output.rglob("*.html"))) == 12
+    assert len(list(output.rglob("*.html"))) == 13
     assert (output / "about/index.html").is_file()
     last = methods.sections[-1].exercises[-1]
     path = output / methods.slug / methods.sections[-1].slug / last.slug / "index.html"
@@ -705,7 +884,7 @@ def test_presentation_order_does_not_restrict_alternative_module_sources(tmp_pat
     )
     output = tmp_path / "site"
     build_site(parse_document(source), output)
-    assert len(list(output.rglob("*.html"))) == 5
+    assert len(list(output.rglob("*.html"))) == 6
     assert (output / "about/index.html").is_file()
 
 
@@ -739,8 +918,9 @@ def test_normal_cli_discovers_all_modules(tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert "HTML pages: 45" in result.stdout
-    assert len(list((tmp_path / "site").rglob("*.html"))) == 45
+    assert "Learning pages: 43" in result.stdout
+    assert "Content pages: 45; HTML files including 404: 46" in result.stdout
+    assert len(list((tmp_path / "site").rglob("*.html"))) == 46
 
 
 def test_context_and_instructions_are_outside_cards(tmp_path, methods):
