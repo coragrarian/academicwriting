@@ -293,22 +293,38 @@ def test_home_and_about_public_content(tmp_path, documents):
     home_source = (output / "index.html").read_text()
     home = Page(home_source)
     assert "course" in home.ids
-    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
+    rows = [attrs for _, attrs in home.elements if attrs.get("class") == "contents-link"]
+    assert len(rows) == 3
+    start = rows[0]
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="page-head">', 1)[1].split("</div>", 1)[0]
     assert "<a " not in hero
+    assert "eyebrow" not in hero and "Interactive self-study" not in hero
+    assert '<ol class="course-contents" role="list">' in home_source
+    assert "Course contents" in home_source and "Explore the course" not in home_source
+    assert "Start here" not in home_source and ">Explore" not in home_source
+    assert 'class="programme-' not in home_source
     assert "About the project" not in home_source
     first = min(documents, key=lambda document: (document.order, document.slug))
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
     assert "Start the course" not in home_source
     assert "About the research project" in home_source
-    assert "A self-study resource for students and researchers" in home_source
+    assert (
+        "An interactive self-study resource for students and researchers writing "
+        "research articles in the Agrarian Sciences."
+    ) in hero
+    assert [row["href"] for row in rows] == [
+        "introduction/index.html", "methods/index.html", "results/index.html",
+    ]
+    for label in ("Introduction", "Methods", "Results"):
+        assert f'<strong class="contents-title">{label}</strong>' in home_source
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
         assert f'>{number:02d}</span>' in home_source
-        assert f"<span>{len(document.sections)} subsections</span>" in home_source
-        assert f"<span>{exercise_count} exercises</span>" in home_source
+        assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
+        module_page = Page((output / document.slug / "index.html").read_text())
+        assert ("h1", document.title) in module_page.headings
     public_pages = (
         (output / "index.html", home),
         (output / "about/index.html", Page((output / "about/index.html").read_text())),
@@ -378,7 +394,7 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
     assert [text for tag, text in home.headings if tag == "h2"] == [
-        "Explore the course", "The research project",
+        "Course contents", "The research project",
     ]
     assert not any(name in home_source for name in names)
     assert not {"people-heading", "team", "data-platform"} & home.ids
@@ -441,35 +457,33 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, docu
     assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 
-def test_home_programme_and_entry_follow_the_supplied_modules(tmp_path, documents):
+def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(tmp_path, documents):
     # A reduced, reordered course catches canonical paths or counts baked into Home.
     introduction, methods, _ = documents
     modules = [
         replace(introduction, order=10, sections=introduction.sections[:2]),
-        replace(methods, order=0, sections=methods.sections[:1]),
+        replace(methods, title="Methods and materials", order=0, sections=methods.sections[:1]),
     ]
     output = tmp_path / "site"
     build_site(modules, output)
     source = (output / "index.html").read_text()
     home = Page(source)
-    start = next(attrs for _, attrs in home.elements if "programme-link" in attrs.get("class", "").split())
+    start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
     assert start["href"] == "methods/index.html"
-    assert start["aria-label"] == "Start here: " + methods.title
-    rows = source.split('<ol class="course-programme">', 1)[1].split("</ol>", 1)[0]
-    rows = rows.split('<li class="programme-module">')[1:]
+    rows = source.split('<ol class="course-contents" role="list">', 1)[1].split("</ol>", 1)[0]
+    rows = rows.split("<li>")[1:]
     assert len(rows) == 2
     for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
         assert f'>{number:02d}</span>' in row
         assert f'href="{module.slug}/index.html"' in row
-        label = "Start here" if number == 1 else "Explore"
-        assert f'aria-label="{label}: {module.title}"' in row
-        assert f'>{label} ' in row
-        assert f"<h3>{module.title}</h3>" in row
+        label = "Methods and materials" if number == 1 else "Introduction"
+        assert f'<strong class="contents-title">{label}</strong>' in row
+        assert row.count("<a ") == 1 and "<button" not in row
+        assert row.index("<a ") < row.index("contents-title") < row.index("</a>")
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)
-        assert f"<span>{subsection_count} {subsection_label}</span>" in row
-        assert f"<span>{exercise_count} exercises</span>" in row
+        assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
 
 
 def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):

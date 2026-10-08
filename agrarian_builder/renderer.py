@@ -34,6 +34,12 @@ STATIC = ROOT / "static"
 SITE_TITLE = "Academic Writing for Agrarian Sciences"
 
 
+def _home_module_title(title: str) -> str:
+    """Shorten the recognised module-title pattern for Home only."""
+    match = re.fullmatch(r"The (.+) section", title)
+    return match.group(1) if match else title
+
+
 def _plain(value: str) -> str:
     """Extract label text from project-generated HTML fragments.
 
@@ -390,6 +396,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             public_page=document is None,
             document_title=(f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE),
             module_exercise_counts={slug: len(ids) for slug, ids in module_ids.items()},
+            home_module_title=_home_module_title,
             coordinators=COORDINATORS,
             research_team=RESEARCH_TEAM,
             data_platform=DATA_PLATFORM,
