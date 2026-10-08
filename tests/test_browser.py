@@ -778,7 +778,7 @@ PUBLICATION_PAGES = (
     "methods/purpose-of-the-methods-section/index.html",
     "methods/purpose-of-the-methods-section/exercise-1/index.html",
     "introduction/indicating-a-research-gap/exercise-1/index.html",
-    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/index.html",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-3/index.html",
     "methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/index.html",
     "introduction/the-introduction-section-of-research-papers/exercise-1/index.html",
 )
@@ -835,6 +835,17 @@ def test_publication_reflow_including_enlarged_text(page, site, width, text_scal
             page.add_style_tag(content="html { font-size: 200%; }")
         page.evaluate("document.fonts.ready")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        header_links = [link.bounding_box() for link in page.locator(".site-header a").all()]
+        for index, first in enumerate(header_links):
+            assert first["width"] > 0 and first["height"] > 0, path
+            assert first["x"] >= 0 and first["x"] + first["width"] <= width, path
+            for second in header_links[index + 1:]:
+                assert (
+                    first["x"] + first["width"] <= second["x"]
+                    or second["x"] + second["width"] <= first["x"]
+                    or first["y"] + first["height"] <= second["y"]
+                    or second["y"] + second["height"] <= first["y"]
+                ), path
         repository = page.locator(".footer-links").bounding_box()
         assert repository["x"] >= 0 and repository["x"] + repository["width"] <= width
         for option in page.locator(".choice-option").all():

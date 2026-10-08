@@ -311,10 +311,11 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid #a9b8af; bor
 .page-navigation a:last-child { text-align: right; margin-left: auto; }
 /* Responsive layout and contents disclosure */
 @media (max-width: 48rem) {
-  .site-header-inner { padding: .8rem 1.2rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .25rem 1.5rem; }
+  /* Allow enlarged header text to wrap before it can overlap adjacent links. */
+  .site-header-inner { padding: .8rem 1.2rem; gap: .25rem 1.5rem; }
   .site-name span { display: none; }
-  .site-links { grid-column: 2; grid-row: 1; }
-  .module-link { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+  .site-links { margin-inline-start: auto; }
+  .module-link { order: 1; flex-basis: 100%; min-width: 0; }
   .layout { display: block; }
   .course-panel { padding: .8rem 1.2rem; border-right: 0; border-bottom: 1px solid var(--line); }
   .course-panel nav { position: static; max-height: none; overflow: visible; padding: .7rem 0 .3rem; }
