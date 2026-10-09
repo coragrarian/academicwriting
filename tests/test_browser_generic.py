@@ -172,12 +172,10 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
         "nodes => nodes.every(n => n.getAttribute('aria-current') === 'true')"
     )
     toggle = page.locator(".course-toggle")
-    cue = toggle.locator(".disclosure-cue")
-    expect(cue).to_have_attribute("aria-hidden", "true")
-    assert cue.evaluate("n => getComputedStyle(n, '::before').content") == '"+"'
+    assert not toggle.evaluate("n => n.parentElement.open")
     toggle.focus()
     page.keyboard.press("Enter")
-    assert cue.evaluate("n => getComputedStyle(n, '::before').content") == '"−"'
+    assert toggle.evaluate("n => n.parentElement.open")
     page.locator(".course-tree details").evaluate_all("nodes => nodes.forEach(n => n.open = true)")
     for target in page.locator(".course-panel a:visible, .course-panel summary:visible, .page-navigation a").all():
         assert target.bounding_box()["height"] >= 44

@@ -118,9 +118,6 @@ a, button, summary, .choice-option { transition: color var(--motion-fast) var(--
 .course-toggle, .course-tree summary { list-style: none; }
 .course-toggle::marker, .course-tree summary::marker { content: ""; }
 .course-toggle::-webkit-details-marker, .course-tree summary::-webkit-details-marker { display: none; }
-.disclosure-cue { flex: none; width: .8em; margin-inline-start: var(--space-small); color: var(--muted); font-weight: 400; text-align: center; }
-.disclosure-cue::before { content: "+"; }
-details[open] > summary > .disclosure-cue::before { content: "−"; }
 .course-tree summary:hover, .course-tree summary:focus-visible { background: var(--wash); }
 .nav-row { display: flex; min-width: 0; flex: 1; justify-content: space-between; align-items: baseline; gap: .45rem; }
 .nav-row > span { min-width: 0; overflow-wrap: anywhere; }
@@ -349,7 +346,7 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid var(--contro
   .layout { display: block; }
   .course-panel { padding: .8rem 1.2rem; border-right: 0; border-bottom: 1px solid var(--line); }
   .course-panel nav { position: static; max-height: none; overflow: visible; padding: .7rem 0 .3rem; }
-  .course-toggle { display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; padding-block: var(--space-small); cursor: pointer; font-size: var(--text-ui); font-weight: 600; }
+  .course-toggle { display: flex; align-items: center; min-height: 2.75rem; padding-block: var(--space-small); cursor: pointer; font-size: var(--text-ui); font-weight: 600; }
   .nav-eyebrow { display: none; }
   .course-tree summary { min-height: 2.75rem; padding-top: .55rem; padding-bottom: .55rem; }
   .nav-home, .nav-module-overview, .section-nav-body a { min-height: 2.75rem; align-items: center; }
