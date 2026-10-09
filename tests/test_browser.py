@@ -917,7 +917,7 @@ def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site
     image.scroll_into_view_if_needed()
     expect(image).to_have_js_property("complete", True)
     assert image.evaluate("node => node.naturalWidth > 0")
-    expect(image).to_have_attribute("alt", first.name)
+    expect(image).to_have_attribute("alt", "")
     real, fallback = fields.first.bounding_box(), fields.nth(1).bounding_box()
     assert (real["width"], real["height"]) == pytest.approx((fallback["width"], fallback["height"]), abs=1)
     assert fields.first.get_attribute("aria-hidden") is None
@@ -927,6 +927,14 @@ def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site
     profile.focus()
     assert profile.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
     assert profile.bounding_box()["height"] >= 44
+    # Facts precede team profiles in source as well as on screen, even when
+    # optional profiles make both regions keyboard destinations.
+    assert page.locator(".about-layout > *").evaluate_all(
+        "nodes => nodes.slice(0, 2).map(n => n.id || n.className)"
+    ) == ["about-narrative", "project-information"]
+    page.keyboard.press("Shift+Tab")
+    expect(page.locator(".project-facts a")).to_be_focused()
+    assert page.locator(".project-facts a").bounding_box()["y"] < profile.bounding_box()["y"]
 
 
 def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):

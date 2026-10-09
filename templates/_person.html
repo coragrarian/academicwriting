@@ -1,7 +1,7 @@
 {% macro entry(person, heading_level=3) -%}
 <li class="person{% if person.placeholder %} person--pending{% endif %}">
   <div class="person-portrait"{% if not person.portrait %} aria-hidden="true"{% endif %}>
-    {% if person.portrait %}<img src="{{ person_asset(person.portrait) }}" alt="{{ person.name }}" width="144" height="144" loading="lazy">
+    {% if person.portrait %}<img src="{{ person_asset(person.portrait) }}" alt="" width="144" height="144" loading="lazy">
     {% elif not person.placeholder %}<span>{{ person.initials }}</span>{% endif %}
   </div>
   <div class="person-information">

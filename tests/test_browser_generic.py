@@ -5,7 +5,7 @@ import re
 from itertools import pairwise
 
 import pytest
-from browser_support import respond
+from browser_support import respond, serve_not_found_candidate
 from playwright.sync_api import expect
 from site_support import PRODUCTION_URL, course_sequence
 
@@ -194,6 +194,44 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
     option.locator("input").focus()
     assert option.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
     assert option.locator("input").evaluate("n => getComputedStyle(n).outlineStyle") == "none"
+
+
+@pytest.mark.parametrize("kind", ["single-choice", "multi-select"])
+def test_checking_choice_results_preserves_horizontal_geometry(page, synthetic_site, synthetic_documents, kind):
+    for width in (1280, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+        page.locator("#reset-exercise").click()
+        page.evaluate("document.fonts.ready")
+        geometry = "nodes => nodes.map(n => [n.getBoundingClientRect().x, n.getBoundingClientRect().width])"
+        selector = ".choice-option, .choice-option input, .choice-option > span"
+        before = page.locator(selector).evaluate_all(geometry)
+        key = json.loads(page.locator("#answer-key").text_content())
+        for wrong in (next(iter(key["questions"])), None):
+            respond(page, key, wrong_id=wrong)
+            page.locator("button[type=submit]").click()
+            after = page.locator(selector).evaluate_all(geometry)
+            for original, checked in zip(before, after, strict=True):
+                assert checked == pytest.approx(original, abs=0.5)
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
+def test_short_public_shell_and_about_follow_natural_document_order(page, synthetic_site):
+    serve_not_found_candidate(page, synthetic_site)
+    for width in (1280, 320):
+        page.set_viewport_size({"width": width, "height": 1200})
+        page.goto(synthetic_site[0] + "/404.html")
+        page.evaluate("document.fonts.ready")
+        footer = page.locator(".site-footer").bounding_box()
+        assert footer["y"] + footer["height"] == pytest.approx(1200, abs=1)
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.goto(synthetic_site[0] + "/about/index.html")
+        page.evaluate("document.fonts.ready")
+        source = page.locator(".about-layout > *").evaluate_all(
+            "nodes => nodes.map(n => [n.id || n.className, n.getBoundingClientRect().y])"
+        )
+        assert [name for name, _ in source[:4]] == ["about-narrative", "project-information", "team", "data-platform"]
+        assert all(second[1] >= first[1] for first, second in pairwise(source))
 
 
 @pytest.mark.parametrize("kind", ["single-choice", "multi-select", "inline-choice", "gap", "typed-gap", "matching"])

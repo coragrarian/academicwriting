@@ -38,21 +38,6 @@
         </div>
       </section>
     </div>
-    <section id="team" class="resource-section" aria-labelledby="team-heading">
-      <h2 id="team-heading" class="section-heading">Research team</h2>
-      <h3 id="coordinators-heading">Coordinators</h3>
-      <ul class="people-grid" aria-labelledby="coordinators-heading">
-        {% for person in coordinators %}{{ entry(person, heading_level=4) }}{% endfor %}
-      </ul>
-      <h3 id="members-heading" class="team-group-heading">Members</h3>
-      <ul class="people-grid" aria-labelledby="members-heading">
-        {% for person in research_team %}{{ entry(person, heading_level=4) }}{% endfor %}
-      </ul>
-    </section>
-    <section id="data-platform" class="resource-section" aria-labelledby="data-heading">
-      <h2 id="data-heading" class="section-heading">Data and platform</h2>
-      <ul class="people-grid people-grid--data">{{ entry(data_platform) }}</ul>
-    </section>
     <aside id="project-information" class="project-facts" aria-labelledby="facts-heading">
       <h2 id="facts-heading">Project information</h2>
       <dl>
@@ -70,6 +55,21 @@
         <dd><a href="{{ repository_url }}">coragrarian/academicwriting</a></dd>
       </dl>
     </aside>
+    <section id="team" class="resource-section" aria-labelledby="team-heading">
+      <h2 id="team-heading" class="section-heading">Research team</h2>
+      <h3 id="coordinators-heading">Coordinators</h3>
+      <ul class="people-grid" aria-labelledby="coordinators-heading">
+        {% for person in coordinators %}{{ entry(person, heading_level=4) }}{% endfor %}
+      </ul>
+      <h3 id="members-heading" class="team-group-heading">Members</h3>
+      <ul class="people-grid" aria-labelledby="members-heading">
+        {% for person in research_team %}{{ entry(person, heading_level=4) }}{% endfor %}
+      </ul>
+    </section>
+    <section id="data-platform" class="resource-section" aria-labelledby="data-heading">
+      <h2 id="data-heading" class="section-heading">Data and platform</h2>
+      <ul class="people-grid people-grid--data">{{ entry(data_platform) }}</ul>
+    </section>
     <section class="resource-section" aria-labelledby="licensing-heading">
       <h2 id="licensing-heading" class="section-heading">Software and licensing</h2>
       <div class="prose">
