@@ -91,6 +91,73 @@ def test_control_boundaries_and_progress_have_contrast_and_distinct_shapes(page,
     assert len(set(shapes)) == 3
 
 
+@pytest.mark.parametrize("motion", ["reduce", "no-preference"])
+def test_partial_navigation_and_chevrons_remain_visually_stable(page, synthetic_site, synthetic_documents, motion):
+    page.emulate_media(reduced_motion=motion)
+    document = synthetic_documents[0]
+    page.goto(f"{synthetic_site[0]}/{document.slug}/index.html")
+    page.evaluate("""() => {
+      window.navigationFrames = [];
+      const sample = () => {
+        const style = getComputedStyle(document.querySelector('[data-page-content]'));
+        navigationFrames.push([style.opacity, style.transform]);
+        if (navigationFrames.length < 35) requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    }""")
+    page.locator('.page-navigation a[rel="next"]').click()
+    expect(page.locator("h1")).to_have_text(document.sections[0].title)
+    expect(page.locator("h1")).to_be_focused()
+    page.wait_for_function("navigationFrames.length >= 35")
+    assert all(frame == ["1", "none"] for frame in page.evaluate("navigationFrames"))
+    assert page.locator("h1").evaluate("n => getComputedStyle(n).outlineStyle") == "none"
+    forward = page.locator('.page-navigation a[rel="next"]')
+    forward.scroll_into_view_if_needed()
+    chevron = forward.locator("svg")
+    before = chevron.bounding_box()
+    forward.hover()
+    assert chevron.evaluate("n => getComputedStyle(n).transform") == "none"
+    assert chevron.bounding_box() == pytest.approx(before, abs=0.5)
+    if motion == "reduce":
+        assert page.locator("a, button, summary, .choice-option, .institution-logo").evaluate_all(
+            "nodes => nodes.every(n => getComputedStyle(n).transitionDuration.split(',').every(d => parseFloat(d) === 0))"
+        )
+        assert page.locator(".course-link, .about-link").evaluate_all(
+            "nodes => nodes.every(n => parseFloat(getComputedStyle(n, '::after').transitionDuration) === 0)"
+        )
+
+
+def test_a_late_aborted_response_cannot_replace_the_newer_destination(page, synthetic_site, synthetic_documents):
+    document = synthetic_documents[0]
+    section = document.sections[0]
+    exercise = section.exercises[0]
+    section_path = f"{document.slug}/{section.slug}/index.html"
+    page.goto(f"{synthetic_site[0]}/{document.slug}/index.html")
+    page.locator(f'[data-nav-node="section:{document.slug}:{section.slug}"] > summary').click()
+    page.evaluate("""({slow, html}) => {
+      const ordinaryFetch = window.fetch.bind(window);
+      window.fetch = (url, options) => {
+        if (url !== slow) return ordinaryFetch(url, options);
+        window.slowSignal = options.signal;
+        return new Promise(resolve => {
+          // Deliberately deliver despite abort to exercise the sequence guard.
+          window.releaseSlowResponse = () => resolve({ok: true,
+            headers: new Headers({'content-type': 'text/html'}),
+            text: async () => { window.slowResponseConsumed = true; return html; }});
+        });
+      };
+    }""", {"slow": f"{synthetic_site[0]}/{section_path}", "html": (synthetic_site[1] / section_path).read_text()})
+    page.get_by_role("link", name="Overview", exact=True).click()
+    page.wait_for_function("window.releaseSlowResponse !== undefined")
+    page.locator(f'[data-exercise-link="{exercise.id}"]').click()
+    expect(page.locator("h1")).to_have_text(exercise.title)
+    assert page.evaluate("slowSignal.aborted")
+    page.evaluate("releaseSlowResponse()")
+    page.wait_for_function("window.slowResponseConsumed === true")
+    expect(page).to_have_url(f"{synthetic_site[0]}/{document.slug}/{section.slug}/{exercise.slug}/index.html")
+    expect(page.locator("h1")).to_have_text(exercise.title)
+
+
 @pytest.mark.parametrize("kind", ["single-choice", "multi-select", "inline-choice", "gap", "typed-gap", "matching"])
 def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synthetic_site, synthetic_documents, kind):
     path = exercise_path(synthetic_documents, kind)
