@@ -19,4 +19,7 @@ dev = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-m 'not browser'"
-markers = ["browser: real Chromium interaction and navigation checks"]
+markers = [
+    "browser: real Chromium interaction and navigation checks",
+    "canonical: regressions that depend on the approved production course or public copy",
+]

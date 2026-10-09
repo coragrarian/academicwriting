@@ -53,6 +53,30 @@ order: 3
     assert document.sections[0].exercises[0].id.startswith("stable-id--")
 
 
+def test_front_matter_allows_a_following_thematic_break():
+    document = parse_document(
+        """---
+id: module
+title: Module
+---
+
+---
+
+# Module
+
+## Section
+
+### Exercise 1
+
+- [x] a) Correct
+- [ ] b) Incorrect
+"""
+    )
+    assert (document.slug, document.title) == ("module", "Module")
+    assert document.sections[0].exercises[0].questions[0].kind == "single-choice"
+
+
+@pytest.mark.canonical
 def test_module_discovery_and_canonical_counts(documents):
     assert [document.slug for document in documents] == ["introduction", "methods", "results"]
     assert [document.order for document in documents] == [1, 2, 3]
@@ -75,6 +99,10 @@ def test_discovery_orders_by_metadata_and_rejects_duplicate_ids(tmp_path):
         (tmp_path / filename).write_text(
             f"---\nid: {slug}\ntitle: Module\norder: {order}\n---\n" + source
         )
+    assert [document.slug for document in discover_documents(tmp_path)] == ["earlier", "later"]
+    # Equal authored order still uses IDs, rather than filename order, to break ties.
+    path = tmp_path / "a.md"
+    path.write_text(path.read_text().replace("order: 2", "order: 1"))
     assert [document.slug for document in discover_documents(tmp_path)] == ["earlier", "later"]
     (tmp_path / "a.md").write_text((tmp_path / "z.md").read_text())
     with pytest.raises(
@@ -127,6 +155,7 @@ def test_exercise_without_item_headings_has_no_anonymous_item():
     assert len(parsed.instructions) == 1
 
 
+@pytest.mark.canonical
 def test_document_hierarchy_and_repeated_exercise_numbers(methods):
     assert [len(section.exercises) for section in methods.sections] == [3, 4]
     first, second = [section.exercises[0] for section in methods.sections]
@@ -183,6 +212,7 @@ def test_gaps_inside_numbered_and_bulleted_passages():
     assert "<ol>" in parsed.context[0].html
 
 
+@pytest.mark.canonical
 def test_bank_distractors_and_repeated_answers(documents):
     introduction, _, results = documents
     repeated = introduction.sections[-1].exercises[-1].questions
@@ -200,6 +230,7 @@ def test_bank_distractors_and_repeated_answers(documents):
     assert len(weather.questions[0].options) == 6  # was/were each appear twice in the bank
 
 
+@pytest.mark.canonical
 def test_inline_alternatives_in_blockquotes(methods):
     questions = methods.sections[1].exercises[0].questions
     assert len(questions) == 10
@@ -241,6 +272,7 @@ def test_matching_is_independent_of_column_names():
     )
 
 
+@pytest.mark.canonical
 def test_canonical_matching_mapping(methods):
     parsed = methods.sections[0].exercises[2]
     assert [
@@ -250,6 +282,7 @@ def test_canonical_matching_mapping(methods):
     assert any("matching-sentences" in block.html for block in parsed.context)
 
 
+@pytest.mark.canonical
 def test_shared_passage_links_to_item_answers_without_treating_citations_as_gaps(documents):
     parsed = documents[0].sections[2].exercises[1]
     assert len(parsed.questions) == 5
@@ -260,6 +293,7 @@ def test_shared_passage_links_to_item_answers_without_treating_citations_as_gaps
     assert 'href="#item-e"' in passage
 
 
+@pytest.mark.canonical
 def test_typed_gap_and_shared_answer_key_across_items(documents):
     introduction, _, results = documents
     parsed = introduction.sections[3].exercises[0]
@@ -280,6 +314,7 @@ def test_typed_gap_and_shared_answer_key_across_items(documents):
     assert all(question.kind == "typed-gap" for question in transformed.questions)
 
 
+@pytest.mark.canonical
 def test_approved_introduction_content_is_self_contained(documents):
     introduction = documents[0]
     assert introduction.sections[-1].title == "Grammar and vocabulary in the Introduction section"
@@ -351,6 +386,7 @@ def test_gap_feedback_requires_valid_labels_and_text(entry):
         exercise(f"- [x] Yes\n\n<!-- agrarian\nfeedback:\n  gaps:\n    {entry}\n-->\n")
 
 
+@pytest.mark.canonical
 def test_worked_models_are_not_scored(documents):
     introduction, _, results = documents
     for parsed in [
@@ -365,6 +401,7 @@ def test_worked_models_are_not_scored(documents):
     assert not results.sections[1].exercises[2].examples[0].questions
 
 
+@pytest.mark.canonical
 def test_canonical_feedback_scopes(methods, documents):
     synonyms = methods.sections[1].exercises[1]
     assert synonyms.metadata.feedback.correct is None
@@ -477,6 +514,41 @@ feedback:
             "- [x] Yes\n\n<!-- agrarian\nfeedback: !!python/object:builtins.object {}\n-->\n",
             "malformed YAML",
         ),
+        (
+            (
+                "- [x] a) Yes\n- [ ] a) No\n\n"
+                "<!-- agrarian\nfeedback:\n  options:\n    a: Ambiguous.\n-->\n"
+            ),
+            "duplicate option label",
+        ),
+        (MARK.format("yes") + " | no | perhaps", "exactly two alternatives"),
+        (MARK.format("yes") + " | " + MARK.format("no"), "malformed inline choice"),
+        (
+            (
+                "#### Item A\n\n<!-- agrarian\ninteraction: typed-gap\n-->\n\n"
+                "- [x] Yes\n\n#### Item B\n\n- [x] Yes\n"
+            ),
+            "Item A.*typed-gap metadata has no labelled gaps",
+        ),
+        (
+            (
+                "- [x] a) One\n- [ ] b) Two\n\nAnother choice.\n\n"
+                "- [x] a) Three\n- [ ] b) Four\n\n"
+                "<!-- agrarian\nfeedback:\n  options:\n    a: Ambiguous scope.\n-->\n"
+            ),
+            "one labelled choice question",
+        ),
+        ("#### Item A1\n\n- [x] Yes\n", "unsupported item heading"),
+        (
+            "- [x] Yes\n\n#### Model\n\nExample.\n\n#### Model\n\nExample.\n",
+            "duplicate item heading Model",
+        ),
+        (
+            "| Label | Text |\n| --- | --- |\n| A | First |\n\n"
+            "**Purposes:**\n\n" + mapping("A", "Purpose") +
+            "\n| Label | Text |\n| --- | --- |\n| A | Again |\n",
+            "multiple matching source tables",
+        ),
     ],
 )
 def test_invalid_exercises_fail_with_author_context(body, message):
@@ -496,11 +568,14 @@ def test_invalid_exercises_fail_with_author_context(body, message):
             mapping("A", "ending") + mapping("A", "another"),
             "duplicate answer mapping",
         ),
+        ("| A | First | Discarded text |", mapping("A", "ending"), "exactly two cells"),
+        ("| A |", mapping("A", "ending"), "exactly two cells"),
     ],
 )
 def test_invalid_matching(entries, mappings, message):
-    with pytest.raises(SourceError, match=message):
+    with pytest.raises(SourceError, match=message) as error:
         exercise("| Label | Text |\n|---|---|\n" + entries + "\n\n**Purposes:**\n\n" + mappings)
+    assert "fixture.md, Section, Exercise 1" in str(error.value)
 
 
 @pytest.mark.parametrize(
@@ -521,8 +596,22 @@ def test_invalid_matching(entries, mappings, message):
         ),
         ("# Module\n\n## Section\n\n## Section\n", "duplicate subsection"),
         ("# Module\n", "no level-two subsections"),
+        ("## Section\n", "expected a level-one title"),
+        ("# Module\n\n# Second module\n", "exactly one level-one title"),
+        ("# Module\n\n## Section\n\n### Task\n", "unsupported exercise heading"),
+        (
+            "---\nid: module\ntitle: Title\ntitle: Another\n---\n# Module\n",
+            "duplicate YAML key",
+        ),
+        (
+            "---\nid: module\ntitle: Title\nextra: value\n---\n# Module\n",
+            "unsupported front matter fields",
+        ),
+        ("---\nid: [broken\ntitle: Title\n---\n# Module\n", "malformed YAML"),
+        ("---\n- not a mapping\n---\n# Module\n", "YAML must be a mapping"),
     ],
 )
 def test_document_validation(source, message):
-    with pytest.raises(SourceError, match=message):
+    with pytest.raises(SourceError, match=message) as error:
         parse_document(source, source_path="broken.md")
+    assert "broken.md" in str(error.value)

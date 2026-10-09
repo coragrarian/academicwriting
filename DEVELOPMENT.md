@@ -42,7 +42,8 @@ There is no backend or database.
 | `static/exercises.js` | Answer checking, feedback, persistence and progress |
 | `static/navigation.js` | Progressive navigation and browser history |
 | `static/fonts/` | Locally served font assets |
-| `tests/` | Parser, build and browser regression tests |
+| `tests/` | Generic authoring/compiler proofs and explicitly marked canonical regressions |
+| `tests/fixtures/course/` | Small four-module authoring examples; never production input |
 | `_site/` | Generated website; do not edit it directly |
 
 Public directory entries use the shared `_person.html` component. Portrait paths
@@ -51,12 +52,6 @@ are relative to `static/`; unverified fields remain absent.
 ## Content and authoring
 
 Each Markdown file in `exercises/` represents one course module.
-
-The current modules are:
-
-- `introduction.md`
-- `methods.md`
-- `results.md`
 
 A module uses front matter for its identity and course order:
 
@@ -68,6 +63,13 @@ order: 2
 ---
 ```
 
+Add a module by creating another `exercises/*.md` file with a unique `id`, title
+and integer `order`. Discovery is recursive and ordering is `(order, id)`;
+filenames do not determine course order. `about` is reserved for the public page.
+Front matter is optional for legacy sources: the filename supplies the ID and
+the level-one heading supplies the title. Present front matter requires both
+`id` and `title`; duplicate YAML keys and unsupported fields are rejected.
+
 The main heading structure is:
 
 ```text
@@ -76,6 +78,12 @@ The main heading structure is:
 ### Exercise N
 #### Item A
 ```
+
+There must be exactly one level-one heading. Add a subsection with a unique
+`##` title; it may contain only overview prose. Add an exercise under it with
+`### Exercise N` and a supported response. Subsection slugs and exercise titles
+must be unique in their respective scopes. Exercise numbers may repeat across
+subsections. Neither addition needs Python or template registration.
 
 `#### Model` is used for worked examples. Models are displayed to learners but
 are not scored and do not contribute to progress.
@@ -105,8 +113,30 @@ The parser validates these conventions rather than trying to guess ambiguous
 answers. If the source is incomplete or contradictory, the build should fail
 with context instead of silently inventing an interpretation.
 
-For the exact authoring syntax, the existing files in `exercises/` are the most
-useful examples.
+| Response | Authoring boundary |
+| --- | --- |
+| Single choice / multi-select | A task list with one / several `[x]` entries; option letters such as `a)` must be unique within a question |
+| Inline choice | Exactly two alternatives separated by `\|`, with one `correct-answer` mark; the unmarked alternative is one word, or `was/were/has/have/had` plus one word |
+| Bank gap | Three or more underscores beside `[label]`, and an **Answer bank:** list mapping marked labels to answer text |
+| Typed gap | The same labelled blank, `interaction: typed-gap`, and an **Answer key:** with every entry labelled |
+| Matching | A two-column labelled table and a **Purposes:** or **Endings:** mapping list; escape literal pipes in cells |
+
+Gap labels are unique across scored containers; every bank/key mapping must be
+used. Banks may include unlabelled distractors and repeated answer text, which
+becomes one selectable option. A shared gap may instead link to a named Item
+containing one single-choice response. Models use a separate, unscored scope.
+
+Feedback can supply `correct`, `incorrect`, `options` and `gaps`. Option feedback
+requires one labelled choice in its scope; gap feedback refers to scored source
+labels (quote numeric YAML labels). Local Item feedback overrides shared fields.
+Comments before Items or immediately after a bank/key are exercise-level.
+Otherwise comments belong to the current Item, except that a lone final Item
+comment supplies shared exercise feedback. Put local feedback before its final
+content block to avoid that trailing-comment convention.
+
+The small [synthetic course](tests/fixtures/course/) demonstrates these boundaries
+without production prose. `tests/test_parser.py` supplies rejection examples and
+checks source-path and structural context in diagnostics.
 
 ## How the site is generated
 
@@ -151,9 +181,21 @@ simplified without understanding why they exist.
 
 Responses and progress are stored in `localStorage`.
 
-Exercise and question identities are derived from the authored structure.
-Renaming or reordering modules, subsections, exercises, questions or options
-can therefore change the meaning of saved browser data.
+Storage uses `agrarian-writing-v2:<module-id>`. Exercise IDs are
+`<module-id>--<subsection-slug>--<exercise-slug>`; response IDs are container-local
+ordinals such as `context-q1` or `item-a-q1`. Choices store zero-based authored
+option indices; typed gaps store raw text. Progress counts only currently
+discovered exercise IDs, so obsolete records do not inflate totals.
+
+Changing a front-matter title or module `order` preserves identity when the
+explicit module ID is retained. Moving unchanged subsections/exercises within
+their existing scopes also preserves IDs. Renaming a module ID, subsection or
+exercise title, moving an exercise between subsections, renaming Items, or
+inserting/reordering questions or options can invalidate or reinterpret saved
+responses. Gap labels scope feedback but do not independently stabilise ordinal
+response IDs. Rebuilding unchanged sources is deterministic and never rewrites
+Markdown. Existing Introduction migrations are specific historical compatibility
+rules, not a general migration service.
 
 Presentation changes should preserve semantic IDs whenever possible.
 
@@ -178,7 +220,7 @@ exercise pages.
 
 Home, About and the 404 fallback are outside that sequence.
 
-Previous and Next move through the sequence once. The final Results exercise
+Previous and Next move through the sequence once. The final learning page
 returns to Home rather than linking back to an earlier learning page.
 
 Do not add a convenient fallback that sends the final page back to a module
@@ -236,7 +278,26 @@ not change their destinations.
 | Partial navigation or browser history | `static/navigation.js` |
 | Parser behaviour | `tests/test_parser.py` |
 | Generated structure or course navigation | `tests/test_build.py` |
+| Generic compiler, additive authoring or build safety | `tests/test_extensibility.py` |
 | Browser interaction and persistence | `tests/test_browser.py` |
+| Synthetic interaction, navigation, persistence or reflow | `tests/test_browser_generic.py` |
+
+Adding a response kind requires a compiler change: recognise and validate its
+syntax in `parser.py`, define its semantic answer shape in `model.py`, render
+controls/models and JSON in `renderer.py` / `question.html`, and collect, restore,
+check and reset that shape in `exercises.js`. Add parser, build and browser proof.
+`navigation.js` needs no kind dispatch when the existing form/DOM hooks suffice.
+There is no registration layer.
+
+Feedback follows `Metadata/Feedback` → `_answer_data` → browser question/group
+results. A future count- or pattern-sensitive rule would need explicit source
+validation, model fields, JSON and runtime selection, preserving existing fields
+and saved response shapes. The present question/group results provide that seam;
+new pedagogical rules have not been implemented.
+
+Home counts, the course tree, progress, traversal and the sitemap derive from
+discovered content. About's curriculum description and README's current-course
+snapshot are intentionally authored prose: review them when the curriculum changes.
 
 ## Build and verification
 
@@ -245,8 +306,8 @@ The project requires Python 3.12 or newer and `uv`.
 Install the environment and build the site with:
 
 ```sh
-uv sync
-uv run python build.py
+uv sync --locked
+uv run --frozen python build.py
 ```
 
 Preview it locally with:
@@ -264,7 +325,16 @@ http://localhost:8000/
 Run the ordinary test suite with:
 
 ```sh
-uv run pytest -q
+uv run --frozen pytest -q
+```
+
+Canonical regressions carry the `canonical` marker, including canonical cases
+of shared build invariants; the existing canonical browser suite has both
+markers. Generic tests use artificial input independently of `exercises/`:
+
+```sh
+uv run --frozen pytest -m 'not canonical and not browser' -q
+uv run --frozen pytest -m 'canonical and not browser' -q
 ```
 
 Run the browser tests with Playwright-managed Chromium:
@@ -274,10 +344,16 @@ uv run --frozen playwright install --with-deps chromium
 uv run --frozen pytest -m browser -q
 ```
 
+Use `-m 'browser and not canonical'` for the synthetic browser proof. All fixture
+builds and additive/removal proofs use temporary directories. CI runs both
+ordinary categories together, then the full browser suite. If Playwright's
+bundled Node crashes locally, set `PLAYWRIGHT_NODEJS_PATH=/usr/bin/node` after
+verifying the installed Node works; this changes only the test environment.
+
 Other useful checks are:
 
 ```sh
-ruff check . --no-cache
+uv run --frozen ruff check . --no-cache
 node --check static/exercises.js
 node --check static/navigation.js
 git diff --check
@@ -292,8 +368,3 @@ altered:
 - answer keys or response groups;
 - matching display order;
 - saved-state identities.
-
-The canonical build currently produces 3 modules, 10 subsections, 30 exercises
-and 43 learning pages, plus Home and About (45 content pages in the sitemap).
-The generated `404.html` fallback brings the total to 46 HTML files; it is outside
-course traversal and progress.

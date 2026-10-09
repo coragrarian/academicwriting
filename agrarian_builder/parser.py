@@ -386,6 +386,9 @@ class _ContentParser:
         set so their demonstrations do not consume scored gap labels.
     item_labels
         Source labels mapped to item anchors for gaps answered by named items.
+    source_lines
+        Original exercise lines, retained to validate matching-table cells
+        before Markdown's table normalisation can hide malformed boundaries.
 
     Notes
     -----
@@ -403,6 +406,7 @@ class _ContentParser:
         interaction: str | None,
         seen_gaps: set[str],
         item_labels: dict[str, str],
+        source_lines: list[str],
     ):
         self.markdown = markdown
         self.context = context
@@ -411,6 +415,7 @@ class _ContentParser:
         self.interaction = interaction
         self.seen_gaps = seen_gaps
         self.item_labels = item_labels
+        self.source_lines = source_lines
         self.questions: list[Question] = []
         self.linked_gaps: set[str] = set()
 
@@ -456,6 +461,13 @@ class _ContentParser:
         """
 
         def replace_inline(match: re.Match[str]) -> str:
+            if (
+                match.string[:match.start()].rstrip().endswith("|")
+                or match.string[match.end():].lstrip().startswith("|")
+            ):
+                raise SourceError(
+                    f"{self.context}: inline choices require exactly two alternatives"
+                )
             correct_left = match.group("left") is not None
             marked = match.group("left") if correct_left else match.group("right")
             correct = MARK_RE.fullmatch(marked)
@@ -531,6 +543,21 @@ class _ContentParser:
         two structures. Questions follow mapping order, and their alternatives
         follow table order. Any learner-facing reorder belongs to the renderer.
         """
+        # Markdown tables pad missing cells and discard excess cells. Matching
+        # must validate authored boundaries before that normalisation can hide
+        # an incomplete or ambiguous answer. Escaped pipes remain cell text.
+        assert chunk[0].map is not None
+        start, end = chunk[0].map
+        for line in self.source_lines[start + 2:end]:
+            cells = re.split(r"(?<!\\)\|", line.strip())
+            if cells and not cells[0]:
+                cells.pop(0)
+            if cells and not cells[-1]:
+                cells.pop()
+            if len(cells) != 2:
+                raise SourceError(
+                    f"{self.context}: matching row requires exactly two cells: {line.strip()!r}"
+                )
         rows = _table_rows(chunk)
         if len(rows) < 2 or len(rows[0]) != 2:
             raise SourceError(
@@ -615,6 +642,9 @@ class _ContentParser:
                             )
                         )
                     correct_count = sum(option.correct for option in options)
+                    keys = [option.key for option in options if option.key]
+                    if len(keys) != len(set(keys)):
+                        raise SourceError(f"{self.context}: duplicate option labels in choice list")
                     if not correct_count:
                         raise SourceError(f"{self.context}: choice list has no correct answer")
                     question = self._add(
@@ -777,6 +807,7 @@ def _exercise(
     }
     seen_gaps: set[str] = set()
     linked_gaps: set[str] = set()
+    source_lines = source.splitlines()
     for container in containers:
         is_model = container.title == "Model"
         parser = _ContentParser(
@@ -787,8 +818,15 @@ def _exercise(
             container.metadata.interaction or exercise.metadata.interaction,
             set() if is_model else seen_gaps,
             item_labels,
+            source_lines,
         )
         blocks = parser.parse()
+        if container.metadata.interaction == "typed-gap" and not any(
+            question.kind == "typed-gap" for question in parser.questions
+        ):
+            raise SourceError(
+                f"{context}, {container.title}: typed-gap metadata has no labelled gaps"
+            )
         linked_gaps |= parser.linked_gaps
         if container == root:
             exercise.blocks, exercise.direct_questions = blocks, parser.questions
