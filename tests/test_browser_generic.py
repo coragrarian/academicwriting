@@ -1,6 +1,7 @@
 """Browser contracts exercised independently of the canonical course."""
 
 import json
+import re
 from itertools import pairwise
 
 import pytest
@@ -41,6 +42,53 @@ def assert_accessible_structure(page):
             "link", "button", "textbox", "combobox", "radio", "checkbox", "image",
         }:
             assert node.get("name", {}).get("value", "").strip(), node
+
+
+def contrast_ratio(first, second):
+    """WCAG relative luminance for opaque computed CSS rgb colours."""
+    def luminance(colour):
+        channels = [int(value) / 255 for value in re.findall(r"\d+", colour)[:3]]
+        linear = [
+            value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4
+            for value in channels
+        ]
+        return sum(weight * value for weight, value in zip((0.2126, 0.7152, 0.0722), linear))
+
+    dark, light = sorted((luminance(first), luminance(second)))
+    return (light + 0.05) / (dark + 0.05)
+
+
+def test_control_boundaries_and_progress_have_contrast_and_distinct_shapes(page, synthetic_site, synthetic_documents):
+    for kind in ("typed-gap", "matching"):
+        page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+        for control in page.locator("select, .typed-gap").all():
+            border, inside, outside = control.evaluate("""node => {
+              let parent = node.parentElement;
+              while (getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement;
+              const style = getComputedStyle(node);
+              return [style.borderColor, style.backgroundColor, getComputedStyle(parent).backgroundColor];
+            }""")
+            assert min(contrast_ratio(border, inside), contrast_ratio(border, outside)) >= 3
+
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
+    exercise = page.locator("#exercise-form").get_attribute("data-exercise-id")
+    dot = page.locator(f'[data-exercise-link="{exercise}"] .state-dot')
+    shapes = []
+    key = json.loads(page.locator("#answer-key").text_content())
+    for status in ("not-started", "in-progress", "completed"):
+        if status != "not-started":
+            respond(page, key, wrong_id=next(iter(key["questions"])) if status == "in-progress" else None)
+            page.locator("button[type=submit]").click()
+        expect(dot.locator("xpath=..")).to_have_attribute("data-status", status)
+        border, background, image, adjacent = dot.evaluate("""node => {
+          const style = getComputedStyle(node);
+          const link = getComputedStyle(node.parentElement);
+          return [style.borderColor, style.backgroundColor, style.backgroundImage,
+            link.backgroundColor === 'rgba(0, 0, 0, 0)' ? getComputedStyle(document.body).backgroundColor : link.backgroundColor];
+        }""")
+        assert contrast_ratio(border, adjacent) >= 3
+        shapes.append((background == "rgba(0, 0, 0, 0)", image == "none"))
+    assert len(set(shapes)) == 3
 
 
 @pytest.mark.parametrize("kind", ["single-choice", "multi-select", "inline-choice", "gap", "typed-gap", "matching"])
