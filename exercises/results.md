@@ -8,31 +8,40 @@ order: 3
 
 ## Purpose and organisation of the Results section
 
-### Exercise 1
+The Results section reports the findings produced by the study and presents the evidence relevant to its research questions or objectives. Writers organise the section so that readers can follow the main patterns, comparisons, and other important findings, while tables and figures can present supporting detail.
 
-The statements below are project-authored guidance on reporting results.
+There is no single mandatory way to organise a Results section. Findings may be organised around research objectives or questions, analyses, themes, or principal results, depending on the study, discipline, and journal.
+
+*See [Nair and Nair (2014)](https://doi.org/10.1007/978-3-319-03101-9_2) on organising and presenting Results, [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on reporting and commenting functions in Agricultural Science research articles, and ICMJE's [Preparing a Manuscript for Submission to a Medical Journal](https://www.icmje.org/recommendations/browse/manuscript-preparation/preparing-for-submission.html) on reporting Results and the relationship between prose, tables and figures.*
+
+### Exercise 1
 
 **Instructions:** Match each sentence beginning with the ending that completes it.
 
 | Beginning | Text |
 | --- | --- |
-| A | The Results section reports the study's findings; |
-| B | Readers need a precise account of the findings, so the Results must be written |
+| A | In an empirical research article, the Results section reports the study's findings; |
+| B | Readers need a clear and precise account of the findings, including uncertainty where relevant, so the Results must be written |
 | C | A useful way to organise the findings is to follow the order in which the |
-| D | When tables and graphs already contain the data, the text should emphasise the |
+| D | When tables and figures already present the detailed data, the Results prose should emphasise the |
 
 **Endings:**
 
 - <mark class="correct-answer">[C]</mark> research objectives appear in the Introduction.
-- <mark class="correct-answer">[A]</mark> therefore, it provides the central evidence for the paper.
-- <mark class="correct-answer">[D]</mark> key findings rather than every individual value.
-- <mark class="correct-answer">[B]</mark> in clear and unambiguous language.
+- <mark class="correct-answer">[A]</mark> these provide central evidence for answering its research questions or objectives.
+- <mark class="correct-answer">[D]</mark> main patterns, comparisons, and other important findings rather than repeat every individual value.
+- <mark class="correct-answer">[B]</mark> in clear and precise language.
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The completed statements describe four basic principles for
-    organising and presenting a Results section.
+    Correct. The completed statements describe four useful guidelines for
+    organising and presenting a Results section. Organising findings in
+    objective order can help readers, but it is one strategy rather than a
+    universal requirement; questions, analyses, themes, or principal findings
+    can also guide organisation. Selective emphasis in prose does not mean
+    suppressing outcomes: detailed results should remain available in an
+    appropriate table, figure, or other report.
   incorrect: >
     Read each sentence beginning as a grammatical unit and ask what kind of
     ending it requires. Pay particular attention to the links between the
@@ -43,10 +52,8 @@ feedback:
 
 **Instructions:** Read the following guidelines for writing a Results section. Choose the **incorrect** guideline.
 
-The guidelines below are project-authored.
-
 - [ ] a) Refer to each table and figure in the text using its number.
-- [ ] b) Avoid displaying identical data in both a table and a graph.
+- [ ] b) Avoid presenting the same information redundantly in both a table and a graph.
 - [x] c) Omit any results that contradict the initial hypothesis.
 - [ ] d) Summarise numerical data with appropriate statistics.
 
@@ -54,31 +61,41 @@ The guidelines below are project-authored.
 feedback:
   options:
     a: >
-      This is an appropriate reporting guideline: tables and figures should
-      be referred to clearly in the text.
+      This is a common manuscript convention: numbered tables and figures
+      should be referred to clearly in the text. Follow the conventions of
+      the target journal, particularly for supplementary material.
     b: >
-      This is an appropriate guideline. Presenting the same information in
-      both a table and a graph is usually unnecessary duplication.
+      Showing identical information twice is usually unnecessary. Different
+      displays may still be justified when they communicate genuinely
+      different aspects or levels of detail.
     c: >
-      Correct. Results should not be excluded merely because they do not
-      support the original hypothesis. Unexpected or non-supporting findings
-      are still part of the study's results.
+      Correct. Results should not be omitted merely because they fail to
+      support or contradict the original hypothesis. Unexpected, null,
+      contradictory, and non-supporting findings remain part of the study's
+      results and should be reported appropriately.
     d: >
-      This is an appropriate guideline. Statistical summaries can make large
-      amounts of numerical information easier to communicate.
+      Appropriate numerical summaries can help communicate patterns in the
+      data. The form depends on the study and type of data and may include
+      descriptive statistics, estimates, measures of uncertainty, graphical
+      summaries, or inferential results. Statistical significance is not
+      the same as substantive importance.
 -->
 
 ## Grammar and vocabulary in the Results section
 
+Results sections use a range of grammatical and lexical resources to report findings, compare groups or values, describe changes, and direct readers to tables and figures. Writers may also make limited interpretations of the findings when the article structure and disciplinary conventions allow it.
+
+The boundary between reporting and interpretation is not identical in every research article. Broader explanation, causal argument, and comparison with previous research may appear in a separate Discussion or in a combined Results and Discussion section.
+
+*See [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on reporting and commenting functions in Agricultural Science research articles. Journal conventions vary: [PLOS ONE](https://journals.plos.org/plosone/s/submission-guidelines), for example, permits separate or combined Results and Discussion sections. Follow the target journal's author guidelines.*
+
 ### Exercise 1
 
-**Instructions:** Complete the passage with the verbs in the answer bank. Use each form the number of times indicated by the gaps.
+**Instructions:** Complete the passage with the verbs in the answer bank. Use was and were twice each. Use the other verbs once.
 
-The passage below is project-authored; the study details are illustrative.
-
-> Weather conditions at the study site [1] __________ a seasonal cycle. Summers [2] __________ warm and dry. Reference evapotranspiration [3] __________ below 1 mm per day in winter. Rainfall [4] __________ concentrated in the cooler months.
+> A field experiment compared irrigated and rain-fed wheat plots over one growing season. Plant development [1] __________ a similar pattern in both treatments during the first month. The irrigated plots [2] __________ greener at the second assessment. Soil water content [3] __________ after irrigation was temporarily withheld. Rainfall [4] __________ low during the middle of the season.
 >
-> The electrical conductivity of drainage water (ECd) [5] __________ after saline irrigation began. ECd [6] __________ with rainfall and irrigation, and the non-equilibrium [7] __________ most evident immediately after rain. Average values of ECd [8] __________ higher under the more saline treatment.
+> Mean plant height [5] __________ between the first and final measurements. Canopy temperature [6] __________ during midday observations as cloud cover changed. The difference in soil water content between treatments [7] __________ greatest near the end of the trial. Final grain yields [8] __________ higher in the irrigated plots.
 
 **Answer bank:**
 
@@ -94,19 +111,21 @@ The passage below is project-authored; the study details are illustrative.
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The selected verbs fit the meaning of the passage and the
-    grammatical number of their subjects.
+    Correct. These sentences describe observations in a completed study
+    scenario, so past forms fit this local time reference. "Was" agrees with
+    singular or non-count subjects such as "rainfall" and "the difference";
+    "were" agrees with plural subjects such as "plots" and "yields".
+    "Followed", "fell", "increased", and "fluctuated" describe patterns or
+    changes. Results sections do not universally use only the simple past.
   incorrect: >
-    Review both meaning and subject-verb agreement. For example, singular
-    subjects such as "rainfall" and "the non-equilibrium" take "was", while
-    plural subjects such as "summers" and "average values" take "were".
+    Review both the pattern or change being described and agreement with
+    the subject. Use "was" with "rainfall" and "the difference", and
+    "were" with "plots" and "yields" in this completed study scenario.
 -->
 
 ### Exercise 2
 
-This exercise focuses on word combinations used to describe and interpret results in Agrarian Sciences research articles.
-
-The sentences below are project-authored illustrations.
+This exercise focuses on expressions used to report, compare, and sometimes interpret results in Agrarian Sciences research articles.
 
 **Instructions:** For each item, choose the expression that best completes the sentence.
 
@@ -128,7 +147,9 @@ The sentences below are project-authored illustrations.
 
 #### Item C
 
-> Seedling height was recorded __________ the trial.
+> The soil carbon pool management index was computed __________ the experiment (i.e., day 360).
+
+*Source: [Zhang et al. (2022)](https://doi.org/10.5194/soil-8-605-2022).*
 
 - [x] at the end of
 - [ ] higher than that of
@@ -187,7 +208,9 @@ The sentences below are project-authored illustrations.
 
 #### Item J
 
-> The yield measurements for the three sampling dates __________ Table 2.
+> The socio-demographic and attitudinal attributes of the interviewed consumers __________ Table 2.
+
+*Source: [Asioli et al. (2019)](https://doi.org/10.1016/j.foodres.2018.11.037).*
 
 - [ ] an increase in
 - [x] are shown in
@@ -197,29 +220,32 @@ The sentences below are project-authored illustrations.
 <!-- agrarian
 feedback:
   correct: >
-    Correct. Each expression forms a natural grammatical and semantic
-    combination in its sentence.
+    Correct. Each expression fits the grammatical structure and intended
+    meaning of its sentence.
   incorrect: >
-    Read the words immediately before and after the gap. Use both collocation
-    and grammar: comparison, cause, agreement, location in a document, and
-    statistical difference require different expressions.
+    Read the words immediately before and after the gap. Consider the
+    relationship being expressed: comparison, explanation, document reference,
+    quantity, or statistical difference. Statistical significance does not
+    by itself establish substantive importance.
 -->
 
 ### Exercise 3
 
-In Results sections, writers sometimes use adverbs to qualify or evaluate findings.
-
-The model and sentences below are project-authored illustrations.
+Results writers sometimes use adverbs to modify findings in different ways. Depending on the sentence, an adverb may express degree, statistical comparison, direction of effect, how clearly a pattern is observed, or the writer's level of commitment.
 
 **Instructions:** Transform the word in parentheses into the adverb that correctly completes each sentence. Follow the model.
 
 #### Model
 
-> Using the same measurement procedure in every plot is **certainly** *(certain)* advantageous for comparing treatments.
+> Soil organic carbon was **strongly** *(strong)* correlated with hot water extractable carbon (R² = 0.75).
+
+*Adapted from [Ortner et al. (2022)](https://doi.org/10.5194/soil-8-113-2022).*
 
 #### Item A
 
-> The mean height of the watered plants was __________ [1] *(significant)* higher than that of the controls.
+> The root volume was __________ [1] *(significant)* higher under deep tillage with no traffic than under zero or shallow tillage with conventional tyre pressure.
+
+*Adapted from [Hobson et al. (2022)](https://doi.org/10.5194/soil-8-391-2022).*
 
 #### Item B
 
@@ -227,7 +253,9 @@ The model and sentences below are project-authored illustrations.
 
 #### Item C
 
-> The PCA __________ [3] *(clear)* separated plots with different irrigation treatments.
+> The principal component analysis __________ [3] *(clear)* separated the three treatments.
+
+*Adapted from [Zhang et al. (2022)](https://doi.org/10.5194/soil-8-605-2022).*
 
 #### Item D
 
@@ -244,8 +272,12 @@ The model and sentences below are project-authored illustrations.
 interaction: typed-gap
 feedback:
   correct: >
-    Correct. Each adjective has been converted to the adverb form required to
-    modify an adjective or verb in the sentence.
+    Correct. Each adjective has been converted to an adverb modifying an
+    adjective or verbal predicate. "Significantly" modifies "higher" in a
+    statistical comparison; "clearly" modifies "separated"; "adversely"
+    modifies "affecting"; and "substantially" modifies "increased" to express
+    degree. In the model, "strongly" modifies "correlated"; R² is a coefficient
+    of determination, not a universal threshold for a strong relationship.
   incorrect: >
     Check which word the gap modifies. These gaps require adverbs rather than
     adjectives: for example, "significantly higher" and "clearly separated".
@@ -259,7 +291,7 @@ The passage below is adapted from [Wietzke et al. (2020)](https://doi.org/10.101
 
 Pay attention to whether the verb functions as a finite main verb or as a participle modifying or introducing another part of the sentence. The same spelling can serve different grammatical functions.
 
-> In total, we __________ [1] *(find)* 207 herbaceous plant species (crops, sown ornamentals, woody seedlings and eight species only determinable to genus level excluded) in the 67 __________ [2] *(study)* arable fields over the 4 yr study period (2016–2019, Table A.7 in the Appendix). 122 of these species are considered as typical arable plants in Germany (according to Hofmeister and Garve, 2006). The influence of plot type on species richness and cover __________ [3] *(be)* highly significant for all herbaceous species and the typical arable plants (p < 0.0001; Table A.8 in the Appendix). __________ [4] *(compare)* to the field edge plots, the field interior __________ [5] *(show)* significantly lower species numbers and, in most cases, cover values (Fig. 1 and Fig. A.4 in the Appendix). Even though interannual fluctuation was substantial, the richness and cover of all herbaceous species in the plots of the measures __________ [6] *(be)* higher (median across all measures and years: 21 species and 68.5 cover) than in the control field edge plots (9 species and 9.5 cover; Fig. A.4 in the Appendix). However, the species richness of the CFM and AFS plots __________ [7] *(differ)* in the second year not significantly from the pre-survey plots (for CFM and AFS) and in the third year from the field edge plots (for CFM). We found no clear differences between the four measure types with respect to the increase in total plant species richness and cover compared to the control.
+> In total, we __________ [1] *(find)* 207 herbaceous plant species (crops, sown ornamentals, woody seedlings and eight species only determinable to genus level excluded) in the 67 __________ [2] *(study)* arable fields over the 4 yr study period (2016–2019, Table A.7 in the Appendix). 122 of these species are considered as typical arable plants in Germany (according to Hofmeister and Garve, 2006). The influence of plot type on species richness and cover __________ [3] *(be)* highly significant for all herbaceous species and the typical arable plants (p < 0.0001; Table A.8 in the Appendix). __________ [4] *(compare)* to the field edge plots, the field interior __________ [5] *(show)* significantly lower species numbers and, in most cases, cover values (Fig. 1 and Fig. A.4 in the Appendix). Even though interannual fluctuation was substantial, the richness and cover of all herbaceous species in the plots of the measures __________ [6] *(be)* higher (medians across all measures and years: 21 species and 68.5% cover) than in the control field edge plots (9 species and 9.5% cover; Fig. A.4 in the Appendix). However, species richness in the CFM and AFS plots __________ [7] *(differ)* from the pre-survey plots in the second year, although the differences were not significant; the same pattern was observed for CFM plots compared with the field-edge plots in the third year. We found no clear differences between the four measure types with respect to the increase in total plant species richness and cover compared to the control.
 
 **Answer key:**
 
@@ -271,7 +303,7 @@ Pay attention to whether the verb functions as a finite main verb or as a partic
 - <mark class="correct-answer">[6]</mark> were
 - <mark class="correct-answer">[7]</mark> differed
 
-*Adapted from [Wietzke et al. (2020)](https://doi.org/10.1016/j.agee.2020.107142).*
+*Adapted from [Wietzke et al. (2020)](https://doi.org/10.1016/j.agee.2020.107142), using the [author's corrected dissertation version, Chapter 3](https://d-nb.info/1231102217/34).*
 
 <!-- agrarian
 interaction: typed-gap
@@ -303,14 +335,12 @@ feedback:
       subject "richness and cover".
     "7": >
       "Differed" is the finite simple-past main verb with the subject
-      "the species richness of the CFM and AFS plots".
+      "species richness in the CFM and AFS plots".
 -->
 
 ### Exercise 5
 
-When presenting results, authors often compare values, groups, or conditions.
-
-The sentences and measurements below are project-authored illustrations.
+This exercise focuses on language used to compare values, groups, and conditions in Results sections.
 
 **Instructions:** Complete each gap with an expression from the answer bank. One expression is not used.
 
@@ -337,20 +367,21 @@ The sentences and measurements below are project-authored illustrations.
 feedback:
   correct: >
     Correct. The expressions accurately mark comparison, relative magnitude,
-    or difference in the seven sentences.
+    or difference in these seven sentences. Both "compared to" and "compared
+    with" occur in research writing; neither is universally required.
   incorrect: >
     Check the grammatical pattern around each gap. Some expressions compare
     two quantities directly ("higher than", "less than"), while others follow
-    verbs or introduce a comparison ("differed from", "compared to").
+    verbs or introduce a comparison ("differed from", "compared to"). In
+    “higher than that for B”, “that” replaces the singular noun phrase “the value”;
+    a plural referent would require “those”.
 -->
 
 ### Exercise 6
 
-Writers use a range of reporting verbs to present findings.
+Writers use different reporting verbs to present findings and indicate relationships between analyses, observations, displays, and conclusions.
 
-These verbs differ in reporting function, what they attribute to an analysis or sample, and the strength of the claim. A grammatical alternative can change one of these relationships.
-
-The model and sentences below are project-authored illustrations.
+Reporting verbs differ not only in grammar but also in what they attribute to the subject and how strongly they present a conclusion. An alternative may therefore be grammatical but still be less appropriate in a particular context. Consider the subject's role, the reporting function, and the evidential warrant.
 
 **Instructions:** For each sentence, choose the alternative that is **least appropriate** in the gap. Follow the model.
 
@@ -360,10 +391,9 @@ feedback:
     Correct. The selected alternatives are the least appropriate choices in
     their contexts.
   incorrect: >
-    Consider both grammar and the reporting function of the verb. Some
-    alternatives are grammatically possible but less appropriate because
-    they describe the wrong relationship or make a substantially stronger
-    claim than the surrounding sentence supports.
+    Consider the subject's role, the reporting function, and the evidence
+    supporting the claim. An alternative can be grammatical while changing
+    the relationship or claiming more than the supplied evidence establishes.
 -->
 
 #### Model
@@ -376,15 +406,16 @@ feedback:
 
 #### Item A
 
-> A three-way ANOVA __________ that irrigation frequency had a significant effect on seedling height.
+> The one-way ANOVA analysis __________ highly significant differences for each soil layer.
+
+*Adapted from [Hobson et al. (2022)](https://doi.org/10.5194/soil-8-391-2022).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "Observed" is least appropriate for attributing an analytical
-    finding to an ANOVA. "Demonstrated" and "revealed" conventionally report
-    what the analysis established; "observed" usually describes what
-    researchers notice or measurements record.
+    Correct. In this sentence, "demonstrated" and "revealed" can present what
+    the analysis established or disclosed. "Observed" does not fit the
+    attribution as well with ANOVA as the subject in this reporting frame.
   incorrect: >
     This is a reporting-function distinction, not a claim that the verb
     "observe" is ungrammatical. Consider how a finding is attributed to
@@ -402,9 +433,10 @@ feedback:
 <!-- agrarian
 feedback:
   correct: >
-    Correct. Analyses or tests can be "performed", but differences are
-    findings rather than procedures. "Found" and "observed" fit this
-    report of whether differences were detected.
+    Correct. "Found" and "observed" can report the detection of differences.
+    "Performed" describes carrying out a procedure, test, or analysis, so it
+    does not express the intended relationship here. A non-significant
+    result does not by itself establish equivalence.
   incorrect: >
     The sentence reports the outcome of a comparison, not the procedure
     carried out. "Found" and "observed" can report differences; "performed"
@@ -417,17 +449,21 @@ feedback:
 
 #### Item C
 
-> The diluted solutions __________ a behaviour close to that of the control sample.
+> The solutions with a thymol concentration of 0.1 mg/mL __________ a behaviour similar to that found in the control sample.
+
+*Adapted from [Marcet et al. (2018)](https://doi.org/10.1016/j.jfoodeng.2018.06.030).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "Discovered" assigns the act of finding something out to the
-    solutions. "Showed" and "revealed" can report behaviour exhibited by
-    the samples, without making them the discoverers.
+    Correct. In this laboratory context, the solutions can "show" or
+    "reveal" a behaviour or pattern. "Discover" normally attributes finding
+    something out to an investigator or other knowing agent, so it does
+    not fit the subject–verb relationship here.
   incorrect: >
-    Consider the subject of the verb. Solutions can show or reveal a
-    behaviour; discovering it is attributed to investigators.
+    Consider the subject's role in this laboratory context. Solutions can
+    exhibit behaviour, while discovering something attributes finding it out
+    to a knowing agent. This is a local reporting distinction.
 -->
 
 - [x] discovered
@@ -443,9 +479,10 @@ Treat the diagram here as a display of the results.
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "Explained" implies an account of how or why something occurs.
-    "Illustrated" and "shown" directly refer to displaying the results.
-    "Explained" is grammatical, but changes the reporting function specified here.
+    Correct. In this sentence, the diagram functions as a display of the
+    results, so "shown" and "illustrated" fit. "Explained" could be possible
+    where a diagram helps account for or clarify a relationship, but it is
+    least appropriate for the display function intended here.
   incorrect: >
     Distinguish displaying a result from explaining it. The task asks for
     a direct reference to the display, without adding an explanatory claim.
@@ -464,9 +501,11 @@ For this item, judge what the observed trend alone supports; no independent proo
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "Proves" is grammatical and is used in research writing, but
-    claims conclusive support. The trend alone supplies an indication or
-    suggestion, rather than establishing this interpretation conclusively.
+    Correct. "Indicates" and "suggests" can present an inference from the
+    observed trend. "Proves" would claim that the conclusion has been
+    established by the evidence. Because the sentence provides only the
+    trend and no independent demonstration of that conclusion, "proves"
+    is the least appropriate choice here.
   incorrect: >
     "Indicates" and "suggests" can report an inference from the trend.
     "Proves" makes a stronger claim that would need sufficient evidence.
@@ -480,14 +519,12 @@ feedback:
 
 ### Exercise 7
 
-In Results sections, writers often report changes observed during a study.
-
-The sentences and measurements below are project-authored illustrations.
+This exercise focuses on verbs used to describe increases, decreases, stability, and other changes over time.
 
 **Instructions:** Complete the sentences with the verbs in the answer bank. Use each verb once.
 
 1. During the study, the proportion of irrigated plots __________ [1] from 20% to 35%.
-2. The sampling plan initially covered only cultivated fields, but it __________ [2] over time to include fallow plots.
+2. At the beginning of the staging period, ‘growing crop’ was the dominant crop stage, although this __________ [2] over time to include more stubble fields and bare soils as harvesting and autumn sowing proceeded. *Adapted from [Nilsson et al. (2016)](https://doi.org/10.1016/j.agee.2015.12.021).*
 3. The area of ground covered by shade __________ [3] from 6 m² to 4 m² after pruning.
 4. The mean moisture content __________ [4] stable throughout the observation period.
 
@@ -501,8 +538,11 @@ The sentences and measurements below are project-authored illustrations.
 <!-- agrarian
 feedback:
   correct: >
-    Correct. Each verb matches the direction or type of change described in
-    the sentence.
+    Correct. "Increased" describes upward change, "decreased" downward
+    change, and "remained stable" a stable state. "Changed" describes the
+    broader change in crop-stage composition during the staging period.
+    "Remained stable" in descriptive language does not by itself establish
+    statistical equivalence.
   incorrect: >
     Use the surrounding information to identify the type of change: an
     increase, a decrease, a stable state, or a more general change over time.
