@@ -158,6 +158,46 @@ def test_a_late_aborted_response_cannot_replace_the_newer_destination(page, synt
     expect(page.locator("h1")).to_have_text(exercise.title)
 
 
+def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, synthetic_documents):
+    page.set_viewport_size({"width": 320, "height": 900})
+    page.goto(f"{synthetic_site[0]}/{synthetic_documents[0].slug}/index.html")
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    expect(page.locator("main")).to_be_focused()
+    page.keyboard.press("Tab")
+    assert page.locator(":focus").evaluate("n => !!n.closest('main')")
+    expect(page.locator(".course-link, .module-link")).to_have_count(2)
+    assert page.locator(".course-link, .module-link").evaluate_all(
+        "nodes => nodes.every(n => n.getAttribute('aria-current') === 'true')"
+    )
+    toggle = page.locator(".course-toggle")
+    cue = toggle.locator(".disclosure-cue")
+    expect(cue).to_have_attribute("aria-hidden", "true")
+    assert cue.evaluate("n => getComputedStyle(n, '::before').content") == '"+"'
+    toggle.focus()
+    page.keyboard.press("Enter")
+    assert cue.evaluate("n => getComputedStyle(n, '::before').content") == '"−"'
+    page.locator(".course-tree details").evaluate_all("nodes => nodes.forEach(n => n.open = true)")
+    for target in page.locator(".course-panel a:visible, .course-panel summary:visible, .page-navigation a").all():
+        assert target.bounding_box()["height"] >= 44
+        target.focus()
+        assert target.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    assert "0 of" in page.locator(".nav-module-group > summary").first.aria_snapshot()
+
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
+    trail = page.get_by_role("navigation", name="Breadcrumb")
+    expect(trail.locator("ol > li")).to_have_count(4)
+    expect(trail.locator('[aria-current="page"]')).to_have_text(
+        "/ " + page.locator("h1").text_content()
+    )
+    expect(page.locator('.course-panel a[aria-current="page"]')).to_have_count(1)
+    option = page.locator(".choice-option").first
+    option.locator("input").focus()
+    assert option.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    assert option.locator("input").evaluate("n => getComputedStyle(n).outlineStyle") == "none"
+
+
 @pytest.mark.parametrize("kind", ["single-choice", "multi-select", "inline-choice", "gap", "typed-gap", "matching"])
 def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synthetic_site, synthetic_documents, kind):
     path = exercise_path(synthetic_documents, kind)
@@ -186,6 +226,9 @@ def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synt
     page.locator("button[type=submit]").click()
     expect(page.locator("[data-current-status]")).to_have_text("Completed")
     expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(f"1/{len(site_data['modules'][module])}")
+    assert f"1 of {len(site_data['modules'][module])} exercises completed" in page.locator(
+        f'[data-progress-module="{module}"]'
+    ).locator("xpath=..").aria_snapshot()
     expect(page.locator(".worked-model [data-question]")).to_have_count(0)
     if kind == "single-choice":
         expect(page.locator("[data-item-feedback]")).to_contain_text("This is the requested label.")
@@ -215,6 +258,7 @@ def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synt
     assert page.evaluate("module => JSON.parse(localStorage.getItem(`agrarian-writing-v2:${module}`))", module) == saved
     page.locator("#reset-exercise").click()
     expect(page.locator("[data-current-status]")).to_have_text("Not started")
+    expect(page.locator("#exercise-feedback")).to_have_text("Exercise reset.")
     expect(page.locator("[data-result], input:checked")).to_have_count(0)
     expect(page.locator("[data-item-feedback]:visible, #shared-feedback:visible")).to_have_count(0)
     assert page.locator("select, input[type=text]").evaluate_all("nodes => nodes.every(n => n.value === '')")
@@ -321,6 +365,12 @@ def test_feedback_local_overrides_shared_and_obsolete_progress_does_not_count(pa
     respond(page, key, wrong_id="item-b-q1")
     page.locator("button[type=submit]").click()
     expect(page.locator("#exercise-feedback")).to_have_text("1 of 2 items correct. Review Item B.")
+    review = page.locator('#exercise-feedback a[href="#item-b"]')
+    review.focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#item-b")).to_be_focused()
+    page.keyboard.press("Tab")
+    expect(page.locator('[data-question="item-b-q1"]')).to_be_focused()
     expect(page.locator("#item-a-feedback")).to_contain_text("first local label agrees")
     expect(page.locator("#item-a-feedback .gap-feedback")).to_contain_text("local explanation replaces")
     expect(page.locator("#item-b-feedback .gap-feedback")).to_contain_text("Use the second label.")

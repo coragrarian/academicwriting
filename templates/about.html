@@ -2,7 +2,10 @@
 {% from "_person.html" import entry with context %}
 {% block content %}
 <div class="project-page project-page--about">
-  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>About</span></nav>
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><ol role="list">
+    <li><a href="{{ home_url }}">Home</a></li>
+    <li aria-current="page"><span aria-hidden="true">/</span> About</li>
+  </ol></nav>
   <div class="page-head">
     <h1>About Academic Writing for Agrarian Sciences</h1>
     <p class="lead">Research on academic English in the Agrarian Sciences, corpus data and teaching materials.</p>

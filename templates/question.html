@@ -5,7 +5,7 @@
   {% endfor %}
 </ul>
 {% elif question.kind in ('single-choice', 'multi-select') %}
-<fieldset class="choice-question" id="{{ question.id }}" data-question="{{ question.id }}" aria-describedby="{{ question.id }}-feedback">
+<fieldset class="choice-question" id="{{ question.id }}" data-question="{{ question.id }}" aria-describedby="{{ question.id }}-feedback" tabindex="-1">
   <legend>{{ 'Choose one answer' if question.kind == 'single-choice' else 'Select all that apply' }}</legend>
   {% for option in question.options %}
   <label class="choice-option">

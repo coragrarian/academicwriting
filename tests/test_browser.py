@@ -92,7 +92,7 @@ def test_representative_interactions_feedback_retry_reset_and_persistence(
     )
     page.locator("#reset-exercise").click()
     expect(page.locator("[data-current-status]")).to_have_text("Not started")
-    expect(page.locator("#exercise-feedback")).to_be_empty()
+    expect(page.locator("#exercise-feedback")).to_have_text("Exercise reset.")
     expect(page.locator("[data-result]")).to_have_count(0)
     expect(page.locator("[data-item-feedback]:visible, #shared-feedback:visible")).to_have_count(
         0
@@ -442,7 +442,7 @@ def test_global_course_tree_defaults_and_current_page(page, site, level):
         "exercise": "/methods/purpose-of-the-methods-section/exercise-1",
     }[level]
     page.goto(f"{site[0]}{suffix}/index.html")
-    expect(page.locator('[aria-current="page"]')).to_have_count(1)
+    expect(page.locator('a[aria-current="page"]')).to_have_count(1)
     if level in {"home", "about"}:
         expect(page.locator(".course-panel, [data-site-navigation], [data-course-navigator]")).to_have_count(0)
         expect(page.locator(".nav-module-group, .nav-section-group, [data-exercise-link]")).to_have_count(0)
@@ -599,6 +599,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
     page.keyboard.press("Enter")
     assert page.url.endswith("#main")
+    expect(page.locator("main")).to_be_focused()
     page.locator(".contents-link").first.click()
     assert page.url == f"{site[0]}/introduction/index.html"
     expect(page.locator("h1")).to_have_text("The Introduction section")
@@ -768,6 +769,7 @@ def test_publication_headings_accessible_names_and_skip_target(page, site, path)
     page.keyboard.press("Tab")
     expect(page.locator(".skip-link")).to_be_focused()
     page.keyboard.press("Enter")
+    expect(page.locator("main")).to_be_focused()
     page.keyboard.press("Tab")
     assert page.locator(":focus").evaluate("node => !!node.closest('main')")
 

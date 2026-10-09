@@ -78,9 +78,15 @@ def test_complete_build(tmp_path, course_documents):
             assert sum(
                 1 for _, attrs in page.elements if "data-exercise-link" in attrs
             ) >= len(exercises)
+        current_links = [
+            attrs for tag, attrs in page.elements
+            if tag == "a" and attrs.get("aria-current") == "page"
+        ]
+        assert len(current_links) == (0 if not_found else 1)
+        assert all(local_link_target(output, path, attrs["href"]) == path for attrs in current_links)
         assert sum(
-            1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
-        ) == (0 if not_found else 1)
+            1 for tag, attrs in page.elements if tag == "li" and attrs.get("aria-current") == "page"
+        ) == (0 if path.relative_to(output) in {Path("index.html"), Path("404.html")} else 1)
         data = {}
         if public_page:
             assert "site-data" not in page.scripts
