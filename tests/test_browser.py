@@ -3,124 +3,18 @@
 import json
 import os
 import shutil
-import threading
 from dataclasses import replace
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from itertools import pairwise
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
 
 import pytest
-from playwright.sync_api import expect, sync_playwright
+from browser_support import open_exercise, respond, serve_not_found_candidate
+from playwright.sync_api import expect
 
 from agrarian_builder import renderer
 from agrarian_builder.renderer import build_site
 
-pytestmark = pytest.mark.browser
-
-
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass
-
-
-@pytest.fixture(scope="module")
-def site(tmp_path_factory, documents):
-    """Serve below /study so tests also exercise deployment under a URL prefix."""
-    root = tmp_path_factory.mktemp("browser-site")
-    build_site(documents, root / "study")
-    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(root)))
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    yield f"http://127.0.0.1:{server.server_port}/study", root / "study"
-    server.shutdown()
-    thread.join()
-    server.server_close()
-
-
-@pytest.fixture(scope="module")
-def browser():
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            channel=os.environ.get("AGRARIAN_BROWSER_CHANNEL") or None
-        )
-        yield browser
-        browser.close()
-
-
-@pytest.fixture
-def page(browser):
-    """Isolate learner storage between tests and surface uncaught frontend errors."""
-    context = browser.new_context(
-        viewport={"width": 1280, "height": 900}, reduced_motion="reduce"
-    )
-    page = context.new_page()
-    errors = []
-    page.on("pageerror", lambda error: errors.append(str(error)))
-    yield page
-    try:
-        assert not errors, errors
-    finally:
-        context.close()
-
-
-def open_exercise(page, site, module, section, number):
-    page.goto(f"{site[0]}/{module}/{section}/exercise-{number}/index.html")
-    expect(page.locator("#exercise-form")).to_have_attribute("data-exercise-initialised", "true")
-    return json.loads(page.locator("#answer-key").text_content())
-
-
-def respond(page, key, *, wrong_id=None, normalised=False):
-    """Fill native controls; leave the Check action to each test.
-
-    Parameters
-    ----------
-    wrong_id
-        Replace one response with an incorrect choice or text, keeping the
-        remaining responses correct.
-    normalised
-        Vary only case and whitespace in correct typed answers to exercise
-        the checking contract without changing the expected words.
-    """
-    for question_id, question in key["questions"].items():
-        control = page.locator(f'[data-question="{question_id}"]')
-        wrong = question_id == wrong_id
-        expected = question["expected"]
-        if question["kind"] == "typed-gap":
-            value = "wrong answer" if wrong else expected
-            if normalised and not wrong:
-                value = "  " + value.upper().replace(" ", "   ") + "  "
-            control.fill(value)
-        elif question["kind"] in ("single-choice", "multi-select"):
-            selected = (
-                expected
-                if not wrong
-                else [
-                    next(
-                        index
-                        for index in range(control.locator("input").count())
-                        if index not in expected
-                    )
-                ]
-            )
-            for input in control.locator("input").all():
-                should_select = int(input.get_attribute("value")) in selected
-                if question["kind"] == "multi-select":
-                    input.set_checked(should_select)
-                elif should_select:
-                    input.check()
-        else:
-            value = (
-                expected[0]
-                if not wrong
-                else next(
-                    index
-                    for index in range(control.locator("option").count() - 1)
-                    if index not in expected
-                )
-            )
-            control.select_option(str(value))
+pytestmark = [pytest.mark.browser, pytest.mark.canonical]
 
 
 CASES = [
@@ -141,7 +35,17 @@ CASES = [
 ]
 
 
-@pytest.mark.parametrize(("module", "section", "number"), CASES)
+# These paths repeat existing response-kind, grouping and feedback contracts.
+# Keep their geometry checks and full-course completion regressions below.
+LIFECYCLE_CASES = [case for case in CASES if case not in {
+    ("introduction", "reviewing-previous-research", 1),
+    ("introduction", "grammar-and-vocabulary-in-the-introduction-section", 1),
+    ("results", "grammar-and-vocabulary-in-the-results-section", 6),
+    ("results", "grammar-and-vocabulary-in-the-results-section", 7),
+}]
+
+
+@pytest.mark.parametrize(("module", "section", "number"), LIFECYCLE_CASES)
 def test_representative_interactions_feedback_retry_reset_and_persistence(
     page, site, module, section, number
 ):
@@ -170,8 +74,9 @@ def test_representative_interactions_feedback_retry_reset_and_persistence(
     page.locator("button[type=submit]").click()
     expect(page.locator("[data-current-status]")).to_have_text("Completed")
     expect(page.locator("[data-question][aria-invalid=true]")).to_have_count(0)
+    site_data = json.loads(page.locator("#site-data").text_content())
     expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(
-        f"1/{ {'methods': 7, 'introduction': 14, 'results': 9}[module] }"
+        f"1/{len(site_data["modules"][module])}"
     )
     assert page.locator("[data-item-feedback]").all_text_contents()
     assert "Correct." in " ".join(
@@ -762,28 +667,6 @@ def test_publication_metadata_follows_history_navigation(page, site):
     expect(page.locator('meta[property="og:url"]')).to_have_attribute(
         "content", "https://coragrarian.github.io/academicwriting/methods/purpose-of-the-methods-section/exercise-2/"
     )
-
-
-def serve_not_found_candidate(page, site):
-    """Serve the fallback at a missing URL and map production assets locally.
-
-    GitHub Pages retains the missing request's URL when returning 404.html.
-    Production links must work there without contacting the deployed site.
-    """
-    page.route(site[0] + "/missing/**", lambda route: route.fulfill(
-        status=404, content_type="text/html", body=(site[1] / "404.html").read_bytes()
-    ))
-
-    def production(route):
-        # Avoid request-context APIResponse objects outliving 404 recovery.
-        relative = unquote(urlsplit(route.request.url.removeprefix(renderer.SITE_URL)).path)
-        target = (site[1] / relative).resolve()
-        assert target.is_relative_to(site[1].resolve())
-        if target.is_dir():
-            target /= "index.html"
-        route.fulfill(path=target)
-
-    page.route(renderer.SITE_URL + "**", production)
 
 
 @pytest.mark.parametrize("javascript", [True, False])

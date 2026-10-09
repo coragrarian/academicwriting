@@ -6,126 +6,42 @@ import struct
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from dataclasses import replace
+from dataclasses import asdict, replace
 from hashlib import sha256
-from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
 
 import pytest
 from conftest import ROOT
+from site_support import (
+    PRODUCTION_URL,
+    Page,
+    course_sequence,
+    local_link_target,
+    navigation_targets,
+)
 
 from agrarian_builder import renderer
 from agrarian_builder.parser import parse_document
 from agrarian_builder.renderer import build_site
 
-PRODUCTION_URL = "https://coragrarian.github.io/academicwriting/"
 
-
-class Page(HTMLParser):
-    """Inspect rendered HTML independently of renderer implementation helpers.
-
-    The collector rejects duplicate IDs and retains raw JSON scripts so build
-    tests can check the browser data contract as well as page structure.
-    """
-
-    def __init__(self, source):
-        super().__init__()
-        self.elements = []
-        self.ids = set()
-        self.links = []
-        self.image_links = []
-        self.scripts = {}
-        self.regions = {"header": [], "main": [], "footer": []}
-        self.title = ""
-        self.headings = []
-        self._script = None
-        self._link = None
-        self._region = None
-        self._title = False
-        self._heading = None
-        self._heading_text = ""
-        self.feed(source)
-
-    def handle_starttag(self, tag, attributes):
-        attrs = dict(attributes)
-        self.elements.append((tag, attrs))
-        if tag in self.regions:
-            self._region = tag
-        if self._region:
-            self.regions[self._region].append((tag, attrs))
-        if tag == "title":
-            self._title = True
-        if tag in ("h1", "h2", "h3", "h4"):
-            self._heading = tag
-            self._heading_text = ""
-        if tag == "a":
-            self._link = attrs
-        if tag == "img" and self._link:
-            self.image_links.append((attrs, self._link))
-        if attrs.get("id"):
-            assert attrs["id"] not in self.ids, f"Duplicate HTML id {attrs['id']}"
-            self.ids.add(attrs["id"])
-        if tag == "script":
-            self._script = attrs.get("id")
-            if self._script:
-                self.scripts[self._script] = ""
-        for key in ("href", "src"):
-            if key in attrs:
-                self.links.append(attrs[key])
-
-    def handle_endtag(self, tag):
-        if tag == self._region:
-            self._region = None
-        if tag == "title":
-            self._title = False
-        if tag == self._heading:
-            self.headings.append((tag, self._heading_text.strip()))
-            self._heading = None
-        if tag == "a":
-            self._link = None
-        if tag == "script":
-            self._script = None
-
-    def handle_data(self, data):
-        if self._title:
-            self.title += data
-        if self._heading:
-            self._heading_text += data
-        if self._script:
-            self.scripts[self._script] += data
-
-
-def local_link_target(output: Path, page: Path, href: str) -> Path | None:
-    """Map production URLs back to output, retaining relative-link checks."""
-    target = urlsplit(href)
-    if href.startswith(PRODUCTION_URL):
-        resolved = output / unquote(urlsplit(href[len(PRODUCTION_URL):]).path)
-    elif target.scheme or target.netloc:
-        return None
-    else:
-        assert not target.path.startswith("/"), f"Unexpected host-root link: {href}"
-        resolved = page.parent / unquote(target.path) if target.path else page
-    resolved = resolved.resolve()
-    assert resolved.is_relative_to(output.resolve())
-    return resolved / "index.html" if resolved.is_dir() else resolved
-
-
-def test_complete_canonical_build(tmp_path, documents):
+def test_complete_build(tmp_path, course_documents):
+    documents = course_documents
+    exercises = [entry for doc in documents for section in doc.sections for entry in section.exercises]
     output = tmp_path / "study"
     sources = {
-        path: sha256(path.read_bytes()).hexdigest() for path in (ROOT / "exercises").glob("*.md")
+        Path(doc.source_path): sha256(Path(doc.source_path).read_bytes()).hexdigest()
+        for doc in documents
     }
     build_site(documents, output)
     pages = {path: Page(path.read_text()) for path in output.rglob("*.html")}
-    assert len(pages) == 46
-    assert len([page for page in pages.values() if "answer-key" in page.scripts]) == 30
+    assert len(pages) == len(course_sequence(documents)) + 3
+    assert len([page for page in pages.values() if "answer-key" in page.scripts]) == len(exercises)
     home = (output / "index.html").read_text()
-    assert (
-        home.index("introduction/index.html")
-        < home.index("methods/index.html")
-        < home.index("results/index.html")
-    )
+    assert [attrs["href"] for _, attrs in Page(home).elements if attrs.get("class") == "contents-link"] == [
+        f"{doc.slug}/index.html" for doc in documents
+    ]
     assert "site-data" not in pages[output / "index.html"].scripts
     for path, page in pages.items():
         source = path.read_text()
@@ -154,14 +70,14 @@ def test_complete_canonical_build(tmp_path, documents):
             assert not nav_nodes
             assert not any("data-exercise-link" in attrs for _, attrs in page.elements)
         else:
-            assert len(nav_nodes) == 13  # Three modules and ten subsections in the course.
+            assert len(nav_nodes) == len(documents) + sum(len(doc.sections) for doc in documents)
             for document in documents:
                 assert f"module:{document.slug}" in nav_nodes
                 for section in document.sections:
                     assert f"section:{document.slug}:{section.slug}" in nav_nodes
             assert sum(
                 1 for _, attrs in page.elements if "data-exercise-link" in attrs
-            ) >= 30
+            ) >= len(exercises)
         assert sum(
             1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
         ) == (0 if not_found else 1)
@@ -260,16 +176,22 @@ def test_complete_canonical_build(tmp_path, documents):
                 ) == len(exercise.items)
                 for question in exercise.questions:
                     assert question.id + "-feedback" in page.ids
-                    if question.kind == "typed-gap":
-                        assert answers["questions"][question.id]["expected"] == question.answer
-                if document.slug == "introduction" and section.slug == "indicating-a-research-gap" and position == 1:
-                    assert [q["gap_feedback"] for q in answers["questions"].values()] == list(
-                        exercise.metadata.feedback.gaps.values()
+                    assert answers["questions"][question.id]["expected"] == (
+                        question.answer if question.kind == "typed-gap" else question.correct_indices
                     )
+                for question in exercise.direct_questions:
+                    assert answers["questions"][question.id]["gap_feedback"] == exercise.metadata.feedback.gaps.get(question.source_label)
+                for item in exercise.items:
+                    for question in item.questions:
+                        expected = item.metadata.feedback.gaps.get(
+                            question.source_label,
+                            exercise.metadata.feedback.gaps.get(question.source_label),
+                        )
+                        assert answers["questions"][question.id]["gap_feedback"] == expected
                 for _, attrs in page.elements:
                     for description in attrs.get("aria-describedby", "").split():
                         assert description in page.ids
-    assert len(ids) == 30
+    assert len(ids) == len(exercises)
     assert {path: sha256(path.read_bytes()).hexdigest() for path in sources} == sources
     first_build = {
         path.relative_to(output): path.read_bytes()
@@ -284,18 +206,17 @@ def test_complete_canonical_build(tmp_path, documents):
     } == first_build
 
 
-def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
+def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, synthetic_documents):
+    documents = synthetic_documents
     output = tmp_path / "site"
     build_site(documents, output)
-    module = Page((output / "introduction/index.html").read_text())
+    module = Page((output / documents[0].slug / "index.html").read_text())
     expected_data = json.loads(module.scripts["site-data"])
-    assert {module: len(ids) for module, ids in expected_data["modules"].items()} == {
-        "introduction": 14,
-        "methods": 7,
-        "results": 9,
+    assert expected_data["modules"] == {
+        doc.slug: [entry.id for section in doc.sections for entry in section.exercises]
+        for doc in documents
     }
-    assert sum(map(len, expected_data["modules"].values())) == 30
-    assert expected_data["module"] == "introduction"
+    assert expected_data["module"] == documents[0].slug
     for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
         assert "site-data" not in page.scripts
@@ -320,6 +241,7 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, documents):
         assert page.title == expected_title
 
 
+@pytest.mark.canonical
 def test_home_and_about_public_content(tmp_path, documents):
     output = tmp_path / "site"
     build_site(documents, output)
@@ -419,6 +341,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     )
 
 
+@pytest.mark.canonical
 def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, documents):
     output = tmp_path / "site"
     build_site(documents, output)
@@ -456,7 +379,8 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
 
 
 @pytest.mark.parametrize("path", ["index.html", "about/index.html"])
-def test_people_component_supports_optional_portrait_and_metadata(tmp_path, documents, monkeypatch, path):
+def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synthetic_documents, monkeypatch, path):
+    documents = synthetic_documents
     assets = tmp_path / "static"
     shutil.copytree(ROOT / "static", assets)
     (assets / "people").mkdir()
@@ -490,33 +414,34 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, docu
     assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 
-def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(tmp_path, documents):
+def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(tmp_path, synthetic_documents):
     # A reduced, reordered course catches canonical paths or counts baked into Home.
-    introduction, methods, _ = documents
+    alpha, beta = synthetic_documents[:2]
     modules = [
-        replace(introduction, order=10, sections=introduction.sections[:2]),
-        replace(methods, title="Methods and materials", order=0, sections=methods.sections[:1]),
+        replace(alpha, title="The Alpha section", order=10),
+        replace(beta, title="Neutral descriptions", order=0),
     ]
     output = tmp_path / "site"
     build_site(modules, output)
     source = (output / "index.html").read_text()
     home = Page(source)
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
-    assert start["href"] == "methods/index.html"
+    assert start["href"] == "beta/index.html"
     rows = source.split('<ol class="course-contents" role="list">', 1)[1].split("</ol>", 1)[0]
     rows = rows.split("<li>")[1:]
     assert len(rows) == 2
     for number, (row, module) in enumerate(zip(rows, reversed(modules), strict=True), 1):
         assert f'>{number:02d}</span>' in row
         assert f'href="{module.slug}/index.html"' in row
-        label = "Methods and materials" if number == 1 else "Introduction"
+        label = "Neutral descriptions" if number == 1 else "Alpha"
         assert f'<strong class="contents-title">{label}</strong>' in row
         assert row.count("<a ") == 1 and "<button" not in row
         assert row.index("<a ") < row.index("contents-title") < row.index("</a>")
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)
-        assert f"{subsection_count} {subsection_label} · {exercise_count} exercises" in row
+        exercise_label = "exercise" if exercise_count == 1 else "exercises"
+        assert f"{subsection_count} {subsection_label} · {exercise_count} {exercise_label}" in row
 
 
 @pytest.mark.parametrize(("path", "title", "description"), [
@@ -543,6 +468,7 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
         "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”.",
     ),
 ])
+@pytest.mark.canonical
 def test_publication_metadata_for_each_page_type(tmp_path, documents, path, title, description):
     output = tmp_path / "site"
     build_site(documents, output)
@@ -578,7 +504,8 @@ def test_publication_metadata_for_each_page_type(tmp_path, documents, path, titl
     assert f'--accent: {metadata["theme-color"]};' in (output / "assets/styles.css").read_text()
 
 
-def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, documents):
+def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, synthetic_documents):
+    documents = synthetic_documents
     output = tmp_path / "site"
     build_site(documents, output)
     favicon = ET.parse(output / "assets/favicon.svg").getroot()
@@ -596,7 +523,8 @@ def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, docu
     assert not list(output.rglob("*.webmanifest"))
 
 
-def test_not_found_is_a_public_fallback_with_safe_recovery_links(tmp_path, documents):
+def test_not_found_is_a_public_fallback_with_safe_recovery_links(tmp_path, synthetic_documents):
+    documents = synthetic_documents
     output = tmp_path / "site"
     build_site(documents, output)
     path = output / "404.html"
@@ -618,7 +546,8 @@ def test_not_found_is_a_public_fallback_with_safe_recovery_links(tmp_path, docum
             assert local_link_target(output, path, href).is_file()
 
 
-def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, documents):
+def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, course_documents):
+    documents = course_documents
     output = tmp_path / "site"
     build_site(documents, output)
     root = ET.parse(output / "sitemap.xml").getroot()
@@ -631,7 +560,7 @@ def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, d
         for section in document.sections:
             paths.append(f"{document.slug}/{section.slug}/")
             paths.extend(f"{document.slug}/{section.slug}/{exercise.slug}/" for exercise in section.exercises)
-    assert len(urls) == len(set(urls)) == 45
+    assert len(urls) == len(set(urls)) == len(paths)
     assert urls == [PRODUCTION_URL + path for path in paths]
     for node in root:
         assert node.tag == namespace + "url"
@@ -643,15 +572,9 @@ def test_sitemap_contains_exactly_the_normal_content_in_course_order(tmp_path, d
     assert not (output / "robots.txt").exists()
 
 
-def test_sitemap_follows_a_reduced_course_without_adding_the_fallback(tmp_path, methods):
-    output = tmp_path / "site"
-    build_site(methods, output)
-    urls = [node.text for node in ET.parse(output / "sitemap.xml").iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-    assert len(urls) == 2 + 1 + len(methods.sections) + sum(len(section.exercises) for section in methods.sections)
-    assert not any("introduction/" in url or "results/" in url or "404" in url for url in urls)
-
-
-def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, documents):
+@pytest.mark.canonical
+def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, synthetic_documents):
+    documents = synthetic_documents
     output = tmp_path / "site"
     build_site(documents, output)
     destinations = {
@@ -693,11 +616,12 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, do
 
 
 @pytest.mark.parametrize("path", [
-    "index.html", "about/index.html", "methods/index.html",
-    "methods/purpose-of-the-methods-section/index.html",
-    "methods/purpose-of-the-methods-section/exercise-1/index.html",
+    "index.html", "about/index.html", "alpha/index.html",
+    "alpha/choosing-a-label/index.html",
+    "alpha/choosing-a-label/exercise-1/index.html",
 ])
-def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, path):
+def test_institutional_images_are_portable_and_unmodified(tmp_path, synthetic_documents, path):
+    documents = synthetic_documents
     output = tmp_path / "site"
     build_site(documents, output)
     page_path = output / path
@@ -718,78 +642,57 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, documents, p
         assert int(attrs["height"]) == int.from_bytes(source_bytes[20:24])
 
 
-def test_single_module_build_remains_available(tmp_path, methods):
+def test_single_module_build_remains_available(tmp_path, synthetic_documents):
+    document = synthetic_documents[1]
     output = tmp_path / "site"
-    build_site(methods, output)
-    assert len(list(output.rglob("*.html"))) == 13
+    build_site(document, output)
+    sequence = course_sequence([document])
+    assert len(list(output.rglob("*.html"))) == len(sequence) + 3
     assert (output / "about/index.html").is_file()
-    last = methods.sections[-1].exercises[-1]
-    path = output / methods.slug / methods.sections[-1].slug / last.slug / "index.html"
+    path = output / sequence[-1]
     page = Page(path.read_text())
     terminal = next(attrs for _, attrs in page.elements if "data-course-terminal" in attrs)
     assert (path.parent / terminal["href"]).resolve() == output / "index.html"
     assert not any(attrs.get("rel") == "next" for _, attrs in page.elements)
-
-
-def course_sequence(documents):
-    """Derive expected reading order without using renderer navigation helpers.
-
-    Home and About stay outside this list; Home terminates either direction.
-    """
-    sequence = []
-    for document in documents:
-        module = Path(document.slug)
-        sequence.append(module / "index.html")
-        for section in document.sections:
-            subsection = module / section.slug
-            sequence.append(subsection / "index.html")
-            sequence.extend(
-                subsection / exercise.slug / "index.html" for exercise in section.exercises
-            )
-    return sequence
-
-
-def navigation_targets(output, path):
-    """Resolve page-relative links, including the terminal return to Home.
-
-    Returns
-    -------
-    tuple
-        Previous path, forward path and whether the forward link terminates
-        the course. Paths are relative to the generated site root.
-    """
-    page = Page((output / path).read_text())
-    previous = [attrs for tag, attrs in page.elements if tag == "a" and attrs.get("rel") == "prev"]
-    following = [
-        attrs for tag, attrs in page.elements
-        if tag == "a" and (attrs.get("rel") == "next" or "data-course-terminal" in attrs)
+    urls = [node.text for node in ET.parse(output / "sitemap.xml").iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    assert urls == [PRODUCTION_URL, PRODUCTION_URL + "about/"] + [
+        PRODUCTION_URL + path.as_posix().removesuffix("index.html") for path in sequence
     ]
-    assert len(previous) == len(following) == 1
-
-    def resolve(attributes):
-        return ((output / path).parent / attributes["href"]).resolve().relative_to(output)
-
-    return resolve(previous[0]), resolve(following[0]), "data-course-terminal" in following[0]
 
 
-def test_whole_course_navigation_graph(tmp_path, documents):
+def test_whole_course_navigation_graph(tmp_path, course_documents):
+    documents = course_documents
     output = (tmp_path / "study").resolve()
     build_site(documents, output)
-    assert [document.slug for document in documents] == ["introduction", "methods", "results"]
     sequence = course_sequence(documents)
-    assert len(sequence) == 43  # Three modules, ten subsections, thirty exercises.
+    assert len(sequence) == len(set(sequence))
     assert Path("about/index.html") not in sequence
     home = Path("index.html")
+    home_page = Page((output / home).read_text())
+    entry = next(attrs for _, attrs in home_page.elements if attrs.get("class") == "contents-link")
+    assert entry["href"] == sequence[0].as_posix()
     targets = {path: navigation_targets(output, path) for path in sequence}
+    module_paths = {Path(doc.slug) / "index.html" for doc in documents}
+    section_paths = {Path(doc.slug) / section.slug / "index.html" for doc in documents for section in doc.sections}
     for index, path in enumerate(sequence):
         previous, following, terminal = targets[path]
         assert previous == (sequence[index - 1] if index else home), path
         assert following == (sequence[index + 1] if index + 1 < len(sequence) else home), path
         assert previous != path and following != path, path
         assert terminal == (index == len(sequence) - 1), path
+        source = (output / path).read_text()
+        if terminal:
+            assert "Back to contents" in source, path
+            assert not any(attrs.get("rel") == "next" for _, attrs in Page(source).elements), path
+        else:
+            assert targets[following][0] == path, (path, following)
+            if following in module_paths:
+                assert "Next module" in source, path
+            elif following in section_paths and path not in module_paths:
+                assert "Next subsection" in source, path
 
     visited = []
-    current = sequence[0]
+    current = Path(entry["href"])
     while current != home:
         assert current not in visited, f"Course navigation revisited {current}"
         visited.append(current)
@@ -808,48 +711,13 @@ def test_whole_course_navigation_graph(tmp_path, documents):
     assert backwards == list(reversed(sequence))
 
 
-@pytest.mark.parametrize("module_index", [0, 1])
-def test_module_navigation_boundaries_are_inverses(tmp_path, documents, module_index):
-    output = (tmp_path / "study").resolve()
-    build_site(documents, output)
-    current, following = documents[module_index : module_index + 2]
-    final_section = current.sections[-1]
-    final_exercise = final_section.exercises[-1]
-    final_path = Path(current.slug) / final_section.slug / final_exercise.slug / "index.html"
-    overview = Path(following.slug) / "index.html"
-    assert navigation_targets(output, final_path)[1] == overview
-    assert navigation_targets(output, overview)[0] == final_path
-    assert "Next module" in (output / final_path).read_text()
-
-
-def test_all_subsection_navigation_boundaries(tmp_path, documents):
-    output = (tmp_path / "study").resolve()
-    build_site(documents, output)
-    for document in documents:
-        for current, following in zip(document.sections, document.sections[1:]):
-            final = Path(document.slug) / current.slug / current.exercises[-1].slug / "index.html"
-            overview = Path(document.slug) / following.slug / "index.html"
-            first = Path(document.slug) / following.slug / following.exercises[0].slug / "index.html"
-            assert navigation_targets(output, final)[1] == overview
-            assert navigation_targets(output, overview)[:2] == (final, first)
-            assert navigation_targets(output, first)[0] == overview
-            assert "Next subsection" in (output / final).read_text()
-
-
-def test_final_course_destination_is_explicit(tmp_path, documents):
-    output = (tmp_path / "study").resolve()
-    build_site(documents, output)
-    final = course_sequence(documents)[-1]
-    _, following, terminal = navigation_targets(output, final)
-    assert following == Path("index.html") and terminal
-    source = (output / final).read_text()
-    assert "Back to contents" in source
-    assert not any(attrs.get("rel") == "next" for _, attrs in Page(source).elements)
-
-
+@pytest.mark.canonical
 def test_orientation_purpose_display_order_preserves_answer_keys(tmp_path, documents):
+    exercise = documents[0].sections[0].exercises[0]
+    before = asdict(exercise)
     output = tmp_path / "study"
     build_site(documents, output)
+    assert asdict(exercise) == before
     path = output / "introduction/the-introduction-section-of-research-papers/exercise-1/index.html"
     page = Page(path.read_text())
     controls = [attrs["data-question"] for _, attrs in page.elements if "data-question" in attrs]
@@ -875,6 +743,7 @@ def test_orientation_purpose_display_order_preserves_answer_keys(tmp_path, docum
         "- <mark class=\"correct-answer\">C</mark> Three"
     ),
 ])
+@pytest.mark.canonical
 def test_presentation_order_does_not_restrict_alternative_module_sources(tmp_path, interaction):
     source = (
         "---\nid: introduction\ntitle: The Introduction section\norder: 1\n---\n\n"
@@ -909,6 +778,7 @@ def test_slash_title_breaks_keep_text_and_html_escaping(tmp_path):
         )
 
 
+@pytest.mark.canonical
 def test_normal_cli_discovers_all_modules(tmp_path):
     result = subprocess.run(
         [sys.executable, str(ROOT / "build.py"), "--output", str(tmp_path / "site")],
@@ -923,6 +793,7 @@ def test_normal_cli_discovers_all_modules(tmp_path):
     assert len(list((tmp_path / "site").rglob("*.html"))) == 46
 
 
+@pytest.mark.canonical
 def test_context_and_instructions_are_outside_cards(tmp_path, methods):
     build_site(methods, tmp_path / "site")
     exercise = methods.sections[1].exercises[1]
@@ -937,21 +808,23 @@ def test_context_and_instructions_are_outside_cards(tmp_path, methods):
 
 
 @pytest.mark.parametrize("directory", ["site", "site.building"])
-def test_refuses_to_replace_unrecognised_directories(tmp_path, methods, directory):
+def test_refuses_to_replace_unrecognised_directories(tmp_path, synthetic_documents, directory):
+    document = synthetic_documents[0]
     existing = tmp_path / directory
     existing.mkdir()
     (existing / "keep.txt").write_text("user data")
     with pytest.raises(ValueError, match="unrecognised"):
-        build_site(methods, tmp_path / "site")
+        build_site(document, tmp_path / "site")
     assert (existing / "keep.txt").read_text() == "user data"
 
 
-def test_duplicate_modules_do_not_touch_output(tmp_path, methods):
+def test_duplicate_modules_do_not_touch_output(tmp_path, synthetic_documents):
+    document = synthetic_documents[0]
     output = tmp_path / "site"
     output.mkdir()
     (output / "keep.txt").write_text("unchanged")
     with pytest.raises(ValueError, match="unique module IDs"):
-        build_site([methods, methods], output)
+        build_site([document, document], output)
     assert (output / "keep.txt").read_text() == "unchanged"
 
 

@@ -392,7 +392,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     Raises
     ------
     ValueError
-        No modules, duplicate module slugs, or unrecognised output/staging
+        No modules, duplicate/reserved module slugs, or unrecognised output/staging
         directories that the builder refuses to replace.
     OSError
         Assets or generated pages cannot be copied, written or replaced.
@@ -418,6 +418,11 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
         documents = [documents]
     if not documents or len({document.slug for document in documents}) != len(documents):
         raise ValueError("Expected at least one module with unique module IDs")
+    for document in documents:
+        if document.slug == "about":
+            raise ValueError(
+                f"{document.source_path}: module id 'about' conflicts with the public About page"
+            )
     documents = sorted(documents, key=lambda document: (document.order, document.slug))
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html"]))
     output = output.resolve()
