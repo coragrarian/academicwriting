@@ -8,12 +8,9 @@ order: 1
 
 ## The Introduction section of research papers
 
-The structure of the *Introduction* section may vary from paper to paper. In the Agrarian Sciences, authors commonly include:
+Research-article Introductions vary in structure. In Agrarian Sciences articles, writers may establish the research context, relate the study to previous research, identify a gap or unresolved issue, and state the purpose or objectives of the present study.
 
-1. the importance of the topic and/or general background to the topic;
-2. a review of previous research;
-3. a research gap;
-4. the research objectives.
+*See [Samraj (2002)](https://doi.org/10.1016/S0889-4906(00)00023-5), [del Saz Rubio (2011)](https://doi.org/10.1016/j.esp.2011.03.002), and [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on Introduction functions and structural variation.*
 
 ### Exercise 1
 
@@ -38,9 +35,9 @@ The sentences below are adapted from [Heng et al. (2024)](https://doi.org/10.339
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The four sentences perform four different functions commonly
-    found in Introductions: establishing the topic, reviewing previous work,
-    identifying a gap, and stating the study objectives.
+    Correct. These sentences illustrate four recurring functions of
+    research-article Introductions: establishing the research context,
+    reviewing previous work, identifying a gap, and stating the study objectives.
   incorrect: >
     Review what each sentence is doing rather than only what topic it mentions.
     Ask whether it establishes importance, reports previous work, identifies
@@ -49,9 +46,13 @@ feedback:
 
 ## Giving a context/background
 
+One recurring function of a research-article Introduction is to establish the context for the study. Writers may introduce a wider disciplinary or practical issue, explain why it matters, and relate it to the more specific setting or question addressed by the research. This movement is not a fixed sequence: importance can be established through consequences, scale, practical relevance, or previous research, and several functions may occur in the same passage.
+
+*See [Samraj (2002)](https://doi.org/10.1016/S0889-4906(00)00023-5), [del Saz Rubio (2011)](https://doi.org/10.1016/j.esp.2011.03.002), and [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on establishing research context.*
+
 ### Exercise 1
 
-A common way of contextualising a research topic is to begin with a broad problem and then narrow the focus to a more specific context. The passage below is adapted from the Introduction of [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), which investigates the relationship between soil salinity and cotton growth.
+The passage below is adapted from the Introduction of [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), which investigates the relationship between soil salinity and cotton growth. In this passage, notice how the authors move from a wider research context towards the more specific problem addressed by the study.
 
 **Instructions:** Some parts of the text have been removed. Choose the expression that correctly completes each gap.
 
@@ -77,21 +78,23 @@ feedback:
 
 ### Exercise 2
 
-In the opening part of an Introduction, writers often establish why a topic deserves attention. They may emphasise the importance of a problem using expressions such as *significant*, *major*, and *crucial*.
+This exercise focuses on language that can help writers express the importance or relevance of a research topic.
+
+Words and expressions such as *significant*, *major*, and *crucial* can contribute to statements of importance, but their function depends on the surrounding context.
 
 > *Soil salt stress is a significant abiotic stress and a constraining factor (...).*
 >
 > *Soil salt stress and low N fertilizer utilization are the major factors limiting cotton growth.*
 
-*Examples above adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229). The sentences below are project-authored examples.*
+*Examples above adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
 
 **Instructions:** Complete each sentence with one expression from the answer bank. Use each expression once.
 
-1. The study area is __________ [1] cereal production regions in the country.
+1. Checking seed germination is __________ [1] tasks when preparing a nursery trial.
 2. Soil moisture deserves attention because it __________ [2] the establishment of seedlings.
-3. The timing of irrigation has __________ [3] on water availability in the root zone.
-4. Reliable measurement is __________ [4] in every stage of the experiment.
-5. Recording the sampling location __________ [5] of the fieldwork protocol.
+3. Damage to an irrigation pipe can have __________ [3] on the amount of water reaching a crop.
+4. An accurate sample label is __________ [4] of a seed-testing record.
+5. Calibrating the balance __________ [5] of preparing a feed-weighing trial.
 
 **Answer bank:**
 
@@ -104,23 +107,40 @@ In the opening part of an Introduction, writers often establish why a topic dese
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The expressions fit the grammatical structure of the sentences
-    and express importance, centrality, or impact.
+    Correct. These expressions can all emphasise importance, but they occur
+    in different grammatical frames. Use the surrounding syntax and intended
+    meaning; they are not freely interchangeable synonyms.
   incorrect: >
-    Check the grammar around each gap as well as the meaning. For example,
-    "plays a crucial role in" must be followed by a noun phrase, whereas
-    "a significant impact" follows the verb "has".
+    Check both meaning and grammatical fit. In these sentences, "plays a
+    crucial role in" introduces what something contributes to, while "have a
+    significant impact on" expresses an effect on something else.
+  gaps:
+    "1": >
+      The plural noun "tasks" completes "one of the most important".
+      The other expressions do not fit this grammatical frame.
+    "2": >
+      "Plays a crucial role in" introduces what soil moisture contributes to:
+      the establishment of seedlings.
+    "3": >
+      The gap needs a noun phrase after "have". "Have a significant impact on"
+      expresses an effect, and "on" introduces what is affected.
+    "4": >
+      "A fundamental element of" identifies a basic component of the record.
+      The singular noun phrase fits after "is" and before "of".
+    "5": >
+      The subject needs a finite verb phrase. "Is an essential part of"
+      identifies calibration as a necessary component of preparation.
 -->
 
 ### Exercise 3
 
-When providing general background information, authors often describe changes or developments that began in the past and remain relevant in the present.
+In background writing, the present perfect can be used to present earlier changes or developments as relevant to the current research context. This does not necessarily mean that the change itself is still continuing.
 
 > *In arid regions, there has been a noticeable upward trend in rhizosphere salt levels.*
 >
 > *(...) the expansion of suitable cultivation areas for cotton has significantly diminished due to the adverse impacts of escalating soil salinity.*
 
-*Examples above adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229). The sentences below are project-authored illustrations.*
+*Examples above adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
 
 **Instructions:** Complete the sentences with the verb phrases in the answer bank. Use each phrase once.
 
@@ -139,42 +159,57 @@ When providing general background information, authors often describe changes or
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The present perfect forms connect changes that began in the past
-    with states or developments that remain relevant in the present.
+    Correct. The present perfect forms present these earlier changes or
+    developments as connected to the current context. The change itself
+    does not have to be still in progress.
   incorrect: >
     Review the direction or type of change described by each sentence and
-    check subject-verb agreement: singular subjects take "has", while the
-    plural subject "emissions" takes "have".
+    check subject-verb agreement. The head noun in "the number of studies"
+    is singular, so the verb is "has increased". The plural subject
+    "emissions" takes "have become".
   gaps:
     "1": >
-      "In recent years" connects a development with the present rather than
-      specifying a finished past period. The head noun "number" is singular:
-      "the number of studies has increased".
+      "In recent years" creates a recent time frame that can be compatible
+      with the present perfect, but the expression does not determine the
+      tense by itself. Here, "has increased" fits the intended connection
+      with the current research context.
 -->
 
 ## Reviewing previous research
 
-An important feature of many research-article Introductions is the presentation and review of previous research. In the examples below, notice the contrast between references to specific studies and more general references to previous research.
+Research-article Introductions often relate the current study to previous research. Writers may report individual studies, summarise a broader body of work, or describe what has been investigated so far. These references help establish what is already known and position the present study in relation to earlier work.
 
-> *[Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229) showed that soil salinity affected nitrogen uptake in cotton.*
->
-> *The researchers investigated the response of seedlings to different watering schedules.*
->
-> *Numerous studies have shown that growing conditions can influence crop performance.*
->
-> *The effects of soil moisture have been investigated across several experiments.*
+Tense can contribute to this framing. One useful tendency is to use the past simple when reporting a particular study and the present perfect when referring more broadly to an area of previous research. This is not a fixed grammar rule: writers can choose other tenses depending on what they want to emphasise.
 
-*The first sentence paraphrases Heng et al. (2024); the other sentences are project-authored illustrations.*
+*See [Swales and Feak (2012)](https://doi.org/10.3998/mpub.2173936) and [Caplan (2019)](https://press.umich.edu/elt/tm/9780472037315-key.pdf) on tense choices in references to previous research.*
+
+> A recent study examined functional root traits as a basis for classifying seven different cover crops to improve physical soil properties, including aggregate stability (Hudek et al., 2022).
+
+*Source: [Gentsch et al. (2024)](https://doi.org/10.5194/soil-10-139-2024).*
+
+Here, *examined* reports a particular prior study in the past simple.
+
+> Previous studies have demonstrated strong positive impacts of cover crops on soil structure formation and aggregate stability (Mendes et al., 1999; Dabney et al., 2001; Liu et al., 2005; Blanco-Canqui and Ruis, 2020; Stegarescu et al., 2021).
+
+*Adapted from [Gentsch et al. (2024)](https://doi.org/10.5194/soil-10-139-2024).*
+
+Here, *have demonstrated* refers to a broader body of research in the present perfect.
+
+> Veloso et al. (2018) have recently demonstrated that about half of the soil organic carbon storage in a 30-year-old no-tillage system in an Acrisol from Southern Brazil was due to the carbon increase in the subsurface layer (0.30-1.00 m).
+
+*Adapted from [Tiecher et al. (2020)](https://doi.org/10.36783/18069657rbcs20200029).*
+
+A named and dated study can also be reported using the present perfect. Author names and publication year do not by themselves determine tense.
 
 ### Exercise 1
 
-A common literature-review pattern is to report a **specific cited study** in the **past simple** and to present a **broader body of previous research** in the **present perfect**. This is a discourse tendency, not a universal grammar rule; other tense choices can frame the research differently.
+A useful pattern in literature reviews is to report a particular study in the **past simple** and refer to a broader body of previous research in the **present perfect**. This is a discourse tendency, not a universal grammar rule; other tense choices can frame the research differently.
 
 > **Specific cited study:** [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229) **showed** that soil salinity affected nitrogen uptake in cotton.
 >
 > **Broader previous research:** Numerous studies **have shown** that growing conditions can influence crop performance.
 
-*The broader example is a project-authored illustration.*
+*First example adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
 
 **Instructions:** Choose the verb form that follows the literature-review pattern practised here.
 
@@ -195,9 +230,9 @@ A common literature-review pattern is to report a **specific cited study** in th
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The specific cited study is framed here as completed research
-    with "showed"; the broader body of research is connected to the present
-    with "have shown".
+    Correct. Here, "showed" presents Heng et al. (2024) as a particular prior
+    study, while "have shown" presents the research more broadly as part of
+    the existing literature.
   incorrect: >
     Both tenses can occur in literature reviews. Choose according to the
     framing practised here: past simple for the specific cited study and
@@ -208,8 +243,6 @@ feedback:
 ### Exercise 2
 
 The passage below is adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), who review previous research about soil salinity and cotton growth. The numbered citations refer to the original article's bibliography.
-
-The pattern practised here uses the **past simple** for specific cited studies and the **present perfect** for broader references to previous research. This is a common discourse tendency; other tense choices can also be grammatical.
 
 **Instructions:** Choose the alternative that follows the literature-review pattern practised here.
 
@@ -243,23 +276,31 @@ The pattern practised here uses the **past simple** for specific cited studies a
 <!-- agrarian
 feedback:
   correct: >
-    Correct. In this passage, the specific studies by Reddy et al., Li et al.,
-    and the researchers in the final sentence use the past simple. "Previous
-    studies" and "prior research" present the literature more broadly with the
-    present perfect.
+    Correct. In this passage, Reddy et al., Li et al., and the researchers in
+    the final sentence are presented as particular prior studies, so the
+    exercise uses the past simple. "Previous studies" and "prior research"
+    refer more broadly to the literature here, so the exercise uses the
+    present perfect. These expressions do not determine tense by themselves;
+    the choice depends on how the writer frames the previous research.
   incorrect: >
-    Look at the subject attached to each gap. Named studies such as
-    "Reddy et al." and "Li et al." refer to specific completed research,
-    whereas "previous studies" and "prior research" refer more generally
-    to the existing literature. Choose the tense that follows the framing
-    practised here, rather than treating the other tense as ungrammatical.
+    Consider how each reference is framed in this passage. Choose the tense
+    that follows the pattern practised here, rather than treating the subject
+    expression as a mechanical tense rule or the other tense as ungrammatical.
 -->
 
 ## Indicating a research gap
 
+A research gap identifies something that previous research has not yet explained, examined, or resolved sufficiently for the question at hand. A gap does not necessarily mean that no research exists: earlier studies may leave a particular population, context, relationship, method, or question insufficiently understood.
+
+Gap statements help position the present study in relation to previous knowledge. They can point to limited research, limited understanding, an unresolved question, or a limitation in existing approaches. These distinctions can overlap, so the surrounding context matters.
+
+*See [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on establishing a research niche, [Robinson et al. (2011)](https://doi.org/10.1016/j.jclinepi.2011.06.009) on different forms of insufficient evidence, and [Hyland (2005)](https://doi.org/10.1177/1461445605050365) on epistemic stance and hedging.*
+
 ### Exercise 1
 
-The excerpt below, adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), connects previous research with the current study and highlights a research gap.
+The excerpt below moves from previous research to a limitation in current understanding, thereby identifying a research gap.
+
+*Adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
 
 **Instructions:** Use the verb in parentheses to complete each sentence in the **present perfect**. Use the active or passive voice as required.
 
@@ -285,13 +326,14 @@ feedback:
     Review the subject and voice of each marked response, then check again.
   gaps:
     "1": >
-      "Previous research" is grammatically singular and performs the action.
-      Use the active present perfect: has + past participle.
+      "Previous research" is grammatically singular, so use "has".
+      "Has concentrated" is active present perfect: has + past participle.
     "2": >
-      "These stressors" is plural, and the stressors receive the action of
-      "find". Use the passive present perfect: have + been + past participle.
+      "These stressors" is plural, so use "have". "Have been found" is
+      passive present perfect: have + been + past participle, followed here
+      by "to impede the growth of cotton".
     "3": >
-      "Investigations" is plural and performs the action. Use the active
+      "Investigations" is plural, so use "have". "Have examined" is active
       present perfect: have + past participle.
 -->
 
@@ -324,44 +366,53 @@ feedback:
 
 ### Exercise 3
 
-Writers can signal research gaps using recurring expressions and word combinations.
+Research gaps can be expressed through a range of phrases and grammatical patterns.
 
-These expressions can describe limited research, limited knowledge, or an unresolved question. Some also qualify a claim according to the authors' knowledge. Check both the meaning and the structure after the gap.
+Gap statements can emphasise different things. A writer may point to a **limited body of research**, **limited knowledge or understanding**, an **unresolved question**, or a **limitation in an existing method or analytical approach**. These emphases can overlap in the same passage.
 
-The sentences below are project-authored illustrations of these patterns.
+Writers may also qualify how strongly they make a gap claim. Expressions such as *to the best of our knowledge* limit the claim to what the authors know rather than guaranteeing that no previous research exists.
+
+The source-based examples below describe their authors' research framing at the time of publication.
 
 **Instructions:** For each item, choose the expression that correctly completes the sentence.
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. Each expression fits both the grammar of the sentence and the
-    type of research gap being described.
+    Correct. Each expression fits the local syntax and meaning. These are
+    overlapping ways of framing a gap, not an exhaustive set of categories.
   incorrect: >
-    Read the words that follow the gap carefully. Some expressions require a
-    noun phrase ("there is a paucity of research"), some introduce a clause
-    ("it remains unknown whether"), and some comment on the authors'
-    knowledge ("to the best of our knowledge"). A shortage of studies and
-    limited knowledge are related, but they do not describe identical gaps.
+    Check both the grammatical pattern and the meaning. In these items,
+    different expressions frame different kinds of limitation, and grammatical
+    fit alone is not enough to choose the answer. A limited body of research
+    and limited knowledge are related but emphasise different aspects of a gap.
+    A passage can express both.
 -->
 
 #### Model
 
-> Although soil salinity can affect seedlings, __________ its effects on the roots of this variety.
+> __________ the impact that soil and soil-extract storage methods may have on sample integrity.
 
-- [ ] few studies
-- [x] little is known about
-- [ ] to the best of our knowledge
+*Adapted from [Rhymes et al. (2021)](https://doi.org/10.5194/soil-7-95-2021).*
+
+- [ ] Few studies
+- [x] Little is known about
+- [ ] To the best of our knowledge
+
+*Little is known about* introduces the noun phrase *the impact* and states a knowledge limitation. *Few studies* would leave this stem without a finite predicate; *To the best of our knowledge* would need a main clause.
 
 #### Item A
 
-> __________ on how farmers choose between irrigation systems.
+> __________ on roots involving the successful use of high-resolution X-ray computed tomography in field trials with undisturbed soil cores.
+
+*Adapted from [Hobson et al. (2022)](https://doi.org/10.5194/soil-8-391-2022).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "There are few studies on" describes a small body of research.
-    "Studies" is plural, and "on" introduces its topic.
+    Correct. "There are few studies on" frames a limited body of research in
+    the specified field setting. "On" introduces the topic; this does not
+    claim a general scarcity of all root research.
   incorrect: >
     The sentence needs an expression that can be followed by "on" and a
     research topic. "It remains unknown" needs a statement or question, and
@@ -374,7 +425,9 @@ feedback:
 
 #### Item B
 
-> The treatments produced similar leaf sizes, but __________ whether their root systems responded in the same way.
+> However, __________ whether the contribution of cover crops to nitrogen supply of subsequent main crops is affected by topography.
+
+*Adapted from [Ladoni et al. (2015)](https://doi.org/10.1371/journal.pone.0143358).*
 
 <!-- agrarian
 feedback:
@@ -393,13 +446,15 @@ feedback:
 
 #### Item C
 
-> __________, no published experiments have compared these two seed-storage methods.
+> __________, this study documents the first preparation of polylactic acid nanoparticles containing thymol.
+
+*Adapted from [Marcet et al. (2018)](https://doi.org/10.1016/j.jfoodeng.2018.06.030).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "To the best of our knowledge" qualifies the authors' claim
-    about the absence of studies; it does not guarantee that none exist.
+    Correct. "To the best of our knowledge" limits the claim to the authors'
+    knowledge. It does not prove that no previous study exists.
   incorrect: >
     The words after the comma already form a complete clause. Choose the
     expression that qualifies that claim according to the authors' knowledge.
@@ -411,18 +466,21 @@ feedback:
 
 #### Item D
 
-> At present, __________ research into the effects of mulching on seedling survival.
+> Presently, __________ research into the effects of reduced-impact logging on natural seedling regeneration within the neotropics.
+
+*Adapted from [Rivett et al. (2016)](https://doi.org/10.1016/j.foreco.2016.02.022).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "There is a paucity of research" describes a shortage of research.
-    The noun phrase "research into the effects ..." follows "of".
+    Correct. "There is a paucity of research" frames a limited body of research
+    in this specified context. The noun phrase "research into the effects ..."
+    follows "of"; this does not claim that no research exists.
   incorrect: >
     "It remains unknown" needs a statement or question, while "there are
     few studies" would need a link such as "on" before this research topic.
-    "Little is known about" can form possible English with a different
-    meaning, but limited knowledge and a shortage of research are distinct gaps.
+    Limited knowledge and a limited body of research emphasise different
+    aspects of a gap, although they can overlap.
 -->
 
 - [ ] it remains unknown
@@ -431,17 +489,20 @@ feedback:
 
 #### Item E
 
-> Earlier analyses considered irrigation frequency alongside several other factors; __________ a more comprehensive analysis framework to focus primarily on irrigation frequency.
+> Currently, __________ data and methods that can quantify the effect of changing soil-forming factors on soil development and soil patterns across space and time.
+
+*Adapted from [van der Meij et al. (2020)](https://doi.org/10.5194/soil-6-337-2020).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "There is a lack of" is followed by the missing resource: a more
-    comprehensive analysis framework. This gap concerns an analytical approach,
-    not the complete absence of earlier analyses.
+    Correct. "There is a lack of" takes the noun phrase "data and methods".
+    The gap concerns analytical resources for the specified task, rather
+    than just a small number of papers.
   incorrect: >
-    Read the noun phrase after the gap. The sentence identifies a missing
-    framework; the other alternatives do not form a complete main clause here.
+    Read the noun phrase after the gap. The sentence identifies a limitation
+    in data and methods; the other alternatives leave it without a suitable
+    main predicate.
 -->
 
 - [ ] it remains unknown
@@ -450,9 +511,15 @@ feedback:
 
 ## Stating the objectives
 
+Research-article Introductions can state what the present study sets out to investigate, test, compare, evaluate, or develop. A purpose or objective statement often helps position the present research in relation to the problem or gap established earlier, although its position in the Introduction can vary.
+
+One recurrent way of stating objectives is to use a **to-infinitive**, as in *the aim of this study was to examine...* or *this study aimed to evaluate...*. Authors can also present the current research through finite statements, research questions, hypotheses, and other grammatical patterns.
+
+*See [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) and the University of Manchester's [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/introducing-work/) on presenting the current research.*
+
 ### Exercise 1
 
-Authors also use the Introduction to present the objectives of their study.
+This exercise focuses on the objectives stated in the excerpt below.
 
 *The objective below is adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
 
@@ -482,21 +549,20 @@ feedback:
 
 ### Exercise 2
 
-To introduce research objectives, authors frequently use infinitive constructions such as *to examine*, *to evaluate*, and *to determine*.
+One recurrent way of stating research objectives is to use a **to-infinitive**, such as *to examine*, *to evaluate*, or *to determine*.
 
-The sentences below are project-authored examples.
-
-**Instructions:** For each item, choose the infinitives that fit the research aim and the words following each gap.
+**Instructions:** Choose the infinitive verb phrase whose meaning best matches the research objective and the words that follow it.
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The selected infinitives form natural verb-noun combinations and
-    accurately describe the research aims in each sentence.
+    Correct. The selected infinitives describe the intended research operation
+    and fit the meaning of the words that follow them in these objectives.
   incorrect: >
-    Check both meaning and collocation. For example, researchers can
-    "investigate an impact", "develop a method", "identify an effect", and
-    "quantify emissions".
+    Consider what the study sets out to do and the complement after each gap.
+    These are local choices, not universal restrictions on a verb's objects.
+    For example, "quantify the influence" can be meaningful when an influence
+    is measured; it is not ruled out merely by the noun "influence".
 -->
 
 #### Model
@@ -509,58 +575,119 @@ feedback:
 
 #### Item A
 
-> The objectives of this study were __________ consumers' associations with food packaging, and __________ the influence of label colour on those associations.
+> We aimed __________ the legacy effect of cover crops on soil structure in the second main crop rotation following cover-crop treatments.
+
+*Adapted from [Gentsch et al. (2024)](https://doi.org/10.5194/soil-10-139-2024).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. "Explore associations" and "study the influence" describe
-    investigating consumers' responses and the factors associated with them.
+    Correct. "To explore" describes investigating the legacy effect in this
+    objective.
   incorrect: >
-    Check both verb-object combinations. Researchers can investigate
-    associations, but "develop the influence" suggests creating or changing
-    an influence rather than studying it. They conduct studies or surveys,
-    not consumers' associations. "Quantify the influence" is a possible
-    objective; that verb is not the problem in the third option.
+    "To conduct" normally needs a research activity as its object here.
+    "To develop the legacy effect" would mean creating or changing it.
+    Quantifying an effect can be meaningful in another objective.
 -->
 
-- [x] a) to explore / to study
-- [ ] b) to investigate / to develop
-- [ ] c) to conduct / to quantify
+- [x] a) to explore
+- [ ] b) to conduct
+- [ ] c) to develop
 
 #### Item B
 
-> The experiment aimed __________ the impact of changing watering frequency on seedling growth.
+> The main aim of this study was __________ the variation of seed mineral components and protein content of faba bean with contrasting tannin contents across environments and years.
+
+*Adapted from [Khazaei and Vandenberg (2020)](https://doi.org/10.3390/agronomy10040511).*
 
 - [ ] a) to conduct
 - [ ] b) to develop
 - [x] c) to investigate
 
+<!-- agrarian
+feedback:
+  correct: >
+    Correct. "To investigate" describes examining the specified variation.
+  incorrect: >
+    "Conduct the variation" does not name a research activity here, and
+    "develop the variation" suggests producing it rather than investigating
+    it. This is a local comparison of these options.
+-->
+
 #### Item C
 
-> Our goal is __________ a new method for collecting soil water without disturbing the roots.
+> The objective of this study is __________ a suitable model for quantifying the variation and predictability of soil patterns as a function of varying environmental factors.
+
+*Source: [van der Meij et al. (2020)](https://doi.org/10.5194/soil-6-337-2020).*
 
 - [ ] a) to conduct
 - [x] b) to develop
 - [ ] c) to quantify
 
+<!-- agrarian
+feedback:
+  correct: >
+    Correct. "To develop a suitable model" states the creation of a modelling
+    resource.
+  incorrect: >
+    "Conduct a model" does not describe that operation here; "quantify a model"
+    changes the object of measurement. "Develop" is not universally restricted
+    to methods, models, tools or frameworks.
+-->
+
 #### Item D
 
-> The purpose of this study is __________ the effect and interaction of planting density and watering frequency.
+> The purpose of this paper is __________ the effect and interaction of machinery traffic and tillage depth using commercial crop establishment methods.
+
+*Source: [Hobson et al. (2022)](https://doi.org/10.5194/soil-8-391-2022).*
 
 - [ ] a) to carry out
 - [x] b) to identify
 - [ ] c) to develop
 
+<!-- agrarian
+feedback:
+  correct: >
+    Correct. "To identify" matches investigating what effect and interaction
+    are present in this objective.
+  incorrect: >
+    Choose the operation intended here. The alternatives can fit other
+    objective statements, but do not express this aim with these complements.
+-->
+
 #### Item E
 
-> The study aimed: 1) __________ greenhouse gas emissions from two fertiliser treatments, and 2) __________ how soil moisture affected those emissions.
+These are objectives from two different studies. In sentence 2, the models concern soil organic carbon and its labile fractions.
+
+> 1. The aim of this study was __________ folate in the main steps of traditional processing of tef injera.
+
+*Source: [Tamene et al. (2019)](https://doi.org/10.1016/j.jcs.2019.04.005).*
+
+> 2. The study aimed __________ whether models based on the combined dataset or on local datasets provided a better fit.
+
+*Adapted from [Ortner et al. (2022)](https://doi.org/10.5194/soil-8-113-2022).*
 
 - [ ] a) to assess / to develop
 - [ ] b) to conduct / to understand
 - [x] c) to quantify / to determine
 
+<!-- agrarian
+feedback:
+  correct: >
+    Correct. "Quantify folate" specifies measuring an amount; "determine
+    whether" introduces the question to be established.
+  incorrect: >
+    Evaluate the pair. "Assess folate" could be meaningful in another
+    objective, but "develop whether" does not fit the second sentence.
+    "Conduct folate" does not name a research activity. "Quantify" and
+    "determine" are not assigned universal complements.
+-->
+
 ## Grammar and vocabulary in the Introduction section
+
+This subsection practises grammar and vocabulary in published research-article Introductions. The exercises focus on how grammatical choices work in context, including subject–verb agreement, verb forms, voice, complementation, and lexical patterns.
+
+When more than one form is grammatically possible, consider the meaning and structure of the sentence rather than relying on a single mechanical rule.
 
 ### Exercise 1
 
@@ -595,11 +722,17 @@ feedback:
       even though "schemes" is plural inside the following phrase.
     "2": >
       "These schemes" is plural, so use "differ".
+    "3": >
+      "They" refers to the plural schemes, so use "expose".
+    "4": >
+      "Research" is singular here, so the present perfect is "has shown".
     "5": >
       The subject is explicitly plural "FOP schemes", so use "improve".
 -->
 
 ### Exercise 2
+
+The passage below adapts the background presented in a 2010 article. Its present-tense forms refer to that historical context, not to conditions today.
 
 **Instructions:** Complete the Introduction excerpt with the expressions in the answer bank. Use each expression once.
 
@@ -610,19 +743,25 @@ feedback:
 - <mark class="correct-answer">[4]</mark> are being
 - <mark class="correct-answer">[5]</mark> used
 - <mark class="correct-answer">[1]</mark> is estimated
-- <mark class="correct-answer">[6]</mark> has crossed
+- <mark class="correct-answer">[6]</mark> has increased
 
-> In India, it [1] __________ that about 260 million workers (Census, 2001) [2] __________ in agricultural and allied activities. In India, traditionally, agriculture [3] __________ mainly human and animal power sources. Presently, electro-mechanical sources of power [4] __________ extensively [5] __________ for various farm operations. The agricultural machinery population in the country has also increased over a period of time. It is estimated to be about 223 million (17th Livestock Census) and the number of tractors [6] __________ the 4.2 million mark.
+> In India, it [1] __________ that many workers [2] __________ in agricultural and allied activities. Traditionally, agriculture [3] __________ mainly human and animal power sources. Electro-mechanical sources of power [4] __________ extensively [5] __________ for various farm operations. The number of farm machines [6] __________ over time.
 
-*Source: [Patel et al. (2010)](https://doi.org/10.1016/j.ssci.2009.08.003).*
+*Adapted from [Patel et al. (2010)](https://doi.org/10.1016/j.ssci.2009.08.003).*
 
 <!-- agrarian
 feedback:
   correct: >
-    Correct. The expressions fit the required tense and voice in the passage.
+    Correct. "Is estimated" is an impersonal passive built with be + past
+    participle; dummy "it" does not refer to an ordinary recipient.
+    "Are engaged" describes the workers' involvement or participation here.
+    "Are being ... used" is progressive passive: be + being + past participle.
+    "Utilized" is simple past; "has increased" is present perfect with the
+    singular head "number" and describes change.
   incorrect: >
-    Check whether the subject performs the action or receives it. In
-    particular, "it is estimated" and "are being used" require passive forms.
+    Identify voice from the structure in context. Check the auxiliary and
+    participle sequence, the meaning of "engaged", and agreement with the
+    head of the subject rather than using an action-recipient rule.
 -->
 
 ### Exercise 3
@@ -652,8 +791,10 @@ feedback:
   incorrect: >
     Check the words before and after each gap. "Have an ... on" requires a
     noun, while "low temperatures ... respiration" requires a verb. After
-    modal verbs such as "may" and "can", use the base form; after "makes it
-    difficult", use an infinitive with "to".
+    "may" and "can" in these sentences, use the base form; after "makes it
+    difficult" here, use the to-infinitive "to separate". Both verbal
+    "impact + noun" and nominal "have an impact on + noun" are possible
+    patterns, but this passage uses the nominal pattern.
   gaps:
     "2": >
       The article "an" and the following "on" require the noun "impact":

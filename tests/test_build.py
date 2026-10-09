@@ -930,7 +930,7 @@ def test_context_and_instructions_are_outside_cards(tmp_path, methods):
         tmp_path / "site" / methods.slug / methods.sections[1].slug / exercise.slug / "index.html"
     ).read_text()
     card_start = source.index('<section class="exercise-item"')
-    assert source.index("In academic writing,") < card_start
+    assert source.index("In these exercises,") < card_start
     assert source.index('class="instructions"') < card_start
     assert source.count('class="exercise-item"') == 3
     assert "Exercise content" not in source
