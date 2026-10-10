@@ -155,13 +155,59 @@ def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page,
     hover_surfaces.append(colours(option)[1])
     option.locator("input").check()
     assert colours(option)[1] == current_surface
-    page.goto(f"{synthetic_site[0]}/index.html")
+    serve_not_found_candidate(page, synthetic_site)
+    page.goto(f"{synthetic_site[0]}/404.html")
     tertiary = page.locator(".action-link--tertiary")
     assert neutral(colours(tertiary)[0])
     tertiary.hover()
     hover_surfaces.append(colours(tertiary)[1])
     assert neutral(colours(tertiary)[0]) and contrast_ratio(*colours(tertiary)[:2]) >= 4.5
     assert len(set(hover_surfaces)) == 1
+
+
+def test_directional_actions_share_styles_without_sharing_position(page, synthetic_site, synthetic_documents):
+    def styles(link):
+        return link.evaluate("""node => {
+          const properties = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight',
+            'color', 'gap', 'minHeight', 'padding', 'borderWidth', 'backgroundColor',
+            'textDecorationLine', 'outlineColor', 'outlineStyle', 'outlineWidth',
+            'outlineOffset', 'transitionProperty', 'transitionDuration', 'transitionTimingFunction'];
+          const style = getComputedStyle(node);
+          const chevron = getComputedStyle(node.querySelector('.nav-chevron'));
+          return [properties.map(key => style[key]),
+            ['width', 'height', 'color', 'transform', 'strokeWidth'].map(key => chevron[key])];
+        }""")
+
+    for motion in ("reduce", "no-preference"):
+        page.emulate_media(reduced_motion=motion)
+        actions = []
+        for path, selector in (
+            ("index.html", ".project-detail-link"),
+            (f"{synthetic_documents[0].slug}/index.html", '.page-navigation a[rel="next"]'),
+        ):
+            page.goto(f"{synthetic_site[0]}/{path}")
+            page.evaluate("document.fonts.ready")
+            page.mouse.move(0, 0)
+            link = page.locator(selector)
+            expect(link).to_have_class(re.compile(r"\bdirectional-link\b"))
+            assert link.bounding_box()["height"] >= 44
+            assert link.evaluate("n => getComputedStyle(n).borderWidth") == "0px"
+            assert link.evaluate("n => getComputedStyle(n).backgroundColor") == "rgba(0, 0, 0, 0)"
+            if path == "index.html":
+                section = link.locator("xpath=..")
+                assert link.bounding_box()["x"] == pytest.approx(section.bounding_box()["x"])
+            states = [styles(link)]
+            link.hover()
+            expect(link).to_have_css("color", "rgb(24, 75, 64)")
+            states.append(styles(link))
+            page.mouse.move(0, 0)
+            page.keyboard.press("Tab")
+            link.focus()
+            expect(link).to_have_css("outline-style", "solid")
+            expect(link).to_have_css("color", "rgb(24, 75, 64)")
+            states.append(styles(link))
+            actions.append(states)
+        assert actions[0] == actions[1]
 
 
 def test_control_boundaries_and_progress_have_contrast_and_distinct_shapes(page, synthetic_site, synthetic_documents):
@@ -542,6 +588,14 @@ def test_synthetic_reflow_controls_navigation_and_accessibility(page, synthetic_
             expect(page.locator("[data-current-status]")).to_have_text("Completed")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (path, width, text_scale)
         assert_accessible_structure(page)
+        if path == "index.html":
+            action = page.locator(".project-detail-link")
+            assert action.bounding_box()["height"] >= 44
+            project = page.locator('[aria-labelledby="project-heading"]')
+            assert action.bounding_box()["x"] == pytest.approx(project.bounding_box()["x"])
+            action.focus()
+            expect(action).to_be_focused()
+            expect(action).to_have_css("outline-style", "solid")
         if page.locator(".course-toggle").is_visible():
             page.locator(".course-toggle").focus()
             page.keyboard.press("Enter")
