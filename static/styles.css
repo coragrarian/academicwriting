@@ -171,34 +171,12 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .resource-section + .resource-section { margin-top: var(--space-group); }
 /* Course entry follows the hero; the research context has a larger separation. */
 .project-page--home { --home-course-gap: clamp(var(--space-group), 5vw, 4rem); --home-project-gap: clamp(var(--space-section), 6vw, 4.5rem); }
-.project-page--home .page-head { margin-bottom: var(--home-course-gap); container-type: inline-size; }
-.project-page--home .page-head .lead { margin-bottom: 0; }
+.project-page--home .page-head { margin-bottom: var(--home-course-gap); }
 .project-page--home > .resource-section + .resource-section { margin-top: var(--home-project-gap); }
 .action-link { display: inline-flex; align-items: center; gap: var(--space-small); max-width: 100%; min-height: 2.75rem; padding: .45rem .85rem; border: 1px solid var(--control-border); border-radius: var(--radius-control); color: var(--ink-interactive-neutral); font-size: var(--text-ui); font-weight: 600; line-height: 1.4; text-decoration: none; }
 .action-link--tertiary { background: var(--wash); font-weight: 500; }
 .action-link--tertiary:hover, .action-link--tertiary:focus-visible { background: var(--surface-hover-neutral); border-color: var(--ink-interactive-strong); color: var(--ink-interactive-strong); }
 .project-detail-link { margin-top: var(--space-text); }
-/* An ordered editorial flow; empty grid pseudo-elements connect the stages
-   without adding spoken content or positioning over the text. */
-.research-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-group); margin: var(--space-group) 0 var(--space-text); padding: 0; list-style: none; }
-.research-flow li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-small) var(--space-text); align-content: start; min-width: 0; }
-.research-step-number { grid-area: 1 / 1; color: var(--muted); font-size: var(--text-small); }
-/* Stage titles belong to list items, keeping the homepage heading outline
-   intact when this flow follows the resource title. Reuse the existing scale. */
-.research-flow strong { grid-column: 1 / -1; font-size: var(--text-h3); line-height: 1.25; overflow-wrap: anywhere; }
-.research-flow p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: var(--text-small); }
-.research-flow li:not(:last-child)::before { content: ""; grid-area: 1 / 2; align-self: center; border-block-start: 1px solid var(--line); }
-.research-flow li:not(:last-child)::after { content: ""; grid-area: 1 / 2; align-self: center; justify-self: end; inline-size: .4rem; block-size: .4rem; border-block-start: 1px solid var(--line); border-inline-end: 1px solid var(--line); transform: rotate(45deg); }
-/* Container rem units also respond to enlarged text, unlike a viewport-only
-   breakpoint. Keep all four stages in one reading sequence at narrow widths. */
-@container (max-width: 60rem) {
-  .research-flow { grid-template-columns: minmax(0, 1fr); gap: var(--space-small); }
-  .research-flow li { column-gap: var(--space-small); }
-  .research-flow strong { grid-area: 1 / 2; }
-  .research-flow p { grid-area: 2 / 2; }
-  .research-flow li:not(:last-child)::before { grid-area: 3 / 1; align-self: start; justify-self: center; inline-size: 0; block-size: var(--space-block); border-block-start: 0; border-inline-start: 1px solid var(--line); }
-  .research-flow li:not(:last-child)::after { grid-area: 3 / 1; align-self: end; justify-self: center; border-block-start: 0; border-block-end: 1px solid var(--line); }
-}
 .course-contents { margin: 0; padding: 0; list-style: none; }
 .course-contents li + li { border-top: 1px solid var(--line); }
 .contents-link { display: grid; grid-template-columns: 2ch minmax(0, 1fr) .85rem; align-items: center; gap: clamp(var(--space-small), 3vw, var(--space-block)); min-height: 5.5rem; padding: var(--space-block) var(--space-small); color: var(--ink); text-decoration: none; }
