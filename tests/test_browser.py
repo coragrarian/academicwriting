@@ -848,7 +848,7 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
             assert not any(name in page.locator("main").inner_text() for name in names)
             expect(page.get_by_role("heading", name="People", exact=True)).to_have_count(0)
             expect(page.get_by_role("heading", name="Project team", exact=True)).to_have_count(0)
-            expect(page.locator('[aria-labelledby="project-heading"] .prose p')).to_have_count(2)
+            expect(page.locator('[aria-labelledby="project-heading"] .prose p')).to_have_count(1)
             if width >= 1024:
                 hero = page.locator(".page-head").bounding_box()
                 course = page.locator("#course").bounding_box()

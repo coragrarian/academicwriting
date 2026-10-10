@@ -588,6 +588,35 @@ def test_synthetic_reflow_controls_navigation_and_accessibility(page, synthetic_
             expect(page.locator("[data-current-status]")).to_have_text("Completed")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (path, width, text_scale)
         assert_accessible_structure(page)
+        if path == "index.html":
+            flow = page.get_by_role("list").filter(
+                has=page.get_by_text("Research articles", exact=True)
+            )
+            hero = page.locator(".page-head")
+            expect(hero.locator(".research-flow")).to_have_count(1)
+            lead = hero.locator(".lead").bounding_box()
+            assert flow.bounding_box()["y"] >= lead["y"] + lead["height"]
+            assert page.locator("#course").bounding_box()["y"] >= flow.bounding_box()["y"] + flow.bounding_box()["height"]
+            stages = flow.locator(":scope > li")
+            expect(stages).to_have_count(4)
+            boxes = [stage.bounding_box() for stage in stages.all()]
+            for current, following in pairwise(boxes):
+                if width == 1280 and text_scale == 1:
+                    assert following["x"] >= current["x"] + current["width"]
+                    assert following["y"] == pytest.approx(current["y"])
+                else:
+                    assert following["y"] >= current["y"] + current["height"]
+            # Font ink can extend beyond a line box without clipping when
+            # overflow is visible; do not mistake those metrics for truncation.
+            assert flow.locator("strong, p").evaluate_all("""nodes => nodes.every(n =>
+              n.scrollWidth <= n.clientWidth && (getComputedStyle(n).overflowY === 'visible'
+                || n.scrollHeight <= n.clientHeight))""")
+            action = page.locator(".project-detail-link")
+            assert action.bounding_box()["height"] >= 44
+            assert action.bounding_box()["x"] == pytest.approx(flow.bounding_box()["x"])
+            action.focus()
+            expect(action).to_be_focused()
+            expect(action).to_have_css("outline-style", "solid")
         if page.locator(".course-toggle").is_visible():
             page.locator(".course-toggle").focus()
             page.keyboard.press("Enter")

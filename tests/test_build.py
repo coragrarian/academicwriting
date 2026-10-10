@@ -347,6 +347,43 @@ def test_home_and_about_public_content(tmp_path, documents):
     )
 
 
+def test_home_research_flow_has_ordered_stages_and_shared_directional_action(tmp_path, synthetic_documents):
+    output = tmp_path / "site"
+    build_site(synthetic_documents, output)
+    source = (output / "index.html").read_text()
+    assert source.index('<p class="lead"') < source.index('<ol class="research-flow"') < source.index('<section id="course"')
+    flow_source = source.split('<ol class="research-flow"', 1)[1].split("</ol>", 1)[0]
+    flow = ET.fromstring('<ol class="research-flow"' + flow_source + "</ol>")
+    assert flow.get("role") == "list"
+    stages = flow.findall("li")
+    assert len(stages) == 4
+    assert [stage.findtext("strong") for stage in stages] == [
+        "Research articles", "CorAgrarian corpus", "Linguistic & rhetorical analysis",
+        "Evidence-informed learning activities",
+    ]
+    for number, stage in enumerate(stages, 1):
+        assert stage.findtext("p")
+        marker = stage.find("span")
+        assert marker.text == f"{number:02d}" and marker.get("aria-hidden") == "true"
+    action = next(
+        attrs for tag, attrs in Page(source).elements
+        if tag == "a" and "project-detail-link" in attrs.get("class", "").split()
+    )
+    assert "directional-link" in action["class"].split()
+    assert action["href"] == "about/index.html"
+    for document in synthetic_documents:
+        module = Page((output / document.slug / "index.html").read_text())
+        navigation = [
+            attrs for tag, attrs in module.elements
+            if tag == "a" and attrs.get("rel") in {"prev", "next"}
+        ]
+        assert len(navigation) == 2
+        assert all(
+            "directional-link" in attrs.get("class", "").split()
+            for attrs in navigation
+        )
+
+
 @pytest.mark.canonical
 def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, documents):
     output = tmp_path / "site"
@@ -375,8 +412,9 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     assert about_source.count("Details to be added") == 6
     assert 'href="about/index.html#team"' not in home_source
     project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
-    assert project.count("<p>") == 1 and "CorAgrarian" in project
-    assert "findings from that work inform" in project
+    introduction = project.split('<div class="prose">', 1)[1].split("</div>", 1)[0]
+    assert introduction.count("<p>") == 1 and "CorAgrarian" in introduction
+    assert "findings from that work inform" in introduction
     assert "Jhonatan cleans and organises" not in about_source
     assert "person-contribution" not in about_source
     for page, count in ((home, 0), (about, 10)):
