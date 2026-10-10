@@ -25,6 +25,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset_touch_icon }}" data-page-metadata>
   <meta name="theme-color" content="#285e51">
   <link rel="stylesheet" href="{{ asset_css }}">
+  {% if not public_page or is_home %}<script defer src="{{ asset_progress }}"></script>{% endif %}
+  {% if is_home %}<script defer src="{{ asset_home }}"></script>{% endif %}
   {% if not public_page %}<script defer src="{{ asset_js }}"></script>
   <script defer src="{{ asset_navigation }}"></script>{% endif %}
 </head>
@@ -50,7 +52,7 @@
     </main>
   </div>
   {% include "_site_footer.html" %}
-  {% if not public_page %}{# Course metadata is read once; each exercise carries
-     its own answer-key inside main. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>{% endif %}
+  {% if site_data %}{# Home reads only the module exercise catalogue. Course
+     pages also receive navigation data; answer-key remains inside exercises. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>{% endif %}
 </body>
 </html>

@@ -42,7 +42,12 @@ def test_complete_build(tmp_path, course_documents):
     assert [attrs["href"] for _, attrs in Page(home).elements if attrs.get("class") == "contents-link"] == [
         f"{doc.slug}/index.html" for doc in documents
     ]
-    assert "site-data" not in pages[output / "index.html"].scripts
+    assert json.loads(pages[output / "index.html"].scripts["site-data"]) == {
+        "modules": {
+            doc.slug: [entry.id for section in doc.sections for entry in section.exercises]
+            for doc in documents
+        },
+    }
     for path, page in pages.items():
         source = path.read_text()
         not_found = path.relative_to(output) == Path("404.html")
@@ -88,10 +93,10 @@ def test_complete_build(tmp_path, course_documents):
             1 for tag, attrs in page.elements if tag == "li" and attrs.get("aria-current") == "page"
         ) == (0 if path.relative_to(output) in {Path("index.html"), Path("404.html")} else 1)
         data = {}
-        if public_page:
+        if public_page and path.relative_to(output) != Path("index.html"):
             assert "site-data" not in page.scripts
             assert not any(tag == "script" for tag, _ in page.elements)
-        else:
+        elif not public_page:
             data = json.loads(page.scripts["site-data"])
             assert data["course_sections"] == {
                 document.slug: {
@@ -113,7 +118,11 @@ def test_complete_build(tmp_path, course_documents):
             assert resolved.is_file(), f"{path}: unresolved link {link}"
             if target.fragment:
                 assert target.fragment in pages[resolved].ids, f"{path}: missing fragment {link}"
-        assets = ("styles.css",) if public_page else ("styles.css", "exercises.js", "navigation.js")
+        assets = ("styles.css",)
+        if path.relative_to(output) == Path("index.html"):
+            assets += ("progress.js", "home.js")
+        elif not public_page:
+            assets += ("progress.js", "exercises.js", "navigation.js")
         for asset in assets:
             assert any(link.endswith("assets/" + asset) for link in page.links)
     ids = set()
@@ -225,8 +234,16 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, synthetic_d
     assert expected_data["module"] == documents[0].slug
     for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
-        assert "site-data" not in page.scripts
-        assert not any(tag == "script" for tag, _ in page.elements)
+        if path == Path("index.html"):
+            assert json.loads(page.scripts["site-data"]) == {"modules": expected_data["modules"]}
+            scripts = [attrs for tag, attrs in page.elements if tag == "script" and "src" in attrs]
+            assert [attrs["src"] for attrs in scripts] == ["assets/progress.js", "assets/home.js"]
+            assert all("defer" in attrs for attrs in scripts)
+            progress = [attrs for _, attrs in page.elements if attrs.get("class") == "contents-progress"]
+            assert len(progress) == len(documents) and all("hidden" in attrs for attrs in progress)
+        else:
+            assert "site-data" not in page.scripts
+            assert not any(tag == "script" for tag, _ in page.elements)
         assert "answer-key" not in page.scripts
         assert not any(
             attrs.get("rel") in {"prev", "next"} or "data-course-terminal" in attrs
@@ -261,7 +278,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     hero = home_source.split('<div class="home-hero-copy">', 1)[1].split("</div>", 1)[0]
     assert hero.count("<a ") == 1
     assert '<p class="eyebrow">Self-study course</p>' in hero
-    assert 'href="introduction/index.html">Begin with Introduction ' in hero
+    assert 'href="introduction/index.html"><span data-home-entry-label>Begin with Introduction</span>' in hero
     assert "CorAgrarian Academic Writing" not in home_source
     assert "Linguistic and rhetorical analysis" not in home_source
     assert '<ol class="course-contents" role="list">' in home_source
@@ -452,7 +469,7 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
     home = Page(source)
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
     assert start["href"] == "beta/index.html"
-    assert 'href="beta/index.html">Begin with Neutral descriptions ' in source
+    assert 'href="beta/index.html"><span data-home-entry-label>Begin with Neutral descriptions</span>' in source
     facts = source.split('<aside class="home-facts"', 1)[1].split("</aside>", 1)[0]
     assert f'<dt>Modules</dt><dd>{len(modules)}</dd>' in facts
     exercise_total = sum(len(section.exercises) for module in modules for section in module.sections)

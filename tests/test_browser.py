@@ -204,6 +204,10 @@ def test_every_canonical_exercise_can_complete(page, site, documents):
                 expect(page.locator("[data-current-status]")).to_have_text("Completed")
         total = sum(len(section.exercises) for section in document.sections)
         expect(page.locator(f'[data-progress-module="{document.slug}"]')).to_have_text(f"{total}/{total}")
+    page.locator(".nav-home").click()
+    expect(page.locator("[data-home-entry]")).to_have_text("Review the course")
+    expect(page.locator("[data-home-entry]")).to_have_attribute("href", "#course")
+    assert page.locator(".contents-progress-status").all_text_contents() == ["Completed"] * len(documents)
 
 
 @pytest.mark.parametrize(
@@ -823,7 +827,11 @@ def test_public_pages_do_not_load_course_runtime(page, site, path):
     requests = []
     page.on("request", lambda request: requests.append(request.url))
     page.goto(site[0] + path)
-    expect(page.locator("script, #site-data, #answer-key")).to_have_count(0)
+    expect(page.locator("#answer-key")).to_have_count(0)
+    if path == "/index.html":
+        expect(page.locator("#site-data, script[src$='progress.js'], script[src$='home.js']")).to_have_count(3)
+    else:
+        expect(page.locator("script, #site-data")).to_have_count(0)
     assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
     assert any(url.endswith("/assets/styles.css") for url in requests)
     assert page.evaluate("JSON.stringify({...localStorage})") == "{}"
@@ -1089,7 +1097,9 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                 assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
         if path in {"/index.html", "/about/index.html"}:
             expect(page.locator(".public-layout")).to_have_count(1)
-            expect(page.locator("script, #site-data, main .institution-logo")).to_have_count(0)
+            expect(page.locator("main .institution-logo")).to_have_count(0)
+            if path == "/about/index.html":
+                expect(page.locator("script, #site-data")).to_have_count(0)
             expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module], [data-progress-other-module]")).to_have_count(0)
             public_edge = page.locator("main").evaluate("node => node.getBoundingClientRect().x + parseFloat(getComputedStyle(node).paddingLeft)")
             assert page.locator(".site-name").bounding_box()["x"] == pytest.approx(public_edge, abs=0.02)

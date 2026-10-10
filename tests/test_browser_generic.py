@@ -81,6 +81,25 @@ def test_home_orientation_and_primary_entry_follow_course_model(page, synthetic_
     expect(page.get_by_role("link", name="Begin module")).to_have_class("directional-link")
 
 
+def test_home_continuation_follows_course_order_and_public_labels(page, synthetic_site, synthetic_documents):
+    page.goto(synthetic_site[0] + "/index.html")
+    modules = json.loads(page.locator("#site-data").text_content())["modules"]
+    # JSON object keys need not follow course order; the ordered rows do.
+    for completed_modules, next_module in ((["alpha"], "beta"), (["alpha", "beta"], "gamma")):
+        page.evaluate("""({modules, completed}) => {
+          for (const module of completed) {
+            localStorage.setItem(`agrarian-writing-v2:${module}`, JSON.stringify({
+              progress: Object.fromEntries(modules[module].map(id => [id, 'completed']))
+            }));
+          }
+        }""", {"modules": modules, "completed": completed_modules})
+        page.reload()
+        row = page.locator(f'[data-home-module="{next_module}"]')
+        expect(page.locator("[data-home-entry]")).to_have_text("Continue with " + row.locator(".contents-title").text_content())
+        expect(page.locator("[data-home-entry]")).to_have_attribute("href", f"{next_module}/index.html")
+    assert page.locator(".contents-link").count() == len(synthetic_documents)
+
+
 def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_site):
     page.goto(f"{synthetic_site[0]}/index.html")
     header = page.locator(".site-header")
@@ -469,7 +488,8 @@ def test_entire_synthetic_sequence_from_home_and_back_with_generic_shell(page, s
         else:
             assert page.evaluate("window.navigationProbe") is None
     assert visited == [path.as_posix() for path in sequence]
-    expect(page.locator(".course-panel, .page-navigation, #site-data")).to_have_count(0)
+    expect(page.locator(".course-panel, .page-navigation")).to_have_count(0)
+    assert set(json.loads(page.locator("#site-data").text_content())) == {"modules"}
     page.goto(f"{base}/{sequence[-1].as_posix()}")
     backwards = []
     while page.url != home:

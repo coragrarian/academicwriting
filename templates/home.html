@@ -6,7 +6,7 @@
     <p class="eyebrow">Self-study course</p>
     <h1>Academic Writing for Agrarian Sciences</h1>
     <p class="lead">Academic Writing for Agrarian Sciences is an interactive self-study resource for students and researchers in the Agrarian Sciences. Working section by section through research articles, it helps learners recognise disciplinary rhetorical conventions and practise the grammar, vocabulary and phraseology used to realise them. The materials are informed by the CorAgrarian corpus, published Agrarian Sciences research and academic-writing scholarship.</p>
-    <a class="action-link action-link--primary" href="{{ module_link(documents[0]) }}">Begin with {{ home_module_title(documents[0].title) }} {% include "_chevron_right.html" %}</a>
+    <a class="action-link action-link--primary" data-home-entry href="{{ module_link(documents[0]) }}"><span data-home-entry-label>Begin with {{ home_module_title(documents[0].title) }}</span> {% include "_chevron_right.html" %}</a>
   </div>
   <aside class="home-facts" aria-labelledby="course-facts-heading">
     <h2 id="course-facts-heading" class="eyebrow">At a glance</h2>
@@ -26,12 +26,16 @@
     {% set subsection_count = module.sections | length %}
     {% set exercise_count = module_exercise_counts[module.slug] %}
     <li>
-      <a class="contents-link" href="{{ module_link(module) }}">
+      <a class="contents-link" data-home-module="{{ module.slug }}" href="{{ module_link(module) }}">
         <span class="contents-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
         <span class="contents-copy">
           <strong class="contents-title">{{ home_module_title(module.title) }}</strong>
           {% if module.summary %}<span class="contents-summary">{{ module.summary }}</span>{% endif %}
           <span class="contents-counts">{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %} · {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span>
+          <span class="contents-progress" hidden>
+            <span class="contents-progress-status"></span>
+            <span class="contents-progress-track" aria-hidden="true"><span class="contents-progress-fill"></span></span>
+          </span>
         </span>
         {% include "_chevron_right.html" %}
       </a>

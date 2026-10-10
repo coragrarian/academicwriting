@@ -197,6 +197,12 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .contents-title { display: block; font-family: var(--font-serif); font-size-adjust: none; font-size: var(--text-h2); line-height: 1.25; overflow-wrap: anywhere; }
 .contents-summary { display: block; margin-top: .35rem; font-size: var(--text-ui); line-height: 1.5; overflow-wrap: anywhere; }
 .contents-counts { display: block; margin-top: .25rem; color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
+.contents-progress { display: block; margin-top: .75rem; font-size: var(--text-small); line-height: 1.5; }
+.contents-progress[data-status="not-started"] { color: var(--muted); }
+.contents-progress[data-status="completed"] { color: var(--success); }
+.contents-link:is(:hover, :focus-visible) .contents-progress[data-status="not-started"] { color: var(--ink-interactive-neutral); }
+.contents-progress-track { display: block; height: 3px; margin-top: .5rem; background: var(--line); }
+.contents-progress-fill { display: block; height: 100%; background: var(--success); }
 .not-found-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-text); }
 .not-found-actions > a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .about-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(14rem, 2fr); gap: var(--space-section) var(--space-group); align-items: start; }
