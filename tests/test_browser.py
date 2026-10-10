@@ -622,7 +622,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     navigation.get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     page.locator(".site-name").click()
-    page.get_by_role("link", name="About the research project", exact=True).click()
+    page.get_by_role("link", name="About the corpus and research", exact=True).click()
     assert page.url == f"{site[0]}/about/index.html"
     expect(page.locator("#team .person--pending")).to_have_count(6)
     context.close()
@@ -631,8 +631,8 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
 def test_home_contents_keyboard_focus_and_module_entry(page, site):
     for index, module in enumerate(("introduction", "methods", "results")):
         page.goto(site[0] + "/index.html")
-        # The skip link and three header links precede the ordered course rows.
-        for _ in range(5 + index):
+        # The skip link, three header links and primary entry precede the rows.
+        for _ in range(6 + index):
             page.keyboard.press("Tab")
         row = page.locator(".contents-link").nth(index)
         expect(row).to_be_focused()
@@ -848,7 +848,7 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
             assert not any(name in page.locator("main").inner_text() for name in names)
             expect(page.get_by_role("heading", name="People", exact=True)).to_have_count(0)
             expect(page.get_by_role("heading", name="Project team", exact=True)).to_have_count(0)
-            expect(page.locator('[aria-labelledby="project-heading"] .prose p')).to_have_count(2)
+            expect(page.locator('[aria-labelledby="project-heading"] .prose p')).to_have_count(1)
             if width >= 1024:
                 hero = page.locator(".page-head").bounding_box()
                 course = page.locator("#course").bounding_box()
@@ -1050,19 +1050,25 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             centres = [mark["y"] + mark["height"] / 2 for mark in marks]
             assert centres == pytest.approx([centres[0]] * 3, abs=0.02)
         if path == "/index.html":
-            expect(page.locator(".project-actions, .project-start, .page-head a")).to_have_count(0)
+            expect(page.locator(".project-actions, .project-start")).to_have_count(0)
+            primary = page.get_by_role("link", name="Begin with Introduction", exact=True)
+            expect(primary).to_have_attribute("href", "introduction/index.html")
+            assert primary.bounding_box()["height"] >= 44
+            expect(page.locator(".page-head a")).to_have_count(1)
             expect(page.get_by_role("link", name="Start the course", exact=True)).to_have_count(0)
             expect(page.get_by_role("link", name="About the project", exact=True)).to_have_count(0)
             expect(page.locator("#course .contents-link")).to_have_count(3)
             assert page.locator(".contents-title").all_text_contents() == [
                 "Introduction", "Methods", "Results",
             ]
-            expect(page.locator("#course button, #course .action-link, .page-head .eyebrow")).to_have_count(0)
+            expect(page.locator("#course button, #course .action-link")).to_have_count(0)
+            expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
+            expect(page.locator(".home-facts dt")).to_have_count(5)
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
-            expect(page.locator(".page-head .lead")).to_have_text(
-                "An interactive self-study resource for students and researchers writing research articles in the Agrarian Sciences."
+            expect(page.locator(".page-head .lead")).to_contain_text(
+                "Academic Writing for Agrarian Sciences is an interactive self-study resource"
             )
-            expect(page.get_by_role("link", name="About the research project", exact=True)).to_have_attribute(
+            expect(page.get_by_role("link", name="About the corpus and research", exact=True)).to_have_attribute(
                 "href", "about/index.html"
             )
             assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03"]

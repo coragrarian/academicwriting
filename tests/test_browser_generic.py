@@ -58,6 +58,29 @@ def contrast_ratio(first, second):
     return (light + 0.05) / (dark + 0.05)
 
 
+def test_home_orientation_and_primary_entry_follow_course_model(page, synthetic_site, synthetic_documents):
+    page.goto(f"{synthetic_site[0]}/index.html")
+    expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
+    assert page.locator(".home-facts dt").all_text_contents() == [
+        "Modules", "Exercises", "Format", "Access", "For",
+    ]
+    exercises = sum(len(section.exercises) for doc in synthetic_documents for section in doc.sections)
+    assert page.locator(".home-facts dd").all_text_contents() == [
+        str(len(synthetic_documents)), f"{exercises} interactive", "Self-paced", "Free",
+        "Students and researchers in the Agrarian Sciences",
+    ]
+    primary = page.locator(".home-hero .action-link--primary")
+    expect(primary).to_have_count(1)
+    expect(primary).to_have_attribute("href", f"{synthetic_documents[0].slug}/index.html")
+    ink, surface = primary.evaluate("n => [getComputedStyle(n).color, getComputedStyle(n).backgroundColor]")
+    assert contrast_ratio(ink, surface) >= 4.5
+    primary.focus()
+    assert primary.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    page.keyboard.press("Enter")
+    expect(page.locator("h1")).to_have_text(synthetic_documents[0].title)
+    expect(page.get_by_role("link", name="Begin module")).to_have_class("directional-link")
+
+
 def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_site):
     page.goto(f"{synthetic_site[0]}/index.html")
     header = page.locator(".site-header")
@@ -155,7 +178,9 @@ def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page,
     hover_surfaces.append(colours(option)[1])
     option.locator("input").check()
     assert colours(option)[1] == current_surface
-    page.goto(f"{synthetic_site[0]}/index.html")
+    # The fallback retains the tertiary action; Home uses a directional link.
+    serve_not_found_candidate(page, synthetic_site)
+    page.goto(f"{synthetic_site[0]}/missing/action")
     tertiary = page.locator(".action-link--tertiary")
     assert neutral(colours(tertiary)[0])
     tertiary.hover()

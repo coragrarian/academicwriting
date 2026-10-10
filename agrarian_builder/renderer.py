@@ -33,7 +33,8 @@ from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 STATIC = ROOT / "static"
-SITE_TITLE = "Academic Writing for Agrarian Sciences"
+SITE_TITLE = "CorAgrarian"
+RESOURCE_TITLE = "Academic Writing for Agrarian Sciences"
 SITE_URL = "https://coragrarian.github.io/academicwriting/"
 
 
@@ -92,11 +93,13 @@ def _page_metadata(
         )
     else:
         description = (
-            "Interactive self-study activities for academic writing in research "
-            "articles in the Agrarian Sciences."
+            "An interactive self-study resource for students and researchers in the "
+            "Agrarian Sciences, informed by the CorAgrarian corpus, published "
+            "research and academic-writing scholarship."
         )
     return PageMetadata(
-        title=f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE,
+        title=(f"{page_title} · {RESOURCE_TITLE}" if page_title else RESOURCE_TITLE)
+        + f" | {SITE_TITLE}",
         description=description,
         # A fallback can be served at any missing URL; none is canonical content.
         canonical_url=None if not_found else SITE_URL + path.as_posix().removesuffix("index.html"),

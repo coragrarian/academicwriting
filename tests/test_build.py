@@ -100,7 +100,7 @@ def test_complete_build(tmp_path, course_documents):
                 }
                 for document in documents
             }
-            assert page.title.endswith(" · Academic Writing for Agrarian Sciences")
+            assert page.title.endswith(" · Academic Writing for Agrarian Sciences | CorAgrarian")
         for node_id, attrs in nav_nodes.items():
             assert ("open" in attrs) == ("data-nav-current" in attrs)
             if node_id.startswith("module:"):
@@ -239,7 +239,7 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, synthetic_d
             for tag, attrs in page.elements
         )
         assert any("public-layout" in attrs.get("class", "").split() for _, attrs in page.elements)
-        expected_title = "Academic Writing for Agrarian Sciences"
+        expected_title = "Academic Writing for Agrarian Sciences | CorAgrarian"
         if path.parent.name == "about":
             expected_title = "About · " + expected_title
         elif path.name == "404.html":
@@ -258,9 +258,12 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert len(rows) == 3
     start = rows[0]
     assert "project-start" not in home_source and "project-actions" not in home_source
-    hero = home_source.split('<div class="page-head">', 1)[1].split("</div>", 1)[0]
-    assert "<a " not in hero
-    assert "eyebrow" not in hero and "Interactive self-study" not in hero
+    hero = home_source.split('<div class="home-hero-copy">', 1)[1].split("</div>", 1)[0]
+    assert hero.count("<a ") == 1
+    assert '<p class="eyebrow">Self-study course</p>' in hero
+    assert 'href="introduction/index.html">Begin with Introduction ' in hero
+    assert "CorAgrarian Academic Writing" not in home_source
+    assert "Linguistic and rhetorical analysis" not in home_source
     assert '<ol class="course-contents" role="list">' in home_source
     assert "Course contents" in home_source and "Explore the course" not in home_source
     assert "Start here" not in home_source and ">Explore" not in home_source
@@ -270,10 +273,15 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
     assert "Start the course" not in home_source
-    assert "About the research project" in home_source
+    assert "About the corpus and research" in home_source
     assert (
-        "An interactive self-study resource for students and researchers writing "
-        "research articles in the Agrarian Sciences."
+        "Academic Writing for Agrarian Sciences is an interactive self-study "
+        "resource for students and researchers in the Agrarian Sciences. Working "
+        "section by section through research articles, it helps learners recognise "
+        "disciplinary rhetorical conventions and practise the grammar, vocabulary "
+        "and phraseology used to realise them. The materials are informed by the "
+        "CorAgrarian corpus, published Agrarian Sciences research and "
+        "academic-writing scholarship."
     ) in hero
     assert [row["href"] for row in rows] == [
         "introduction/index.html", "methods/index.html", "results/index.html",
@@ -356,7 +364,7 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
     assert [text for tag, text in home.headings if tag == "h2"] == [
-        "Course contents", "The research project",
+        "At a glance", "Course contents", "The CorAgrarian corpus",
     ]
     assert not any(name in home_source for name in names)
     assert not {"people-heading", "team", "data-platform"} & home.ids
@@ -375,8 +383,13 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     assert about_source.count("Details to be added") == 6
     assert 'href="about/index.html#team"' not in home_source
     project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
-    assert project.count("<p>") == 2 and "CorAgrarian" in project
-    assert "pedagogical materials" in project and "self-study activities" in project
+    assert project.count("<p>") == 1
+    assert (
+        "CorAgrarian is a specialised corpus of academic writing in the Agrarian "
+        "Sciences and one of the empirical resources informing this course. Corpus "
+        "evidence is used alongside published research examples and academic-writing "
+        "scholarship throughout the materials."
+    ) in project
     assert "Jhonatan cleans and organises" not in about_source
     assert "person-contribution" not in about_source
     for page, count in ((home, 0), (about, 10)):
@@ -437,6 +450,16 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
     home = Page(source)
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
     assert start["href"] == "beta/index.html"
+    assert 'href="beta/index.html">Begin with Neutral descriptions ' in source
+    facts = source.split('<aside class="home-facts"', 1)[1].split("</aside>", 1)[0]
+    assert f'<dt>Modules</dt><dd>{len(modules)}</dd>' in facts
+    exercise_total = sum(len(section.exercises) for module in modules for section in module.sections)
+    assert f'<dt>Exercises</dt><dd>{exercise_total} interactive</dd>' in facts
+    for label, value in (
+        ("Format", "Self-paced"), ("Access", "Free"),
+        ("For", "Students and researchers in the Agrarian Sciences"),
+    ):
+        assert f"<dt>{label}</dt><dd>{value}</dd>" in facts
     rows = source.split('<ol class="course-contents" role="list">', 1)[1].split("</ol>", 1)[0]
     rows = rows.split("<li>")[1:]
     assert len(rows) == 2
@@ -456,25 +479,25 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
 
 @pytest.mark.parametrize(("path", "title", "description"), [
     (
-        "index.html", "Academic Writing for Agrarian Sciences",
-        "Interactive self-study activities for academic writing in research articles in the Agrarian Sciences.",
+        "index.html", "Academic Writing for Agrarian Sciences | CorAgrarian",
+        "An interactive self-study resource for students and researchers in the Agrarian Sciences, informed by the CorAgrarian corpus, published research and academic-writing scholarship.",
     ),
     (
-        "about/index.html", "About · Academic Writing for Agrarian Sciences",
+        "about/index.html", "About · Academic Writing for Agrarian Sciences | CorAgrarian",
         "Research, CorAgrarian, pedagogical materials, project information and the research team behind Academic Writing for Agrarian Sciences.",
     ),
     (
-        "methods/index.html", "The Methods section · Academic Writing for Agrarian Sciences",
+        "methods/index.html", "The Methods section · Academic Writing for Agrarian Sciences | CorAgrarian",
         "The Methods section: interactive academic-writing activities for Agrarian Sciences research articles.",
     ),
     (
         "methods/purpose-of-the-methods-section/index.html",
-        "Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Purpose of the Methods section · Academic Writing for Agrarian Sciences | CorAgrarian",
         "Academic-writing activities on “Purpose of the Methods section” in the module “The Methods section”.",
     ),
     (
         "methods/purpose-of-the-methods-section/exercise-1/index.html",
-        "Exercise 1: Purpose of the Methods section · Academic Writing for Agrarian Sciences",
+        "Exercise 1: Purpose of the Methods section · Academic Writing for Agrarian Sciences | CorAgrarian",
         "Interactive exercise 1 on “Purpose of the Methods section” in the module “The Methods section”.",
     ),
 ])
@@ -499,7 +522,7 @@ def test_publication_metadata_for_each_page_type(tmp_path, documents, path, titl
     assert metadata["og:title"] == metadata["twitter:title"] == title
     assert metadata["og:url"] == canonical
     assert metadata["og:type"] == "website"
-    assert metadata["og:site_name"] == "Academic Writing for Agrarian Sciences"
+    assert metadata["og:site_name"] == "CorAgrarian"
     assert metadata["og:image"] == metadata["twitter:image"] == PRODUCTION_URL + "assets/social-preview.png"
     assert metadata["og:image:width"] == "1200" and metadata["og:image:height"] == "630"
     assert metadata["og:image:alt"] == metadata["twitter:image:alt"]
