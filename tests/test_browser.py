@@ -1032,9 +1032,11 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         footer = page.get_by_role("contentinfo")
         expect(footer).to_have_count(1)
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
-        expect(footer.locator(".footer-group")).to_have_count(3)
-        expect(footer.locator(".footer-links a")).to_have_count(5)
+        expect(footer.locator(".footer-group")).to_have_count(2)
+        expect(footer.locator(".footer-links a")).to_have_count(2)
+        expect(footer.locator(".footer-bottom .footer-source")).to_have_text("Source code on GitHub")
         expect(footer.locator(".footer-licence")).to_have_text("Course materials — CC BY-NC-SA 4.0")
+        expect(footer.locator(".footer-group .footer-licence")).to_have_count(0)
         expect(footer.get_by_role("link", name="Course materials — CC BY-NC-SA 4.0", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
         expect(provenance).to_have_text(

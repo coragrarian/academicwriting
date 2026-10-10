@@ -113,14 +113,14 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
     assert contrast_ratio(header_surface, footer_surface) >= 7
     for selector, surface in (
         (".site-name, .site-name span, .site-links a", header_surface),
-        (".footer-heading, .footer-provenance, .footer-licence, .footer-links a", footer_surface),
+        (".footer-heading, .footer-provenance, .footer-licence, .footer-links a, .footer-source", footer_surface),
     ):
         for text in page.locator(selector).all():
             colour = text.evaluate("n => getComputedStyle(n).color")
             assert contrast_ratio(colour, surface) >= 4.5
-    for selector, surface in ((".about-link", header_surface), (".footer-links a", footer_surface)):
+    for selector, surface in ((".about-link", header_surface), (".footer-links a, .footer-source", footer_surface)):
         for link in page.locator(selector).all():
-            if selector == ".footer-links a":
+            if selector == ".footer-links a, .footer-source":
                 assert "underline" not in link.evaluate("n => getComputedStyle(n).textDecorationLine")
                 assert int(link.evaluate("n => getComputedStyle(n).fontWeight")) > int(
                     footer.locator(".footer-licence").evaluate("n => getComputedStyle(n).fontWeight")
@@ -128,7 +128,7 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
             link.focus()
             colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
             assert outline == "solid" and contrast_ratio(colour, surface) >= 3
-            if selector == ".footer-links a":
+            if selector == ".footer-links a, .footer-source":
                 ink, background, decoration = link.evaluate(
                     "n => [getComputedStyle(n).color, getComputedStyle(n).backgroundColor, getComputedStyle(n).textDecorationLine]"
                 )

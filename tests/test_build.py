@@ -666,13 +666,12 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         }
         external_links = {
             "Source code on GitHub": repository_url,
-            "Software — MIT": repository_url + "/blob/main/LICENSES/MIT.txt",
-            "Third-party rights and notices": repository_url + "/blob/main/NOTICE.md",
         }
-        assert len(utility_links) == len(set(utility_links)) == 8
+        assert len(utility_links) == len(set(utility_links)) == 6
         assert {href for href, _ in destinations.values()} | set(external_links.values()) <= set(utility_links)
         footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
         assert '<p class="footer-licence">Course materials — CC BY-NC-SA 4.0</p>' in footer
+        assert footer.index('class="footer-licence"') > footer.index("Source code on GitHub")
         assert not any("CC-BY-NC-SA-4.0.txt" in href for href in utility_links)
         for label, fragment in project_links.items():
             assert label in footer
@@ -687,7 +686,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         for label, href in external_links.items():
             assert label in footer and href in utility_links
         for text in (
-            "Developed and supported by", "Project", "Use and reuse",
+            "Developed and supported by", "Project",
             "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
             "Supported by FAPEMIG and CAPES. FAPEMIG", "APQ-01173-22",
         ):
@@ -695,6 +694,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         for excluded in (
             "<strong>", "FUNDEP", "Contact", "mailto:", "#team", "Cite this resource",
             "doi.org", "Version", "[Year]", "[Surname", "[record]", "[date]", "FAPEMIG reference",
+            "Use and reuse", "Software — MIT", "Third-party rights and notices",
         ):
             assert excluded not in footer
         icon = next(attrs for tag, attrs in page.regions["footer"] if tag == "svg")
