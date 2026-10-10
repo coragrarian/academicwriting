@@ -30,9 +30,16 @@
   color-scheme: light;
   --ink: #263331;
   --muted: #64716c;
-  --line: #dce4dd;
+  --line: #c6d0c7;
   --paper: #fbfcfa;
   --surface: #fff;
+  --surface-header: #eaf0e8;
+  --surface-footer: #383838;
+  --footer-ink: #ebece7;
+  --footer-muted: #cdd0c9;
+  --ink-interactive-neutral: #454545;
+  --ink-interactive-strong: #303030;
+  --surface-hover-neutral: #eeede8;
   --wash: #f2f6f1;
   --accent: #285e51;
   --accent-dark: #184b40;
@@ -91,18 +98,19 @@ a, button, summary, .choice-option { transition: color var(--motion-fast) var(--
 .skip-link:focus { top: .5rem; }
 /* Site shell and course contents */
 .site-header, .site-footer { flex: none; }
-.site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.site-header { background: var(--surface-header); border-bottom: 1px solid var(--line); }
 .site-header-inner { max-width: 90rem; margin: auto; padding: .95rem 2rem; display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; flex-wrap: wrap; }
 .site-header--public .site-header-inner { max-width: 80rem; padding-inline: clamp(1.35rem, 5vw, 4.5rem); }
-.site-name { font-size: var(--text-body); font-weight: 600; color: var(--ink); text-decoration: none; }
-.site-name span { font-weight: 400; color: var(--muted); }
+.site-name { font-size: var(--text-body); font-weight: 600; color: var(--accent-dark); text-decoration: none; }
+.site-name span { font-weight: 400; color: var(--ink-interactive-neutral); }
 .site-links { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem 1.5rem; }
-.course-link, .about-link { position: relative; display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--ink); font-size: var(--text-small); text-decoration: none; }
+.course-link, .about-link { position: relative; display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--ink-interactive-neutral); font-size: var(--text-small); text-decoration: none; }
 .course-link::after, .about-link::after { content: ""; position: absolute; inset-inline: 0; bottom: .4rem; border-bottom: 1px solid var(--accent); opacity: 0; transition: opacity var(--motion-fast) var(--ease-standard); }
 .course-link:hover, .about-link:hover, .course-link:focus-visible, .about-link:focus-visible { color: var(--accent-dark); }
+.site-links [aria-current] { color: var(--accent-dark); }
 .course-link:hover::after, .about-link:hover::after, .course-link:focus-visible::after, .about-link:focus-visible::after, .site-links [aria-current]::after { opacity: 1; }
 .about-link[aria-current="page"] { font-weight: 600; }
-.module-link { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--muted); font-size: var(--text-small); line-height: 1.4; text-decoration: none; }
+.module-link { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--ink-interactive-neutral); font-size: var(--text-small); line-height: 1.4; text-decoration: none; }
 .module-link:hover, .module-link:focus-visible { color: var(--accent-dark); text-decoration: underline; text-underline-offset: .2em; }
 .layout { flex: 1; width: 100%; max-width: 90rem; min-height: 0; margin: auto; display: grid; grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr); }
 .course-panel { border-right: 1px solid var(--line); padding: 2rem 1.15rem 2rem 2rem; }
@@ -197,22 +205,23 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .people-grid--data .person-portrait { margin: 0; }
 .team-group-heading { margin-top: var(--space-section); }
 /* Site chrome stays outside the course grid and the regions replaced by navigation. */
-.site-footer { border-top: 1px solid var(--line); background: var(--wash); }
+.site-footer { --focus: var(--footer-ink); border-top: 1px solid var(--surface-footer); background: var(--surface-footer); color: var(--footer-ink); }
 .site-footer-inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-small); max-width: 80rem; margin: auto; padding: var(--space-block) clamp(1.35rem, 5vw, 4.5rem); }
 .footer-institutions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; max-width: 100%; gap: var(--space-block) var(--space-group); margin-bottom: var(--space-small); }
 .footer-institutions a { display: flex; align-items: center; min-width: 0; max-width: 100%; min-height: 2.75rem; }
-.footer-provenance { max-inline-size: 65ch; margin: 0; color: var(--muted); font-size: var(--text-small); line-height: 1.6; text-align: center; text-wrap: balance; }
+.footer-provenance { max-inline-size: 65ch; margin: 0; color: var(--footer-muted); font-size: var(--text-small); line-height: 1.6; text-align: center; text-wrap: balance; }
 .footer-links { display: flex; align-items: center; max-width: 100%; }
-.footer-links a { display: inline-flex; align-items: center; gap: var(--space-small); min-width: 0; min-height: 2.75rem; color: var(--ink); font-size: var(--text-small); text-decoration: none; text-underline-offset: .2em; }
+.footer-links a { display: inline-flex; align-items: center; gap: var(--space-small); min-width: 0; min-height: 2.75rem; color: var(--footer-ink); font-size: var(--text-small); text-decoration: none; text-underline-offset: .2em; }
 .footer-links span { min-width: 0; overflow-wrap: anywhere; }
-.footer-links a:hover, .footer-links a:focus-visible { color: var(--accent-dark); text-decoration: underline; }
+.footer-links a:hover, .footer-links a:focus-visible { color: var(--footer-ink); text-decoration: underline; }
 .github-mark { flex: none; fill: currentColor; }
 .institution-logo { display: block; max-width: 100%; height: auto; }
 .institution-logo--ufmg-fale { width: 18rem; }
 .institution-logo--fapemig { width: 7rem; }
 .institution-logo--capes { width: 6rem; }
-/* Footer-only filtering preserves the original artwork for institutional contexts. */
-.site-footer .institution-logo { filter: grayscale(1); opacity: .85; transition: opacity var(--motion-fast) var(--ease-standard); }
+/* A single pale neutral keeps all marks legible on graphite, preserving the
+   original artwork and its alpha channel for other institutional contexts. */
+.site-footer .institution-logo { filter: grayscale(1) brightness(0) invert(.902); opacity: .94; transition: opacity var(--motion-fast) var(--ease-standard); }
 .site-footer .footer-institutions a:hover .institution-logo, .site-footer .footer-institutions a:focus-visible .institution-logo { opacity: 1; }
 .site-footer .institution-logo--ufmg-fale { width: 14.5rem; }
 .site-footer .institution-logo--fapemig { width: 5.75rem; }
