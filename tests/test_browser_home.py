@@ -169,3 +169,48 @@ def test_home_without_javascript_preserves_static_entry_and_contents(browser, si
         expect(page).to_have_url(site[0] + "/introduction/index.html")
     finally:
         context.close()
+
+
+@pytest.mark.parametrize(("width", "text_scale"), [
+    (1280, 1), (768, 1), (375, 1), (320, 1), (1280, 2), (320, 2),
+])
+def test_progress_rows_reflow_without_obscuring_content_or_navigation(page, site, width, text_scale):
+    page.set_viewport_size({"width": width, "height": 900})
+    page.goto(site[0] + "/index.html")
+    seed_progress(page, [14, 2, 0])
+    page.reload()
+    if text_scale == 2:
+        page.add_style_tag(content="html { font-size: 200%; }")
+    page.evaluate("document.fonts.ready")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    expect(page.locator(".contents-progress:visible")).to_have_count(3)
+    assert page.locator("#course a").count() == page.locator(".contents-link").count()
+    for row in page.locator(".contents-link").all():
+        expect(row.locator("a, button, input, select, textarea, [tabindex]")).to_have_count(0)
+        assert row.bounding_box()["height"] >= 44
+        boxes = {
+            selector: row.locator(selector).bounding_box()
+            for selector in (".contents-number", ".contents-title", ".contents-summary", ".contents-counts", ".contents-progress", ".nav-chevron")
+        }
+        title, number = boxes[".contents-title"], boxes[".contents-number"]
+        assert title["y"] <= number["y"] + number["height"] / 2 <= title["y"] + title["height"]
+        for index, first in enumerate(boxes.values()):
+            assert first["width"] > 0 and first["height"] > 0
+            assert first["x"] >= 0 and first["x"] + first["width"] <= width
+            for second in list(boxes.values())[index + 1:]:
+                assert (
+                    first["x"] + first["width"] <= second["x"] + 1
+                    or second["x"] + second["width"] <= first["x"] + 1
+                    or first["y"] + first["height"] <= second["y"] + 1
+                    or second["y"] + second["height"] <= first["y"] + 1
+                )
+        track = row.locator(".contents-progress-track").bounding_box()
+        fill = row.locator(".contents-progress-fill").bounding_box()
+        assert track["width"] > 0 and 0 <= fill["width"] <= track["width"] + 1
+        row.focus()
+        assert row.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
+    # Keyboard activation remains ordinary full-row navigation after hydration.
+    row = page.locator('[data-home-module="methods"]')
+    row.focus()
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(site[0] + "/methods/index.html")

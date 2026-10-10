@@ -189,15 +189,16 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .project-detail-link { margin-top: var(--space-text); }
 .course-contents { margin: 0; padding: 0; list-style: none; }
 .course-contents li + li { border-top: 1px solid var(--line); }
-.contents-link { display: grid; grid-template-columns: 2ch minmax(0, 1fr) .85rem; align-items: center; gap: clamp(var(--space-small), 3vw, var(--space-block)); min-height: 5.5rem; padding: var(--space-block) var(--space-small); color: var(--ink); text-decoration: none; }
+.contents-link { display: grid; grid-template-columns: 2ch minmax(0, 1fr) 12rem .85rem; align-items: first baseline; gap: 0 clamp(var(--space-small), 3vw, var(--space-block)); min-height: 5.5rem; padding: var(--space-block) var(--space-small); color: var(--ink); text-decoration: none; }
 .contents-link:hover, .contents-link:focus-visible { background: var(--surface-hover-neutral); color: var(--ink-interactive-strong); }
 .contents-link:is(:hover, :focus-visible) :is(.contents-number, .contents-counts) { color: var(--ink-interactive-neutral); }
 .contents-number { color: var(--muted); font-size: var(--text-ui); }
 .contents-copy { min-width: 0; }
+.contents-link > .nav-chevron { grid-column: -2; grid-row: 1; }
 .contents-title { display: block; font-family: var(--font-serif); font-size-adjust: none; font-size: var(--text-h2); line-height: 1.25; overflow-wrap: anywhere; }
 .contents-summary { display: block; margin-top: .35rem; font-size: var(--text-ui); line-height: 1.5; overflow-wrap: anywhere; }
 .contents-counts { display: block; margin-top: .25rem; color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
-.contents-progress { display: block; margin-top: .75rem; font-size: var(--text-small); line-height: 1.5; }
+.contents-progress { display: block; min-width: 0; align-self: center; font-size: var(--text-small); line-height: 1.5; }
 .contents-progress[data-status="not-started"] { color: var(--muted); }
 .contents-progress[data-status="completed"] { color: var(--success); }
 .contents-link:is(:hover, :focus-visible) .contents-progress[data-status="not-started"] { color: var(--ink-interactive-neutral); }
@@ -257,9 +258,17 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
   .home-facts dl { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem var(--space-text); }
   .home-facts dl > div { display: block; }
   .home-facts dl > div:last-child { display: grid; grid-column: 1 / -1; }
+  .contents-link { grid-template-columns: 2ch minmax(0, 1fr) .85rem; }
+  .contents-progress { grid-column: 2; grid-row: 2; width: min(100%, 14rem); margin-top: .75rem; }
 }
 @container (max-width: 36rem) {
   .home-facts dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Let supporting text use the chevron's space below the title on mobile. */
+  .contents-copy { display: contents; }
+  .contents-title { grid-column: 2; grid-row: 1; }
+  .contents-summary { grid-column: 2 / -1; grid-row: 2; }
+  .contents-counts { grid-column: 2 / -1; grid-row: 3; }
+  .contents-progress { grid-column: 2 / -1; grid-row: 4; }
 }
 @container (max-width: 15rem) {
   .home-facts dl { grid-template-columns: minmax(0, 1fr); }
