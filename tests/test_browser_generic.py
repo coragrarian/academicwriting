@@ -89,6 +89,81 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
         assert image.evaluate("n => +getComputedStyle(n).opacity") == 1
 
 
+def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page, synthetic_site, synthetic_documents):
+    def colours(node):
+        return node.evaluate("""n => {
+          const style = getComputedStyle(n);
+          let parent = n;
+          while (getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement;
+          return [style.color, getComputedStyle(parent).backgroundColor, style.borderColor];
+        }""")
+
+    def neutral(colour):
+        return len(set(re.findall(r"\d+", colour))) == 1
+
+    hover_surfaces = []
+    document = synthetic_documents[0]
+    for path, selector, metadata in (
+        ("index.html", ".contents-link", ".contents-number, .contents-counts"),
+        (f"{document.slug}/index.html", ".overview-link", ".overview-number, .overview-progress"),
+        (f"{document.slug}/{document.sections[0].slug}/index.html", ".exercise-list a", None),
+    ):
+        page.goto(f"{synthetic_site[0]}/{path}")
+        page.mouse.move(0, 0)
+        row = page.locator(selector).first
+        original = colours(row)
+        assert neutral(row.locator(".nav-chevron").evaluate("n => getComputedStyle(n).color"))
+        row.hover()
+        ink, surface, _ = colours(row)
+        assert neutral(ink) and surface != original[1]
+        assert contrast_ratio(ink, surface) >= 4.5
+        if metadata:
+            for text in row.locator(metadata).all():
+                assert contrast_ratio(colours(text)[0], surface) >= 4.5
+        hover_surfaces.append(surface)
+
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
+    current = page.locator('.course-panel a[aria-current="page"]')
+    current_ink, current_surface, _ = colours(current)
+    assert not neutral(current_ink) and current_surface != hover_surfaces[0]
+    assert contrast_ratio(current_ink, current_surface) >= 4.5
+    current.hover()
+    assert colours(current)[:2] == [current_ink, current_surface]
+    inactive = page.locator(".nav-home")
+    assert neutral(colours(inactive)[0])
+    inactive.hover()
+    hover_surfaces.append(colours(inactive)[1])
+    for link in page.locator(".page-navigation a").all():
+        assert neutral(colours(link)[0])
+
+    primary = page.locator(".button-primary")
+    ink, surface, _ = colours(primary)
+    assert not neutral(surface) and contrast_ratio(ink, surface) >= 4.5
+    primary.hover()
+    assert colours(primary)[1] != surface
+    assert contrast_ratio(*colours(primary)[:2]) >= 4.5
+    secondary = page.locator(".button-secondary")
+    ink, surface, border = colours(secondary)
+    assert neutral(ink) and neutral(border) and contrast_ratio(border, surface) >= 3
+    secondary.hover()
+    ink, surface, border = colours(secondary)
+    hover_surfaces.append(surface)
+    assert neutral(ink) and contrast_ratio(ink, surface) >= 4.5
+    assert contrast_ratio(border, surface) >= 3
+    option = page.locator(".choice-option").first
+    option.hover()
+    hover_surfaces.append(colours(option)[1])
+    option.locator("input").check()
+    assert colours(option)[1] == current_surface
+    page.goto(f"{synthetic_site[0]}/index.html")
+    tertiary = page.locator(".action-link--tertiary")
+    assert neutral(colours(tertiary)[0])
+    tertiary.hover()
+    hover_surfaces.append(colours(tertiary)[1])
+    assert neutral(colours(tertiary)[0]) and contrast_ratio(*colours(tertiary)[:2]) >= 4.5
+    assert len(set(hover_surfaces)) == 1
+
+
 def test_control_boundaries_and_progress_have_contrast_and_distinct_shapes(page, synthetic_site, synthetic_documents):
     for kind in ("typed-gap", "matching"):
         page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
