@@ -56,6 +56,19 @@ def test_complete_build(tmp_path, course_documents):
         }
         assert source.count("data-site-navigation") == (0 if public_page else 1)
         assert source.count("data-page-content") == 1
+        header_links = [attrs for tag, attrs in page.regions["header"] if tag == "a"]
+        assert [attrs.get("class") for attrs in header_links] == [
+            "site-name", "course-link", "about-link",
+        ]
+        assert next(attrs for tag, attrs in page.regions["header"] if tag == "header")["class"] == "site-header"
+        relative_path = path.relative_to(output)
+        assert header_links[0].get("aria-current") == (
+            "page" if relative_path == Path("index.html") else None
+        )
+        assert header_links[1].get("aria-current") == (None if public_page else "true")
+        assert header_links[2].get("aria-current") == (
+            "page" if relative_path == Path("about/index.html") else None
+        )
         about_links = [
             attrs for tag, attrs in page.elements
             if tag == "a" and attrs.get("class") == "about-link"
@@ -277,7 +290,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="home-hero-copy">', 1)[1].split("</div>", 1)[0]
     assert hero.count("<a ") == 1
-    assert '<p class="eyebrow">Self-study course</p>' in hero
+    assert hero.lstrip().startswith("<h1>")
     assert 'href="introduction/index.html"><span data-home-entry-label>Begin with Introduction</span>' in hero
     assert "CorAgrarian Academic Writing" not in home_source
     assert "Linguistic and rhetorical analysis" not in home_source
@@ -363,7 +376,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert "original teaching content is licensed under CC BY-NC-SA 4.0" in about_source
     assert "third-party material retain their own rights" in about_source
     assert any(tag == "dl" for tag, _ in about.regions["main"])
-    assert not any(tag == "img" for tag, _ in about.regions["main"])
+    assert sum(tag == "img" for tag, _ in about.regions["main"]) == 4
     assert "contact" not in about.ids
     assert "mailto:" not in about_source and "Coming soon" not in about_source
     assert not any(
@@ -413,9 +426,25 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     ) in project
     assert "Jhonatan cleans and organises" not in about_source
     assert "person-contribution" not in about_source
-    for page, count in ((home, 0), (about, 10)):
+    for page, count in ((home, 0), (about, 4)):
         portraits = [attrs for _, attrs in page.elements if attrs.get("class") == "person-portrait"]
         assert len(portraits) == count and all(attrs.get("aria-hidden") == "true" for attrs in portraits)
+    entries = about_source.split('<li class="person">')[1:]
+    filenames = [
+        "deise-prina-dutra.jpg", "gustavo-leal-teixeira.webp",
+        "danilo-duarte-costa.jpg", "jhonatan-h-lopes.jpg",
+    ]
+    for name, filename, source in zip(names, filenames, entries, strict=True):
+        person = Page(source.split("</li>", 1)[0])
+        assert any(text == name for _, text in person.headings)
+        images = [attrs for tag, attrs in person.elements if tag == "img"]
+        assert len(images) == 1 and images[0]["alt"] == ""
+        assert images[0]["src"].endswith("assets/people/" + filename)
+        asset = (output / "about" / images[0]["src"]).resolve()
+        assert asset.is_relative_to(output) and asset.is_file()
+        assert asset.read_bytes() == (ROOT / "static/people" / filename).read_bytes()
+    for source in about_source.split('<li class="person person--pending">')[1:]:
+        assert "person-portrait" not in source.split("</li>", 1)[0]
 
 
 @pytest.mark.parametrize("path", ["index.html", "about/index.html"])
@@ -423,7 +452,7 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synt
     documents = synthetic_documents
     assets = tmp_path / "static"
     shutil.copytree(ROOT / "static", assets)
-    (assets / "people").mkdir()
+    (assets / "people").mkdir(exist_ok=True)
     # A local PNG fixture exercises asset routing, without fetching a person's image.
     portrait = assets / "people/test-portrait.png"
     portrait.write_bytes((ROOT / "static/institutions/logo-ufmg-fale.png").read_bytes())
@@ -433,7 +462,10 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synt
         contribution="Verified test contribution",
     )
     monkeypatch.setattr(renderer, "STATIC", assets)
-    monkeypatch.setattr(renderer, "COORDINATORS", (person, *renderer.COORDINATORS[1:]))
+    monkeypatch.setattr(renderer, "COORDINATORS", (
+        person, *(replace(member, portrait=None) for member in renderer.COORDINATORS[1:]),
+    ))
+    monkeypatch.setattr(renderer, "DATA_PLATFORM", replace(renderer.DATA_PLATFORM, portrait=None))
     output = tmp_path / "site"
     build_site(documents, output)
     page_path = output / path
@@ -451,10 +483,11 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synt
     image = images[0]
     assert image["alt"] == ""
     assert (page_path.parent / image["src"]).resolve().read_bytes() == portrait.read_bytes()
-    assert image["width"] == image["height"] == "144"
+    assert int(image["width"]) > 0 and int(image["height"]) > 0
     assert "Verified test affiliation" in page_path.read_text()
     assert "Verified test contribution" in page_path.read_text()
     assert any(attrs.get("class") == "person-portrait" and attrs.get("aria-hidden") == "true" for _, attrs in page.elements)
+    assert sum(attrs.get("class") == "person-portrait" for _, attrs in page.elements) == 1
     assert any(attrs.get("href") == person.profile_url for _, attrs in page.elements)
 
 

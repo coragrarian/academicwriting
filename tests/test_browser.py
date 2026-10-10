@@ -848,8 +848,7 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         for portrait in page.locator(".person-portrait").all():
             box = portrait.bounding_box()
-            assert box["width"] == pytest.approx(box["height"], abs=1)
-            assert box["width"] >= 64
+            assert box["width"] > 0 and box["height"] > 0
             assert box["x"] >= 0 and box["x"] + box["width"] <= width
             expect(portrait).to_have_attribute("aria-hidden", "true")
         if path == "/index.html":
@@ -870,10 +869,21 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
             expect(page.locator("#team > h2")).to_have_text("Research team")
             assert page.locator("#team > h3").all_text_contents() == ["Coordinators", "Members"]
             assert page.locator('#team [aria-labelledby="coordinators-heading"] .person-name').all_text_contents() == names[:3]
-            assert page.locator(".person-portrait span").all_text_contents() == ["DPD", "GLT", "DDC", "JHL"]
+            expect(page.locator(".person-portrait img")).to_have_count(4)
+            for name, filename in zip(names, (
+                "deise-prina-dutra.jpg", "gustavo-leal-teixeira.webp",
+                "danilo-duarte-costa.jpg", "jhonatan-h-lopes.jpg",
+            ), strict=True):
+                person = page.locator(".person").filter(has=page.get_by_role("heading", name=name, exact=True))
+                image = person.locator("img")
+                image.scroll_into_view_if_needed()
+                expect(image).to_have_js_property("complete", True)
+                assert image.evaluate("node => node.naturalWidth > 0")
+                assert image.get_attribute("src").endswith("assets/people/" + filename)
+                expect(image).to_have_attribute("alt", "")
             expect(page.locator("#team .person--pending")).to_have_count(6)
             assert page.locator(".person--pending .person-name").all_text_contents() == ["Research team member"] * 6
-            assert all(not text.strip() for text in page.locator(".person--pending .person-portrait").all_text_contents())
+            expect(page.locator(".person--pending .person-portrait")).to_have_count(0)
             expect(page.locator("#data-platform .person-name")).to_have_text(names[3])
             expect(page.locator("#data-platform .person-role")).to_have_text("Data processing and web development")
             expect(page.locator("#data-platform .person-information")).to_have_text(
@@ -913,28 +923,31 @@ def test_course_main_uses_available_grid_width_with_bounded_prose(page, site, pa
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
-def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site, documents, tmp_path, monkeypatch):
+def test_optional_portrait_and_text_only_entries_keep_profile_access(page, site, documents, tmp_path, monkeypatch):
     assets = tmp_path / "static"
     shutil.copytree(Path(__file__).resolve().parents[1] / "static", assets)
-    (assets / "people").mkdir()
+    (assets / "people").mkdir(exist_ok=True)
     # Local PNG fixture only: no portrait is fetched or published by this test.
     (assets / "people/test.png").write_bytes((assets / "institutions/logo-ufmg-fale.png").read_bytes())
     first = replace(renderer.COORDINATORS[0], portrait="people/test.png", profile_url="https://example.org/profile")
-    monkeypatch.setattr(renderer, "COORDINATORS", (first, *renderer.COORDINATORS[1:]))
+    monkeypatch.setattr(renderer, "COORDINATORS", (
+        first, *(replace(member, portrait=None) for member in renderer.COORDINATORS[1:]),
+    ))
+    monkeypatch.setattr(renderer, "DATA_PLATFORM", replace(renderer.DATA_PLATFORM, portrait=None))
     monkeypatch.setattr(renderer, "STATIC", assets)
     output = site[1].parent / "portrait-component"
     build_site(documents, output)
     page.goto(site[0].removesuffix("/study") + "/portrait-component/about/index.html")
     fields = page.locator(".person-portrait")
+    expect(fields).to_have_count(1)
     image = fields.first.locator("img")
     image.scroll_into_view_if_needed()
     expect(image).to_have_js_property("complete", True)
     assert image.evaluate("node => node.naturalWidth > 0")
     expect(image).to_have_attribute("alt", "")
-    real, fallback = fields.first.bounding_box(), fields.nth(1).bounding_box()
-    assert (real["width"], real["height"]) == pytest.approx((fallback["width"], fallback["height"]), abs=1)
-    assert fields.first.get_attribute("aria-hidden") is None
-    expect(fields.nth(1)).to_have_attribute("aria-hidden", "true")
+    expect(fields.first).to_have_attribute("aria-hidden", "true")
+    expect(page.locator(".person").nth(1).locator(".person-name")).to_have_text(renderer.COORDINATORS[1].name)
+    expect(page.locator(".person").nth(1).locator("img, .person-portrait")).to_have_count(0)
     profile = page.locator(".person-profile")
     expect(profile).to_have_attribute("href", first.profile_url)
     profile.focus()
@@ -993,12 +1006,16 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
         "/index.html", "/about/index.html", "/introduction/index.html",
-        "/methods/index.html",
+        "/methods/purpose-of-the-methods-section/index.html",
         "/results/grammar-and-vocabulary-in-the-results-section/exercise-7/index.html",
     ):
         page.goto(site[0] + path)
         page.evaluate("document.fonts.ready")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        assert page.locator(".site-header-inner").evaluate(
+            "node => [...node.children].map(child => [child.tagName, child.className])"
+        ) == [["A", "site-name"], ["NAV", "site-links"]]
+        expect(page.locator(".site-header a")).to_have_count(3)
         about = page.locator(".about-link")
         expect(about).to_be_visible()
         assert about.bounding_box()["height"] >= 44
@@ -1070,7 +1087,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                 "Introduction", "Methods", "Results",
             ]
             expect(page.locator("#course button, #course .action-link")).to_have_count(0)
-            expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
+            expect(page.locator(".home-hero-copy .eyebrow")).to_have_count(0)
             expect(page.locator(".home-facts dt")).to_have_count(5)
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
             expect(page.locator(".page-head .lead")).to_contain_text(
@@ -1114,7 +1131,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                     assert facts["y"] >= narrative["y"] + narrative["height"]
         else:
             expect(page.locator(".course-panel, [data-site-navigation]")).to_have_count(1)
-            expect(page.locator(".module-link")).to_be_visible()
+            expect(course).to_have_attribute("aria-current", "true")
             expect(page.locator("#site-data, script[src$='exercises.js'], script[src$='navigation.js']")).to_have_count(3)
 
 

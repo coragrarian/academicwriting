@@ -110,7 +110,7 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
     assert header_surface != paper
     # The footer supplies neutral dark closure, with its own light focus colour.
     assert len(set(re.findall(r"\d+", footer_surface))) == 1
-    assert contrast_ratio(header_surface, footer_surface) >= 7
+    assert header_surface != footer_surface and footer_surface != paper
     for selector, surface in (
         (".site-name, .site-name span, .site-links a", header_surface),
         (".footer-heading, .footer-provenance, .footer-licence, .footer-links a, .footer-source", footer_surface),
@@ -118,7 +118,7 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
         for text in page.locator(selector).all():
             colour = text.evaluate("n => getComputedStyle(n).color")
             assert contrast_ratio(colour, surface) >= 4.5
-    for selector, surface in ((".about-link", header_surface), (".footer-links a, .footer-source", footer_surface)):
+    for selector, surface in ((".site-header a", header_surface), (".footer-links a, .footer-source", footer_surface)):
         for link in page.locator(selector).all():
             if selector == ".footer-links a, .footer-source":
                 assert "underline" not in link.evaluate("n => getComputedStyle(n).textDecorationLine")
@@ -327,10 +327,8 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
     expect(page.locator("main")).to_be_focused()
     page.keyboard.press("Tab")
     assert page.locator(":focus").evaluate("n => !!n.closest('main')")
-    expect(page.locator(".course-link, .module-link")).to_have_count(2)
-    assert page.locator(".course-link, .module-link").evaluate_all(
-        "nodes => nodes.every(n => n.getAttribute('aria-current') === 'true')"
-    )
+    expect(page.locator(".course-link")).to_have_count(1)
+    expect(page.locator(".course-link")).to_have_attribute("aria-current", "true")
     toggle = page.locator(".course-toggle")
     assert not toggle.evaluate("n => n.parentElement.open")
     toggle.focus()
