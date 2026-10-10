@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><a href="{{ module_url }}">{{ document.title }}</a><span aria-hidden="true">/</span><a href="{{ section_url(section) }}">{{ section.title }}</a></nav>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol role="list">
+  <li><a href="{{ home_url }}">Home</a></li>
+  <li><span aria-hidden="true">/</span> <a href="{{ module_url }}">{{ document.title }}</a></li>
+  <li><span aria-hidden="true">/</span> <a href="{{ section_url(section) }}">{{ section.title }}</a></li>
+  <li aria-current="page"><span aria-hidden="true">/</span> {{ exercise.title }}</li>
+</ol></nav>
 <div class="page-head exercise-head">
   {% if total > 1 %}<p class="eyebrow">{{ position }} of {{ total }}</p>{% endif %}
   <h1>{{ exercise.title }}</h1>
@@ -18,7 +23,7 @@
   </section>
   {% endfor %}
   {% for item in rendered_items %}
-  <section class="exercise-item" id="{{ item.id }}" aria-labelledby="{{ item.id }}-heading" data-response-group="{{ item.id }}">
+  <section class="exercise-item" id="{{ item.id }}" aria-labelledby="{{ item.id }}-heading" data-response-group="{{ item.id }}" tabindex="-1">
     <h2 id="{{ item.id }}-heading">{{ item.title }}</h2>
     <div class="prose">
       {% for block in item.blocks %}{{ block | safe }}{% endfor %}

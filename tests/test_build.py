@@ -78,9 +78,15 @@ def test_complete_build(tmp_path, course_documents):
             assert sum(
                 1 for _, attrs in page.elements if "data-exercise-link" in attrs
             ) >= len(exercises)
+        current_links = [
+            attrs for tag, attrs in page.elements
+            if tag == "a" and attrs.get("aria-current") == "page"
+        ]
+        assert len(current_links) == (0 if not_found else 1)
+        assert all(local_link_target(output, path, attrs["href"]) == path for attrs in current_links)
         assert sum(
-            1 for _, attrs in page.elements if attrs.get("aria-current") == "page"
-        ) == (0 if not_found else 1)
+            1 for tag, attrs in page.elements if tag == "li" and attrs.get("aria-current") == "page"
+        ) == (0 if path.relative_to(output) in {Path("index.html"), Path("404.html")} else 1)
         data = {}
         if public_page:
             assert "site-data" not in page.scripts
@@ -304,8 +310,8 @@ def test_home_and_about_public_content(tmp_path, documents):
         "team", "data-platform", "licensing-heading", "facts-heading",
     } <= about.ids
     assert [text for tag, text in about.headings if tag == "h2"] == [
-        "The research project", "CorAgrarian", "Pedagogical materials", "Research team",
-        "Data and platform", "Project information", "Software and licensing",
+        "The research project", "CorAgrarian", "Pedagogical materials", "Project information",
+        "Research team", "Data and platform", "Software and licensing",
     ]
     for old_heading in (
         "About the resource", "Research behind the resource", "From research to learning",
@@ -398,7 +404,10 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synt
     build_site(documents, output)
     page_path = output / path
     page = Page(page_path.read_text())
-    images = [attrs for tag, attrs in page.elements if tag == "img" and attrs.get("alt") == person.name]
+    images = [
+        attrs for tag, attrs in page.elements
+        if tag == "img" and attrs.get("src", "").endswith("people/test-portrait.png")
+    ]
     if path == "index.html":
         assert not images
         for value in (person.name, person.affiliation, person.contribution, person.profile_url):
@@ -406,6 +415,7 @@ def test_people_component_supports_optional_portrait_and_metadata(tmp_path, synt
         return
     assert len(images) == 1
     image = images[0]
+    assert image["alt"] == ""
     assert (page_path.parent / image["src"]).resolve().read_bytes() == portrait.read_bytes()
     assert image["width"] == image["height"] == "144"
     assert "Verified test affiliation" in page_path.read_text()

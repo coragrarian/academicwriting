@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><a href="{{ module_url }}">{{ document.title }}</a><span aria-hidden="true">/</span><span>{{ section.title }}</span></nav>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol role="list">
+  <li><a href="{{ home_url }}">Home</a></li>
+  <li><span aria-hidden="true">/</span> <a href="{{ module_url }}">{{ document.title }}</a></li>
+  <li aria-current="page"><span aria-hidden="true">/</span> {{ section.title }}</li>
+</ol></nav>
 <div class="page-head">
   <p class="eyebrow">Subsection overview</p>
   {# Slash compounds can wrap naturally without changing the title text. #}

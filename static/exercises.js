@@ -82,11 +82,19 @@
       });
       document.querySelectorAll(`[data-progress-module="${module}"]`).forEach((node) => {
         node.textContent = `${completed}/${ids.length}`;
+        const description = node.nextElementSibling;
+        if (description?.hasAttribute("data-progress-description")) {
+          description.textContent = `${completed} of ${ids.length} exercises completed`;
+        }
       });
       for (const [slug, sectionIds] of Object.entries(siteData.course_sections[module])) {
         const sectionCompleted = sectionIds.filter((id) => states[module].progress[id] === "completed").length;
         document.querySelectorAll(`[data-progress-section="${slug}"][data-progress-module-id="${module}"]`).forEach((node) => {
           node.textContent = `${sectionCompleted}/${sectionIds.length}`;
+          const description = node.nextElementSibling;
+          if (description?.hasAttribute("data-progress-description")) {
+            description.textContent = `${sectionCompleted} of ${sectionIds.length} exercises completed`;
+          }
         });
       }
     }
@@ -190,6 +198,22 @@
       return null;
     }
 
+    function reviewSummary(message, responses, remaining = 0) {
+      // Keep the existing summary wording; native fragment links let learners
+      // revisit failures deliberately without moving focus during checking.
+      feedback.replaceChildren(document.createTextNode(message));
+      if (!responses.length) return;
+      feedback.append(document.createTextNode(" Review "));
+      responses.forEach((response, index) => {
+        if (index) feedback.append(document.createTextNode(", "));
+        const link = document.createElement("a");
+        link.href = `#${response.id}`;
+        link.textContent = response.label;
+        feedback.append(link);
+      });
+      feedback.append(document.createTextNode(`${remaining ? ` and ${remaining} more` : ""}.`));
+    }
+
     function showResult(given) {
       const results = Object.fromEntries(Object.keys(key.questions).map((id) => [id, correctAnswer(id, given[id])]));
       const allCorrect = Object.values(results).every(Boolean);
@@ -247,13 +271,14 @@
       const items = key.groups.filter((group) => group.title);
       if (items.length) {
         const correct = items.filter((group) => group.questions.every((id) => results[id])).length;
-        const review = items.filter((group) => group.questions.some((id) => !results[id])).map((group) => group.title);
-        feedback.textContent = `${correct} of ${items.length} items correct.${review.length ? ` Review ${review.join(", ")}.` : ""}`;
+        const review = items.filter((group) => group.questions.some((id) => !results[id]))
+          .map((group) => ({ id: group.id, label: group.title }));
+        reviewSummary(`${correct} of ${items.length} items correct.`, review);
       } else {
         const correct = Object.values(results).filter(Boolean).length;
-        const review = Object.keys(results).filter((id) => !results[id]).map((id) => key.questions[id].label);
-        const labels = review.slice(0, 5).join(", ");
-        feedback.textContent = `${correct} of ${controls.length} responses correct.${review.length ? ` Review ${labels}${review.length > 5 ? ` and ${review.length - 5} more` : ""}.` : ""}`;
+        const review = Object.keys(results).filter((id) => !results[id])
+          .map((id) => ({ id, label: key.questions[id].label }));
+        reviewSummary(`${correct} of ${controls.length} responses correct.`, review.slice(0, 5), Math.max(0, review.length - 5));
       }
       feedback.className = allCorrect ? "feedback-correct" : "feedback-incorrect";
       return allCorrect;
@@ -313,6 +338,7 @@
       clearFeedback();
       saveState();
       updateStatus();
+      feedback.textContent = "Exercise reset.";
     });
   }
 

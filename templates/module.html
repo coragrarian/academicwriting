@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ home_url }}">Home</a><span aria-hidden="true">/</span><span>{{ document.title }}</span></nav>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol role="list">
+  <li><a href="{{ home_url }}">Home</a></li>
+  <li aria-current="page"><span aria-hidden="true">/</span> {{ document.title }}</li>
+</ol></nav>
 <div class="page-head">
   <p class="eyebrow">Module</p>
   <h1>{{ document.title }}</h1>

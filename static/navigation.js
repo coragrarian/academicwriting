@@ -28,7 +28,6 @@
 
   if (!moduleId) return;
   const moduleRoot = new URL(document.querySelector(`[data-module-overview="${moduleId}"]`).href).pathname.replace(/index\.html$/, '');
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let activeRequest = null;
   let navigationNumber = 0;
   let renderedUrl = new URL(window.location.href);
@@ -42,19 +41,6 @@
     history.scrollRestoration = 'manual';
   }
 
-  function waitForExit(signal) {
-    if (reducedMotion.matches) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve) => {
-      const timer = window.setTimeout(resolve, 150);
-      signal.addEventListener('abort', () => {
-        window.clearTimeout(timer);
-        resolve();
-      }, { once: true });
-    });
-  }
-
   function absolutiseLinks(region, pageUrl) {
     region.querySelectorAll('a[href]').forEach((link) => {
       link.href = new URL(link.getAttribute('href'), pageUrl).href;
@@ -62,10 +48,9 @@
   }
 
   async function navigate(target, mode) {
-    // A slow older request must never replace a newer destination, including
-    // while the exit transition is pending. Abort and sequence checks agree.
+    // A slow older request must never replace a newer destination.
+    // Abort and sequence checks agree before either region is replaced.
     activeRequest?.abort();
-    document.querySelector('[data-page-content]')?.removeAttribute('data-transition');
     const controller = new AbortController();
     activeRequest = controller;
     const number = ++navigationNumber;
@@ -97,13 +82,6 @@
       }
 
       const currentMain = document.querySelector('[data-page-content]');
-      currentMain.dataset.transition = 'leaving';
-      await waitForExit(controller.signal);
-      if (controller.signal.aborted || number !== navigationNumber) {
-        return;
-      }
-
-      nextMain.dataset.transition = 'entering';
       // Native disclosure state needs no storage or additional event handlers.
       // Newly active ancestors still open when the destination changes section.
       const currentNavigation = document.querySelector('[data-site-navigation]');
@@ -137,9 +115,6 @@
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
       window.scrollTo(0, Math.max(0, nextMain.getBoundingClientRect().top + window.scrollY - 16));
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => nextMain.removeAttribute('data-transition'));
-      });
     } catch (error) {
       if (!controller.signal.aborted && number === navigationNumber) {
         // A failed enhancement must still reach the ordinary URL. popstate

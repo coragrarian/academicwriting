@@ -8,13 +8,13 @@
       {% for nav_module in documents %}
       {% set current_module = document and document.slug == nav_module.slug %}
       <details class="nav-module-group" data-nav-node="module:{{ nav_module.slug }}" {% if current_module %}open data-nav-current{% endif %}>
-        <summary><span class="nav-row"><span>{{ nav_module.title }}</span><small data-progress-module="{{ nav_module.slug }}" aria-label="Exercises completed">0/{{ site_data.modules[nav_module.slug] | length }}</small></span></summary>
+        <summary><span class="nav-row"><span>{{ nav_module.title }}</span><small data-progress-module="{{ nav_module.slug }}" aria-hidden="true">0/{{ site_data.modules[nav_module.slug] | length }}</small><span class="sr-only" data-progress-description>0 of {{ site_data.modules[nav_module.slug] | length }} exercises completed</span></span></summary>
         <div class="nav-module-body">
           <a class="nav-module-overview" data-module-overview="{{ nav_module.slug }}" href="{{ module_link(nav_module) }}" {% if current_module and active_section is not defined %}aria-current="page"{% endif %}>Module overview</a>
           {% for nav_section in nav_module.sections %}
           {% set current_section = current_module and active_section is defined and active_section == nav_section %}
           <details class="nav-section-group" data-nav-node="section:{{ nav_module.slug }}:{{ nav_section.slug }}" {% if current_section %}open data-nav-current{% endif %}>
-            <summary><span class="nav-row"><span>{{ nav_section.title }}</span><small data-progress-section="{{ nav_section.slug }}" data-progress-module-id="{{ nav_module.slug }}" aria-label="Exercises completed">0/{{ nav_section.exercises | length }}</small></span></summary>
+            <summary><span class="nav-row"><span>{{ nav_section.title }}</span><small data-progress-section="{{ nav_section.slug }}" data-progress-module-id="{{ nav_module.slug }}" aria-hidden="true">0/{{ nav_section.exercises | length }}</small><span class="sr-only" data-progress-description>0 of {{ nav_section.exercises | length }} exercises completed</span></span></summary>
             <div class="section-nav-body">
               <a href="{{ course_section_url(nav_module, nav_section) }}" {% if current_section and exercise is not defined %}aria-current="page"{% endif %}>Overview</a>
               {% for nav_exercise in nav_section.exercises %}

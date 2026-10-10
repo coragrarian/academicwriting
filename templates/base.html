@@ -33,9 +33,9 @@
   <header class="site-header{% if public_page %} site-header--public{% endif %}">
     <div class="site-header-inner">
       <a class="site-name" href="{{ home_url }}"{% if is_home %} aria-current="page"{% endif %}>Academic Writing <span>for Agrarian Sciences</span></a>
-      {% if document %}<a class="module-link" href="{{ module_url }}">{{ document.title }}</a>{% endif %}
+      {% if document %}<a class="module-link" href="{{ module_url }}" aria-current="true">{{ document.title }}</a>{% endif %}
       <nav class="site-links" aria-label="Site">
-        <a class="course-link" href="{{ course_url }}">Course</a>
+        <a class="course-link" href="{{ course_url }}"{% if document %} aria-current="true"{% endif %}>Course</a>
         <a class="about-link" href="{{ about_url }}" {% if is_about %}aria-current="page"{% endif %}>About</a>
       </nav>
     </div>
@@ -45,7 +45,7 @@
        retaining the header, footer and scripts. #}<aside class="course-panel" aria-label="Course navigation" data-site-navigation>
       {% include "_course_navigation.html" %}
     </aside>{% endif %}
-    <main id="main" class="main-content" data-page-content>
+    <main id="main" class="main-content" data-page-content tabindex="-1">
       {% block content %}{% endblock %}
     </main>
   </div>

@@ -1,10 +1,11 @@
 """Browser contracts exercised independently of the canonical course."""
 
 import json
+import re
 from itertools import pairwise
 
 import pytest
-from browser_support import respond
+from browser_support import respond, serve_not_found_candidate
 from playwright.sync_api import expect
 from site_support import PRODUCTION_URL, course_sequence
 
@@ -43,6 +44,196 @@ def assert_accessible_structure(page):
             assert node.get("name", {}).get("value", "").strip(), node
 
 
+def contrast_ratio(first, second):
+    """WCAG relative luminance for opaque computed CSS rgb colours."""
+    def luminance(colour):
+        channels = [int(value) / 255 for value in re.findall(r"\d+", colour)[:3]]
+        linear = [
+            value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4
+            for value in channels
+        ]
+        return sum(weight * value for weight, value in zip((0.2126, 0.7152, 0.0722), linear))
+
+    dark, light = sorted((luminance(first), luminance(second)))
+    return (light + 0.05) / (dark + 0.05)
+
+
+def test_control_boundaries_and_progress_have_contrast_and_distinct_shapes(page, synthetic_site, synthetic_documents):
+    for kind in ("typed-gap", "matching"):
+        page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+        for control in page.locator("select, .typed-gap").all():
+            border, inside, outside = control.evaluate("""node => {
+              let parent = node.parentElement;
+              while (getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement;
+              const style = getComputedStyle(node);
+              return [style.borderColor, style.backgroundColor, getComputedStyle(parent).backgroundColor];
+            }""")
+            assert min(contrast_ratio(border, inside), contrast_ratio(border, outside)) >= 3
+
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
+    exercise = page.locator("#exercise-form").get_attribute("data-exercise-id")
+    dot = page.locator(f'[data-exercise-link="{exercise}"] .state-dot')
+    shapes = []
+    key = json.loads(page.locator("#answer-key").text_content())
+    for status in ("not-started", "in-progress", "completed"):
+        if status != "not-started":
+            respond(page, key, wrong_id=next(iter(key["questions"])) if status == "in-progress" else None)
+            page.locator("button[type=submit]").click()
+        expect(dot.locator("xpath=..")).to_have_attribute("data-status", status)
+        border, background, image, adjacent = dot.evaluate("""node => {
+          const style = getComputedStyle(node);
+          const link = getComputedStyle(node.parentElement);
+          return [style.borderColor, style.backgroundColor, style.backgroundImage,
+            link.backgroundColor === 'rgba(0, 0, 0, 0)' ? getComputedStyle(document.body).backgroundColor : link.backgroundColor];
+        }""")
+        assert contrast_ratio(border, adjacent) >= 3
+        shapes.append((background == "rgba(0, 0, 0, 0)", image == "none"))
+    assert len(set(shapes)) == 3
+
+
+@pytest.mark.parametrize("motion", ["reduce", "no-preference"])
+def test_partial_navigation_and_chevrons_remain_visually_stable(page, synthetic_site, synthetic_documents, motion):
+    page.emulate_media(reduced_motion=motion)
+    document = synthetic_documents[0]
+    page.goto(f"{synthetic_site[0]}/{document.slug}/index.html")
+    page.evaluate("""() => {
+      window.navigationFrames = [];
+      const sample = () => {
+        const style = getComputedStyle(document.querySelector('[data-page-content]'));
+        navigationFrames.push([style.opacity, style.transform]);
+        if (navigationFrames.length < 35) requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    }""")
+    page.locator('.page-navigation a[rel="next"]').click()
+    expect(page.locator("h1")).to_have_text(document.sections[0].title)
+    expect(page.locator("h1")).to_be_focused()
+    page.wait_for_function("navigationFrames.length >= 35")
+    assert all(frame == ["1", "none"] for frame in page.evaluate("navigationFrames"))
+    assert page.locator("h1").evaluate("n => getComputedStyle(n).outlineStyle") == "none"
+    forward = page.locator('.page-navigation a[rel="next"]')
+    forward.scroll_into_view_if_needed()
+    chevron = forward.locator("svg")
+    before = chevron.bounding_box()
+    forward.hover()
+    assert chevron.evaluate("n => getComputedStyle(n).transform") == "none"
+    assert chevron.bounding_box() == pytest.approx(before, abs=0.5)
+    if motion == "reduce":
+        assert page.locator("a, button, summary, .choice-option, .institution-logo").evaluate_all(
+            "nodes => nodes.every(n => getComputedStyle(n).transitionDuration.split(',').every(d => parseFloat(d) === 0))"
+        )
+        assert page.locator(".course-link, .about-link").evaluate_all(
+            "nodes => nodes.every(n => parseFloat(getComputedStyle(n, '::after').transitionDuration) === 0)"
+        )
+
+
+def test_a_late_aborted_response_cannot_replace_the_newer_destination(page, synthetic_site, synthetic_documents):
+    document = synthetic_documents[0]
+    section = document.sections[0]
+    exercise = section.exercises[0]
+    section_path = f"{document.slug}/{section.slug}/index.html"
+    page.goto(f"{synthetic_site[0]}/{document.slug}/index.html")
+    page.locator(f'[data-nav-node="section:{document.slug}:{section.slug}"] > summary').click()
+    page.evaluate("""({slow, html}) => {
+      const ordinaryFetch = window.fetch.bind(window);
+      window.fetch = (url, options) => {
+        if (url !== slow) return ordinaryFetch(url, options);
+        window.slowSignal = options.signal;
+        return new Promise(resolve => {
+          // Deliberately deliver despite abort to exercise the sequence guard.
+          window.releaseSlowResponse = () => resolve({ok: true,
+            headers: new Headers({'content-type': 'text/html'}),
+            text: async () => { window.slowResponseConsumed = true; return html; }});
+        });
+      };
+    }""", {"slow": f"{synthetic_site[0]}/{section_path}", "html": (synthetic_site[1] / section_path).read_text()})
+    page.get_by_role("link", name="Overview", exact=True).click()
+    page.wait_for_function("window.releaseSlowResponse !== undefined")
+    page.locator(f'[data-exercise-link="{exercise.id}"]').click()
+    expect(page.locator("h1")).to_have_text(exercise.title)
+    assert page.evaluate("slowSignal.aborted")
+    page.evaluate("releaseSlowResponse()")
+    page.wait_for_function("window.slowResponseConsumed === true")
+    expect(page).to_have_url(f"{synthetic_site[0]}/{document.slug}/{section.slug}/{exercise.slug}/index.html")
+    expect(page.locator("h1")).to_have_text(exercise.title)
+
+
+def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, synthetic_documents):
+    page.set_viewport_size({"width": 320, "height": 900})
+    page.goto(f"{synthetic_site[0]}/{synthetic_documents[0].slug}/index.html")
+    page.keyboard.press("Tab")
+    expect(page.locator(".skip-link")).to_be_focused()
+    page.keyboard.press("Enter")
+    expect(page.locator("main")).to_be_focused()
+    page.keyboard.press("Tab")
+    assert page.locator(":focus").evaluate("n => !!n.closest('main')")
+    expect(page.locator(".course-link, .module-link")).to_have_count(2)
+    assert page.locator(".course-link, .module-link").evaluate_all(
+        "nodes => nodes.every(n => n.getAttribute('aria-current') === 'true')"
+    )
+    toggle = page.locator(".course-toggle")
+    assert not toggle.evaluate("n => n.parentElement.open")
+    toggle.focus()
+    page.keyboard.press("Enter")
+    assert toggle.evaluate("n => n.parentElement.open")
+    page.locator(".course-tree details").evaluate_all("nodes => nodes.forEach(n => n.open = true)")
+    for target in page.locator(".course-panel a:visible, .course-panel summary:visible, .page-navigation a").all():
+        assert target.bounding_box()["height"] >= 44
+        target.focus()
+        assert target.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    assert "0 of" in page.locator(".nav-module-group > summary").first.aria_snapshot()
+
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
+    trail = page.get_by_role("navigation", name="Breadcrumb")
+    expect(trail.locator("ol > li")).to_have_count(4)
+    expect(trail.locator('[aria-current="page"]')).to_have_text(
+        "/ " + page.locator("h1").text_content()
+    )
+    expect(page.locator('.course-panel a[aria-current="page"]')).to_have_count(1)
+    option = page.locator(".choice-option").first
+    option.locator("input").focus()
+    assert option.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    assert option.locator("input").evaluate("n => getComputedStyle(n).outlineStyle") == "none"
+
+
+@pytest.mark.parametrize("kind", ["single-choice", "multi-select"])
+def test_checking_choice_results_preserves_horizontal_geometry(page, synthetic_site, synthetic_documents, kind):
+    for width in (1280, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+        page.locator("#reset-exercise").click()
+        page.evaluate("document.fonts.ready")
+        geometry = "nodes => nodes.map(n => [n.getBoundingClientRect().x, n.getBoundingClientRect().width])"
+        selector = ".choice-option, .choice-option input, .choice-option > span"
+        before = page.locator(selector).evaluate_all(geometry)
+        key = json.loads(page.locator("#answer-key").text_content())
+        for wrong in (next(iter(key["questions"])), None):
+            respond(page, key, wrong_id=wrong)
+            page.locator("button[type=submit]").click()
+            after = page.locator(selector).evaluate_all(geometry)
+            for original, checked in zip(before, after, strict=True):
+                assert checked == pytest.approx(original, abs=0.5)
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
+def test_short_public_shell_and_about_follow_natural_document_order(page, synthetic_site):
+    serve_not_found_candidate(page, synthetic_site)
+    for width in (1280, 320):
+        page.set_viewport_size({"width": width, "height": 1200})
+        page.goto(synthetic_site[0] + "/404.html")
+        page.evaluate("document.fonts.ready")
+        footer = page.locator(".site-footer").bounding_box()
+        assert footer["y"] + footer["height"] == pytest.approx(1200, abs=1)
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.goto(synthetic_site[0] + "/about/index.html")
+        page.evaluate("document.fonts.ready")
+        source = page.locator(".about-layout > *").evaluate_all(
+            "nodes => nodes.map(n => [n.id || n.className, n.getBoundingClientRect().y])"
+        )
+        assert [name for name, _ in source[:4]] == ["about-narrative", "project-information", "team", "data-platform"]
+        assert all(second[1] >= first[1] for first, second in pairwise(source))
+
+
 @pytest.mark.parametrize("kind", ["single-choice", "multi-select", "inline-choice", "gap", "typed-gap", "matching"])
 def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synthetic_site, synthetic_documents, kind):
     path = exercise_path(synthetic_documents, kind)
@@ -71,6 +262,9 @@ def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synt
     page.locator("button[type=submit]").click()
     expect(page.locator("[data-current-status]")).to_have_text("Completed")
     expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(f"1/{len(site_data['modules'][module])}")
+    assert f"1 of {len(site_data['modules'][module])} exercises completed" in page.locator(
+        f'[data-progress-module="{module}"]'
+    ).locator("xpath=..").aria_snapshot()
     expect(page.locator(".worked-model [data-question]")).to_have_count(0)
     if kind == "single-choice":
         expect(page.locator("[data-item-feedback]")).to_contain_text("This is the requested label.")
@@ -100,6 +294,7 @@ def test_interaction_retry_feedback_reset_and_saved_response_contract(page, synt
     assert page.evaluate("module => JSON.parse(localStorage.getItem(`agrarian-writing-v2:${module}`))", module) == saved
     page.locator("#reset-exercise").click()
     expect(page.locator("[data-current-status]")).to_have_text("Not started")
+    expect(page.locator("#exercise-feedback")).to_have_text("Exercise reset.")
     expect(page.locator("[data-result], input:checked")).to_have_count(0)
     expect(page.locator("[data-item-feedback]:visible, #shared-feedback:visible")).to_have_count(0)
     assert page.locator("select, input[type=text]").evaluate_all("nodes => nodes.every(n => n.value === '')")
@@ -206,6 +401,12 @@ def test_feedback_local_overrides_shared_and_obsolete_progress_does_not_count(pa
     respond(page, key, wrong_id="item-b-q1")
     page.locator("button[type=submit]").click()
     expect(page.locator("#exercise-feedback")).to_have_text("1 of 2 items correct. Review Item B.")
+    review = page.locator('#exercise-feedback a[href="#item-b"]')
+    review.focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#item-b")).to_be_focused()
+    page.keyboard.press("Tab")
+    expect(page.locator('[data-question="item-b-q1"]')).to_be_focused()
     expect(page.locator("#item-a-feedback")).to_contain_text("first local label agrees")
     expect(page.locator("#item-a-feedback .gap-feedback")).to_contain_text("local explanation replaces")
     expect(page.locator("#item-b-feedback .gap-feedback")).to_contain_text("Use the second label.")

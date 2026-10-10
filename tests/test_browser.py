@@ -92,7 +92,7 @@ def test_representative_interactions_feedback_retry_reset_and_persistence(
     )
     page.locator("#reset-exercise").click()
     expect(page.locator("[data-current-status]")).to_have_text("Not started")
-    expect(page.locator("#exercise-feedback")).to_be_empty()
+    expect(page.locator("#exercise-feedback")).to_have_text("Exercise reset.")
     expect(page.locator("[data-result]")).to_have_count(0)
     expect(page.locator("[data-item-feedback]:visible, #shared-feedback:visible")).to_have_count(
         0
@@ -442,7 +442,7 @@ def test_global_course_tree_defaults_and_current_page(page, site, level):
         "exercise": "/methods/purpose-of-the-methods-section/exercise-1",
     }[level]
     page.goto(f"{site[0]}{suffix}/index.html")
-    expect(page.locator('[aria-current="page"]')).to_have_count(1)
+    expect(page.locator('a[aria-current="page"]')).to_have_count(1)
     if level in {"home", "about"}:
         expect(page.locator(".course-panel, [data-site-navigation], [data-course-navigator]")).to_have_count(0)
         expect(page.locator(".nav-module-group, .nav-section-group, [data-exercise-link]")).to_have_count(0)
@@ -599,6 +599,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
     page.keyboard.press("Enter")
     assert page.url.endswith("#main")
+    expect(page.locator("main")).to_be_focused()
     page.locator(".contents-link").first.click()
     assert page.url == f"{site[0]}/introduction/index.html"
     expect(page.locator("h1")).to_have_text("The Introduction section")
@@ -768,6 +769,7 @@ def test_publication_headings_accessible_names_and_skip_target(page, site, path)
     page.keyboard.press("Tab")
     expect(page.locator(".skip-link")).to_be_focused()
     page.keyboard.press("Enter")
+    expect(page.locator("main")).to_be_focused()
     page.keyboard.press("Tab")
     assert page.locator(":focus").evaluate("node => !!node.closest('main')")
 
@@ -915,7 +917,7 @@ def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site
     image.scroll_into_view_if_needed()
     expect(image).to_have_js_property("complete", True)
     assert image.evaluate("node => node.naturalWidth > 0")
-    expect(image).to_have_attribute("alt", first.name)
+    expect(image).to_have_attribute("alt", "")
     real, fallback = fields.first.bounding_box(), fields.nth(1).bounding_box()
     assert (real["width"], real["height"]) == pytest.approx((fallback["width"], fallback["height"]), abs=1)
     assert fields.first.get_attribute("aria-hidden") is None
@@ -925,6 +927,14 @@ def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site
     profile.focus()
     assert profile.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
     assert profile.bounding_box()["height"] >= 44
+    # Facts precede team profiles in source as well as on screen, even when
+    # optional profiles make both regions keyboard destinations.
+    assert page.locator(".about-layout > *").evaluate_all(
+        "nodes => nodes.slice(0, 2).map(n => n.id || n.className)"
+    ) == ["about-narrative", "project-information"]
+    page.keyboard.press("Shift+Tab")
+    expect(page.locator(".project-facts a")).to_be_focused()
+    assert page.locator(".project-facts a").bounding_box()["y"] < profile.bounding_box()["y"]
 
 
 def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
