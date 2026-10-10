@@ -23,8 +23,10 @@ turns it into the pages that are published.
 On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
 
-Home, About and the generated 404 fallback use ordinary links and only the shared
-stylesheet. They do not receive course scripts or learner-state JSON.
+Home uses ordinary links, the shared progress helper and `home.js` to show saved
+completion and suggest where to continue. Its JSON contains only the module
+exercise catalogue. About and the generated 404 fallback use the shared
+stylesheet without scripts or learner-state JSON.
 
 There is no backend or database.
 
@@ -41,6 +43,8 @@ There is no backend or database.
 | `static/styles.css` | Visual presentation |
 | `static/exercises.js` | Answer checking, feedback, persistence and progress |
 | `static/navigation.js` | Progressive navigation and browser history |
+| `static/progress.js` | Shared saved-state reading and completion counting |
+| `static/home.js` | Homepage progress and Begin/Continue/Review entry |
 | `static/fonts/` | Locally served font assets |
 | `tests/` | Generic authoring/compiler proofs and explicitly marked canonical regressions |
 | `tests/fixtures/course/` | Small four-module authoring examples; never production input |
@@ -361,6 +365,8 @@ Other useful checks are:
 uv run --frozen ruff check . --no-cache
 node --check static/exercises.js
 node --check static/navigation.js
+node --check static/progress.js
+node --check static/home.js
 git diff --check
 ```
 

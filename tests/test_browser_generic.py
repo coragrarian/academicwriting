@@ -113,16 +113,26 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
     assert contrast_ratio(header_surface, footer_surface) >= 7
     for selector, surface in (
         (".site-name, .site-name span, .site-links a", header_surface),
-        (".footer-provenance, .footer-links a", footer_surface),
+        (".footer-heading, .footer-provenance, .footer-licence, .footer-links a", footer_surface),
     ):
         for text in page.locator(selector).all():
             colour = text.evaluate("n => getComputedStyle(n).color")
             assert contrast_ratio(colour, surface) >= 4.5
     for selector, surface in ((".about-link", header_surface), (".footer-links a", footer_surface)):
-        link = page.locator(selector)
-        link.focus()
-        colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
-        assert outline == "solid" and contrast_ratio(colour, surface) >= 3
+        for link in page.locator(selector).all():
+            if selector == ".footer-links a":
+                assert "underline" not in link.evaluate("n => getComputedStyle(n).textDecorationLine")
+                assert int(link.evaluate("n => getComputedStyle(n).fontWeight")) > int(
+                    footer.locator(".footer-licence").evaluate("n => getComputedStyle(n).fontWeight")
+                )
+            link.focus()
+            colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
+            assert outline == "solid" and contrast_ratio(colour, surface) >= 3
+            if selector == ".footer-links a":
+                ink, background, decoration = link.evaluate(
+                    "n => [getComputedStyle(n).color, getComputedStyle(n).backgroundColor, getComputedStyle(n).textDecorationLine]"
+                )
+                assert contrast_ratio(ink, background) >= 4.5 and "underline" not in decoration
     for image in footer.locator(".institution-logo").all():
         filter_, opacity = image.evaluate("n => [getComputedStyle(n).filter, +getComputedStyle(n).opacity]")
         assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
@@ -373,7 +383,11 @@ def test_short_public_shell_and_about_follow_natural_document_order(page, synthe
         page.goto(synthetic_site[0] + "/404.html")
         page.evaluate("document.fonts.ready")
         footer = page.locator(".site-footer").bounding_box()
-        assert footer["y"] + footer["height"] == pytest.approx(1200, abs=1)
+        layout = page.locator(".layout").bounding_box()
+        assert footer["y"] >= layout["y"] + layout["height"]
+        document_height = page.evaluate("document.documentElement.scrollHeight")
+        assert document_height >= 1200
+        assert footer["y"] + footer["height"] == pytest.approx(document_height, abs=1)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.goto(synthetic_site[0] + "/about/index.html")
         page.evaluate("document.fonts.ready")

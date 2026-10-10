@@ -806,8 +806,9 @@ def test_publication_reflow_including_enlarged_text(page, site, width, text_scal
                     or first["y"] + first["height"] <= second["y"]
                     or second["y"] + second["height"] <= first["y"]
                 ), path
-        repository = page.locator(".footer-links").bounding_box()
-        assert repository["x"] >= 0 and repository["x"] + repository["width"] <= width
+        for group in page.locator(".footer-group").all():
+            box = group.bounding_box()
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width
         for option in page.locator(".choice-option").all():
             label = option.bounding_box()
             text = option.locator("span").first.bounding_box()
@@ -953,7 +954,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     page.goto(site[0] + "/methods/index.html")
     page.evaluate("window.footerProbe = document.querySelector('.site-footer')")
     footer = page.get_by_role("contentinfo")
-    source = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
+    source = footer.get_by_role("link", name="Source code on GitHub", exact=True)
+    course_about = footer.get_by_role("link", name="About the course", exact=True)
+    corpus_about = footer.get_by_role("link", name="Corpus and research", exact=True)
     expected_source = "https://github.com/coragrarian/academicwriting"
     expect(source).to_have_attribute("href", expected_source)
     expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
@@ -962,6 +965,8 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
         expect(page.locator("h1")).to_have_text(heading)
         assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
         expect(source).to_have_attribute("href", expected_source)
+        assert course_about.evaluate("node => node.href") == f"{site[0]}/about/index.html"
+        assert corpus_about.evaluate("node => node.href") == f"{site[0]}/about/index.html#corpus-heading"
         expect(page.locator(".course-link")).to_have_attribute("href", f"{site[0]}/index.html#course")
     # The footer has remained below the viewport while URL depth changed.
     # Its lazy images must still load from the original site's asset directory.
@@ -976,7 +981,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     expect(page.locator("h1")).to_have_text("Exercise 1")
     assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
     expect(source).to_have_attribute("href", expected_source)
-    page.locator(".about-link").click()
+    corpus_about.focus()
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(f"{site[0]}/about/index.html#corpus-heading")
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     assert page.evaluate("window.footerProbe") is None
 
@@ -1025,38 +1032,29 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         footer = page.get_by_role("contentinfo")
         expect(footer).to_have_count(1)
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
-        expect(footer.locator(".footer-links a")).to_have_count(1)
-        institution_group = footer.locator(".footer-institutions").bounding_box()
+        expect(footer.locator(".footer-group")).to_have_count(3)
+        expect(footer.locator(".footer-links a")).to_have_count(5)
+        expect(footer.locator(".footer-licence")).to_have_text("Course materials — CC BY-NC-SA 4.0")
+        expect(footer.get_by_role("link", name="Course materials — CC BY-NC-SA 4.0", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
-        expect(provenance).to_have_text("Developed at UFMG · Supported by FAPEMIG and CAPES · APQ-01173-22")
-        provenance_box = provenance.bounding_box()
-        repository = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
-        expect(repository).to_have_text("coragrarian/academicwriting")
-        expect(footer.get_by_role("link", name="Source code", exact=True)).to_have_count(0)
+        expect(provenance).to_have_text(
+            "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
+            "Supported by FAPEMIG and CAPES. FAPEMIG APQ-01173-22."
+        )
+        repository = footer.get_by_role("link", name="Source code on GitHub", exact=True)
         expect(repository.locator("svg")).to_have_attribute("aria-hidden", "true")
-        source_link = repository.bounding_box()
-        assert provenance_box["y"] >= institution_group["y"] + institution_group["height"]
-        assert source_link["y"] >= provenance_box["y"] + provenance_box["height"]
         layout = page.locator(".layout").bounding_box()
         assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
         for name, href in (
             ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
-            ("GitHub repository: coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
+            ("Source code on GitHub", "https://github.com/coragrarian/academicwriting"),
         ):
             link = footer.get_by_role("link", name=name, exact=True)
             expect(link).to_have_attribute("href", href)
             assert link.get_attribute("target") is None
             assert link.bounding_box()["height"] >= 44
-        if width >= 768:
-            marks = [mark.bounding_box() for mark in page.locator(".footer-institutions a").all()]
-            assert all(
-                following["x"] >= current["x"] + current["width"]
-                for current, following in pairwise(marks)
-            )
-            centres = [mark["y"] + mark["height"] / 2 for mark in marks]
-            assert centres == pytest.approx([centres[0]] * 3, abs=0.02)
         if path == "/index.html":
             expect(page.locator(".project-actions, .project-start")).to_have_count(0)
             primary = page.get_by_role("link", name="Begin with Introduction", exact=True)

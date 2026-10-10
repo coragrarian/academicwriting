@@ -332,6 +332,8 @@ def test_home_and_about_public_content(tmp_path, documents):
     about_source = (output / "about/index.html").read_text()
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
+    assert "Modules are organised around major sections of research articles." in about_source
+    assert "The available modules cover" not in about_source
     assert {
         "research-heading", "corpus-heading", "materials-heading",
         "team", "data-platform", "licensing-heading", "facts-heading",
@@ -657,20 +659,44 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             assert "target" not in link
             assert image["alt"] == name
         utility_links = [attrs["href"] for tag, attrs in page.regions["footer"] if tag == "a"]
-        assert len(utility_links) == 4
-        assert set(utility_links) == {href for href, _ in destinations.values()} | {
-            "https://github.com/coragrarian/academicwriting",
+        repository_url = "https://github.com/coragrarian/academicwriting"
+        project_links = {
+            "About the course": None,
+            "Corpus and research": "corpus-heading",
         }
+        external_links = {
+            "Source code on GitHub": repository_url,
+            "Software — MIT": repository_url + "/blob/main/LICENSES/MIT.txt",
+            "Third-party rights and notices": repository_url + "/blob/main/NOTICE.md",
+        }
+        assert len(utility_links) == len(set(utility_links)) == 8
+        assert {href for href, _ in destinations.values()} | set(external_links.values()) <= set(utility_links)
         footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
-        for text in ("Developed at UFMG", "Supported by FAPEMIG and CAPES", "APQ-01173-22", "coragrarian/academicwriting"):
+        assert '<p class="footer-licence">Course materials — CC BY-NC-SA 4.0</p>' in footer
+        assert not any("CC-BY-NC-SA-4.0.txt" in href for href in utility_links)
+        for label, fragment in project_links.items():
+            assert label in footer
+            assert any(
+                tag == "a"
+                and local_link_target(output, path, attrs["href"]) == output / "about/index.html"
+                and urlsplit(attrs["href"]).fragment == (fragment or "")
+                for tag, attrs in page.regions["footer"]
+            )
+            if fragment:
+                assert fragment in Page((output / "about/index.html").read_text()).ids
+        for label, href in external_links.items():
+            assert label in footer and href in utility_links
+        for text in (
+            "Developed and supported by", "Project", "Use and reuse",
+            "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
+            "Supported by FAPEMIG and CAPES. FAPEMIG", "APQ-01173-22",
+        ):
             assert text in footer
-        for excluded in ("Source code", "FUNDEP", "Contact", "Escrita acadêmica", "licence"):
+        for excluded in (
+            "<strong>", "FUNDEP", "Contact", "mailto:", "#team", "Cite this resource",
+            "doi.org", "Version", "[Year]", "[Surname", "[record]", "[date]", "FAPEMIG reference",
+        ):
             assert excluded not in footer
-        repository = next(
-            attrs for tag, attrs in page.regions["footer"]
-            if tag == "a" and attrs["href"] == "https://github.com/coragrarian/academicwriting"
-        )
-        assert repository["aria-label"] == "GitHub repository: coragrarian/academicwriting"
         icon = next(attrs for tag, attrs in page.regions["footer"] if tag == "svg")
         assert icon["aria-hidden"] == "true" and icon["focusable"] == "false"
         assert not any(tag == "figcaption" for tag, _ in page.elements)

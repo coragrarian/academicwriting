@@ -230,15 +230,20 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .people-grid--data .person-portrait { margin: 0; }
 .team-group-heading { margin-top: var(--space-section); }
 /* Site chrome stays outside the course grid and the regions replaced by navigation. */
-.site-footer { --focus: var(--footer-ink); border-top: 1px solid var(--surface-footer); background: var(--surface-footer); color: var(--footer-ink); }
-.site-footer-inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-small); max-width: 80rem; margin: auto; padding: var(--space-block) clamp(1.35rem, 5vw, 4.5rem); }
-.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; max-width: 100%; gap: var(--space-block) var(--space-group); margin-bottom: var(--space-small); }
-.footer-institutions a { display: flex; align-items: center; min-width: 0; max-width: 100%; min-height: 2.75rem; }
-.footer-provenance { max-inline-size: 65ch; margin: 0; color: var(--footer-muted); font-size: var(--text-small); line-height: 1.6; text-align: center; text-wrap: balance; }
-.footer-links { display: flex; align-items: center; max-width: 100%; }
-.footer-links a { display: inline-flex; align-items: center; gap: var(--space-small); min-width: 0; min-height: 2.75rem; color: var(--footer-ink); font-size: var(--text-small); text-decoration: none; text-underline-offset: .2em; }
+.site-footer { --focus: var(--footer-ink); container-type: inline-size; border-top: 1px solid var(--surface-footer); background: var(--surface-footer); color: var(--footer-ink); }
+.site-footer-inner { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, .85fr) minmax(0, 1fr); gap: var(--space-group) var(--space-section); max-width: 80rem; margin: auto; padding: var(--space-group) clamp(1.35rem, 5vw, 4.5rem); }
+.footer-group { min-width: 0; }
+.footer-heading { margin: 0 0 .75rem; font-size: var(--text-eyebrow); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; max-width: 100%; gap: .75rem 1rem; margin-bottom: .75rem; }
+.footer-institutions a { display: flex; align-items: center; min-width: 0; max-width: 100%; min-height: 2.75rem; height: 64px; }
+.footer-provenance { max-inline-size: 65ch; margin: 0; color: var(--footer-muted); font-size: var(--text-small); line-height: 1.6; }
+.footer-reference { white-space: nowrap; }
+.footer-licence { margin: 0 0 .25rem; padding-block: .5rem; color: var(--footer-muted); font-size: var(--text-small); line-height: 1.5; }
+.footer-links { display: flex; flex-direction: column; align-items: flex-start; max-width: 100%; margin: 0; padding: 0; list-style: none; }
+.footer-links li { width: 100%; }
+.footer-links a { display: inline-flex; align-items: center; gap: var(--space-small); min-width: 0; max-width: 100%; min-height: 2.75rem; margin-inline: -.375rem; padding: .5rem .375rem; border-radius: .125rem; color: var(--footer-ink); font-size: var(--text-small); font-weight: 600; line-height: 1.5; text-decoration: none; overflow-wrap: anywhere; }
 .footer-links span { min-width: 0; overflow-wrap: anywhere; }
-.footer-links a:hover, .footer-links a:focus-visible { color: var(--footer-ink); text-decoration: underline; }
+.footer-links a:hover, .footer-links a:focus-visible { background: #454545; color: var(--footer-ink); }
 .github-mark { flex: none; fill: currentColor; }
 .institution-logo { display: block; max-width: 100%; height: auto; }
 .institution-logo--ufmg-fale { width: 18rem; }
@@ -248,9 +253,22 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
    original artwork and its alpha channel for other institutional contexts. */
 .site-footer .institution-logo { filter: grayscale(1) brightness(0) invert(.902); opacity: .94; transition: opacity var(--motion-fast) var(--ease-standard); }
 .site-footer .footer-institutions a:hover .institution-logo, .site-footer .footer-institutions a:focus-visible .institution-logo { opacity: 1; }
-.site-footer .institution-logo--ufmg-fale { width: 14.5rem; }
-.site-footer .institution-logo--fapemig { width: 5.75rem; }
-.site-footer .institution-logo--capes { width: 5rem; }
+/* The combined artwork has padding on every side; its larger image fits a
+   shorter wrapper without clipping. Horizontal compensation aligns visible
+   ink and balances gaps. Text enlargement need not enlarge the artwork. */
+.institution-link--ufmg-fale { margin-inline: -17px -16px; }
+.site-footer .institution-logo--ufmg-fale { width: 272px; }
+.site-footer .institution-logo--fapemig { width: 70px; }
+.site-footer .institution-logo--capes { width: 54px; }
+@container (max-width: 60rem) {
+  .site-footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-support { grid-column: 1 / -1; }
+}
+@container (max-width: 36rem) {
+  .site-footer-inner { grid-template-columns: minmax(0, 1fr); }
+  .footer-support { grid-column: auto; }
+  .institution-link--ufmg-fale { flex-basis: 100%; }
+}
 /* Home responds to its reading width, including enlarged text on desktop. */
 @container (max-width: 60rem) {
   .home-hero { grid-template-columns: minmax(0, 1fr); gap: var(--space-block); }
