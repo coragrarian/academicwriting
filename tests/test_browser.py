@@ -364,7 +364,11 @@ def test_selected_rows_distinguish_review_from_success(page, site, module, secti
     correct_row = control.locator(".choice-option").nth(question["expected"][0])
     correct_background = correct_row.evaluate("node => getComputedStyle(node).backgroundColor")
     wrong_row.click()
-    assert wrong_row.evaluate("node => getComputedStyle(node).backgroundColor") == "rgb(237, 241, 240)"
+    selected_background = wrong_row.evaluate("node => getComputedStyle(node).backgroundColor")
+    current_background = page.locator('.course-panel a[aria-current="page"]').evaluate(
+        "node => getComputedStyle(node).backgroundColor"
+    )
+    assert selected_background == current_background and selected_background != correct_background
     page.locator("button[type=submit]").click()
     assert wrong_row.evaluate("node => getComputedStyle(node).backgroundColor") == "rgb(255, 240, 229)"
     assert correct_row.evaluate("node => getComputedStyle(node).backgroundColor") == correct_background
