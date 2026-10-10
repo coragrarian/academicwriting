@@ -30,6 +30,7 @@
         <span class="contents-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
         <span class="contents-copy">
           <strong class="contents-title">{{ home_module_title(module.title) }}</strong>
+          {% if module.summary %}<span class="contents-summary">{{ module.summary }}</span>{% endif %}
           <span class="contents-counts">{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %} · {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span>
         </span>
         {% include "_chevron_right.html" %}

@@ -291,6 +291,8 @@ def test_home_and_about_public_content(tmp_path, documents):
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
         assert f'>{number:02d}</span>' in home_source
+        assert document.summary
+        assert f'<span class="contents-summary">{document.summary}</span>' in home_source
         assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
         module_page = Page((output / document.slug / "index.html").read_text())
         assert ("h1", document.title) in module_page.headings
@@ -441,7 +443,7 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
     # A reduced, reordered course catches canonical paths or counts baked into Home.
     alpha, beta = synthetic_documents[:2]
     modules = [
-        replace(alpha, title="The Alpha section", order=10),
+        replace(alpha, title="The Alpha section", order=10, summary='Comparing labels & <script>values</script>.'),
         replace(beta, title="Neutral descriptions", order=0),
     ]
     output = tmp_path / "site"
@@ -470,6 +472,15 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
         assert f'<strong class="contents-title">{label}</strong>' in row
         assert row.count("<a ") == 1 and "<button" not in row
         assert row.index("<a ") < row.index("contents-title") < row.index("</a>")
+        if module.summary is None:
+            assert "contents-summary" not in row
+        else:
+            assert (
+                '<span class="contents-summary">Comparing labels &amp; '
+                '&lt;script&gt;values&lt;/script&gt;.</span>'
+            ) in row
+            assert "aria-hidden" not in row.split('class="contents-summary"', 1)[1].split("</span>", 1)[0]
+            assert row.index("contents-title") < row.index("contents-summary") < row.index("contents-counts")
         subsection_count = len(module.sections)
         subsection_label = "subsection" if subsection_count == 1 else "subsections"
         exercise_count = sum(len(section.exercises) for section in module.sections)

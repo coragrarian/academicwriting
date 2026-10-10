@@ -60,6 +60,9 @@ A module uses front matter for its identity and course order:
 id: methods
 title: The Methods section
 order: 2
+summary: >-
+  Study design and reporting: participants or materials, procedures,
+  measurements, data collection and analysis.
 ---
 ```
 
@@ -69,6 +72,8 @@ filenames do not determine course order. `about` is reserved for the public page
 Front matter is optional for legacy sources: the filename supplies the ID and
 the level-one heading supplies the title. Present front matter requires both
 `id` and `title`; duplicate YAML keys and unsupported fields are rejected.
+Optional `summary` describes module coverage in plain text and appears in the
+homepage module row. When present, it must be a non-empty string after trimming.
 
 The main heading structure is:
 
