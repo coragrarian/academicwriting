@@ -622,7 +622,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     navigation.get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     page.locator(".site-name").click()
-    page.get_by_role("link", name="About the research project", exact=True).click()
+    page.get_by_role("link", name="About CorAgrarian and the research", exact=True).click()
     assert page.url == f"{site[0]}/about/index.html"
     expect(page.locator("#team .person--pending")).to_have_count(6)
     context.close()
@@ -984,6 +984,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         page.goto(site[0] + path)
         page.evaluate("document.fonts.ready")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
+        expect(page.locator(".site-name")).to_have_text("CorAgrarian")
         about = page.locator(".about-link")
         expect(about).to_be_visible()
         assert about.bounding_box()["height"] >= 44
@@ -1060,9 +1061,14 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             expect(page.locator("#course button, #course .action-link, .page-head .eyebrow")).to_have_count(0)
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
             expect(page.locator(".page-head .lead")).to_have_text(
-                "An interactive self-study resource for students and researchers writing research articles in the Agrarian Sciences."
+                "CorAgrarian Academic Writing is an interactive self-study resource for "
+                "students and researchers in the Agrarian Sciences. Organised around the "
+                "major sections of research articles, it offers guided practice with "
+                "disciplinary rhetorical conventions, grammar, vocabulary and phraseology. "
+                "The materials are informed by the CorAgrarian corpus and research into "
+                "academic English in the field."
             )
-            expect(page.get_by_role("link", name="About the research project", exact=True)).to_have_attribute(
+            expect(page.get_by_role("link", name="About CorAgrarian and the research", exact=True)).to_have_attribute(
                 "href", "about/index.html"
             )
             assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03"]

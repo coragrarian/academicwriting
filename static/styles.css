@@ -353,8 +353,8 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid var(--contro
 .feedback-incorrect { color: var(--danger); }
 .feedback-incorrect a { color: var(--danger); }
 .page-navigation { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 1rem; }
-.page-navigation a { display: inline-flex; align-items: center; gap: .35rem; min-height: 2.75rem; color: var(--ink-interactive-neutral); font-size: var(--text-ui); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
-.page-navigation a:hover, .page-navigation a:focus-visible { color: var(--accent-dark); }
+.directional-link { display: inline-flex; align-items: center; gap: .35rem; min-height: 2.75rem; color: var(--ink-interactive-neutral); font-size: var(--text-ui); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+.directional-link:hover, .directional-link:focus-visible { color: var(--accent-dark); }
 .page-navigation a:last-child { text-align: right; margin-left: auto; }
 /* Use whitespace to separate overview lists from course traversal. */
 .course-overview + .page-navigation { border-top: 0; margin-top: var(--space-group); padding-top: var(--space-small); }

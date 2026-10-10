@@ -45,6 +45,7 @@ def test_complete_build(tmp_path, course_documents):
     assert "site-data" not in pages[output / "index.html"].scripts
     for path, page in pages.items():
         source = path.read_text()
+        assert ">CorAgrarian</a>" in source.split("</header>", 1)[0]
         not_found = path.relative_to(output) == Path("404.html")
         public_page = path.relative_to(output) in {
             Path("index.html"), Path("about/index.html"), Path("404.html"),
@@ -270,11 +271,10 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert (output / start["href"]).resolve() == output / first.slug / "index.html"
     assert any(attrs.get("href") == "about/index.html" for _, attrs in home.elements)
     assert "Start the course" not in home_source
-    assert "About the research project" in home_source
-    assert (
-        "An interactive self-study resource for students and researchers writing "
-        "research articles in the Agrarian Sciences."
-    ) in hero
+    assert "About CorAgrarian and the research" in home_source
+    assert "interactive self-study resource" in hero
+    assert "major sections of research articles" in hero
+    assert "informed by the CorAgrarian corpus" in hero
     assert [row["href"] for row in rows] == [
         "introduction/index.html", "methods/index.html", "results/index.html",
     ]
@@ -356,7 +356,7 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
     assert [text for tag, text in home.headings if tag == "h2"] == [
-        "Course contents", "The research project",
+        "Course contents", "Built on CorAgrarian",
     ]
     assert not any(name in home_source for name in names)
     assert not {"people-heading", "team", "data-platform"} & home.ids
@@ -375,8 +375,8 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     assert about_source.count("Details to be added") == 6
     assert 'href="about/index.html#team"' not in home_source
     project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
-    assert project.count("<p>") == 2 and "CorAgrarian" in project
-    assert "pedagogical materials" in project and "self-study activities" in project
+    assert project.count("<p>") == 1 and "CorAgrarian" in project
+    assert "findings from that work inform" in project
     assert "Jhonatan cleans and organises" not in about_source
     assert "person-contribution" not in about_source
     for page, count in ((home, 0), (about, 10)):
