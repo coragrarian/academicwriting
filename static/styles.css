@@ -31,9 +31,9 @@
   --ink: #263331;
   --muted: #64716c;
   --line: #c6d0c7;
-  --paper: #fbfcfa;
+  --paper: #FCFBF7;
   --surface: #fff;
-  --surface-header: #eaf0e8;
+  --surface-header: #BDCFB9;
   --surface-footer: #383838;
   --footer-ink: #ebece7;
   --footer-muted: #cdd0c9;
@@ -48,7 +48,7 @@
   --progress: #87663e;
   --success: var(--accent);
   --danger: #8b4926;
-  --surface-selected: #eaf0e8;
+  --surface-selected: var(--surface-header);
   --surface-correct: #f3f8f5;
   --surface-incorrect: #fff8f3;
   --radius-control: .25rem;
@@ -121,7 +121,9 @@ a, button, summary, .choice-option { transition: color var(--motion-fast) var(--
 .nav-eyebrow { margin: 0 0 var(--space-small); }
 .nav-home, .nav-module-overview, .section-nav-body a { display: flex; align-items: baseline; gap: .45rem; padding: .4rem .45rem; color: var(--ink-interactive-neutral); text-decoration: none; font-size: var(--text-small); line-height: 1.4; border-radius: var(--radius-control); }
 .course-panel a:hover, .course-panel a:focus-visible { background: var(--surface-hover-neutral); color: var(--ink-interactive-strong); }
-.course-panel a[aria-current="page"] { background: var(--surface-selected); color: var(--accent-dark); font-weight: 600; }
+/* The shared sage needs a darker hollow marker; progress and completion
+   retain their semantic borders. */
+.course-panel a[aria-current="page"] { --control-border: var(--ink-interactive-neutral); background: var(--surface-selected); color: var(--accent-dark); font-weight: 600; }
 .course-tree { margin-top: .6rem; border-top: 1px solid var(--line); }
 .nav-module-group { padding: .55rem 0; border-bottom: 1px solid var(--line); }
 .course-tree summary { display: flex; align-items: baseline; cursor: pointer; padding: .45rem .45rem; color: var(--ink-interactive-neutral); font-size: var(--text-ui); font-weight: 600; line-height: 1.4; border-radius: var(--radius-control); }
