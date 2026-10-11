@@ -1016,6 +1016,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             "node => [...node.children].map(child => [child.tagName, child.className])"
         ) == [["A", "site-name"], ["NAV", "site-links"]]
         expect(page.locator(".site-header a")).to_have_count(3)
+        expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
         about = page.locator(".about-link")
         expect(about).to_be_visible()
         assert about.bounding_box()["height"] >= 44
@@ -1089,7 +1090,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                 "Introduction", "Methods", "Results",
             ]
             expect(page.locator("#course button, #course .action-link")).to_have_count(0)
-            expect(page.locator(".home-hero-copy .eyebrow")).to_have_count(0)
+            expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
             expect(page.locator(".home-facts dt")).to_have_count(5)
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
             expect(page.locator(".page-head .lead")).to_contain_text(

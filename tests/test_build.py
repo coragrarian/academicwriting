@@ -51,6 +51,7 @@ def test_complete_build(tmp_path, course_documents):
     }
     for path, page in pages.items():
         source = path.read_text()
+        assert ">CorAgrarian <span>Academic Writing</span></a>" in source.split("</header>", 1)[0]
         not_found = path.relative_to(output) == Path("404.html")
         public_page = path.relative_to(output) in {
             Path("index.html"), Path("about/index.html"), Path("404.html"),
@@ -291,7 +292,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="home-hero-copy">', 1)[1].split("</div>", 1)[0]
     assert hero.count("<a ") == 1
-    assert hero.lstrip().startswith("<h1>")
+    assert hero.lstrip().startswith('<p class="eyebrow">Self-study course</p>')
     assert 'href="introduction/index.html"><span data-home-entry-label>Begin with Introduction</span>' in hero
     assert "CorAgrarian Academic Writing" not in home_source
     assert "Linguistic and rhetorical analysis" not in home_source
@@ -388,6 +389,29 @@ def test_home_and_about_public_content(tmp_path, documents):
         attrs.get("class") == "about-link" and attrs.get("aria-current") == "page"
         for _, attrs in about.elements
     )
+
+
+def test_home_research_action_reuses_directional_navigation(tmp_path, synthetic_documents):
+    output = tmp_path / "site"
+    build_site(synthetic_documents, output)
+    source = (output / "index.html").read_text()
+    action = next(
+        attrs for tag, attrs in Page(source).elements
+        if tag == "a" and "project-detail-link" in attrs.get("class", "").split()
+    )
+    assert "directional-link" in action["class"].split()
+    assert action["href"] == "about/index.html"
+    for document in synthetic_documents:
+        module = Page((output / document.slug / "index.html").read_text())
+        navigation = [
+            attrs for tag, attrs in module.elements
+            if tag == "a" and attrs.get("rel") in {"prev", "next"}
+        ]
+        assert len(navigation) == 2
+        assert all(
+            "directional-link" in attrs.get("class", "").split()
+            for attrs in navigation
+        )
 
 
 @pytest.mark.canonical
