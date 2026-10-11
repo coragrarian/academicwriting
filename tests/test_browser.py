@@ -204,6 +204,10 @@ def test_every_canonical_exercise_can_complete(page, site, documents):
                 expect(page.locator("[data-current-status]")).to_have_text("Completed")
         total = sum(len(section.exercises) for section in document.sections)
         expect(page.locator(f'[data-progress-module="{document.slug}"]')).to_have_text(f"{total}/{total}")
+    page.locator(".nav-home").click()
+    expect(page.locator("[data-home-entry]")).to_have_text("Review the course")
+    expect(page.locator("[data-home-entry]")).to_have_attribute("href", "#course")
+    assert page.locator(".contents-progress-status").all_text_contents() == ["Completed"] * len(documents)
 
 
 @pytest.mark.parametrize(
@@ -622,7 +626,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
     navigation.get_by_role("link", name="About", exact=True).click()
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     page.locator(".site-name").click()
-    page.get_by_role("link", name="About CorAgrarian and the research", exact=True).click()
+    page.get_by_role("link", name="About the corpus and research", exact=True).click()
     assert page.url == f"{site[0]}/about/index.html"
     expect(page.locator("#team .person--pending")).to_have_count(6)
     context.close()
@@ -631,8 +635,8 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
 def test_home_contents_keyboard_focus_and_module_entry(page, site):
     for index, module in enumerate(("introduction", "methods", "results")):
         page.goto(site[0] + "/index.html")
-        # The skip link and three header links precede the ordered course rows.
-        for _ in range(5 + index):
+        # The skip link, three header links and primary entry precede the rows.
+        for _ in range(6 + index):
             page.keyboard.press("Tab")
         row = page.locator(".contents-link").nth(index)
         expect(row).to_be_focused()
@@ -802,8 +806,9 @@ def test_publication_reflow_including_enlarged_text(page, site, width, text_scal
                     or first["y"] + first["height"] <= second["y"]
                     or second["y"] + second["height"] <= first["y"]
                 ), path
-        repository = page.locator(".footer-links").bounding_box()
-        assert repository["x"] >= 0 and repository["x"] + repository["width"] <= width
+        for group in page.locator(".footer-group").all():
+            box = group.bounding_box()
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width
         for option in page.locator(".choice-option").all():
             label = option.bounding_box()
             text = option.locator("span").first.bounding_box()
@@ -823,7 +828,11 @@ def test_public_pages_do_not_load_course_runtime(page, site, path):
     requests = []
     page.on("request", lambda request: requests.append(request.url))
     page.goto(site[0] + path)
-    expect(page.locator("script, #site-data, #answer-key")).to_have_count(0)
+    expect(page.locator("#answer-key")).to_have_count(0)
+    if path == "/index.html":
+        expect(page.locator("#site-data, script[src$='progress.js'], script[src$='home.js']")).to_have_count(3)
+    else:
+        expect(page.locator("script, #site-data")).to_have_count(0)
     assert not any(url.endswith(("/exercises.js", "/navigation.js")) for url in requests)
     assert any(url.endswith("/assets/styles.css") for url in requests)
     assert page.evaluate("JSON.stringify({...localStorage})") == "{}"
@@ -839,8 +848,7 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         for portrait in page.locator(".person-portrait").all():
             box = portrait.bounding_box()
-            assert box["width"] == pytest.approx(box["height"], abs=1)
-            assert box["width"] >= 64
+            assert box["width"] > 0 and box["height"] > 0
             assert box["x"] >= 0 and box["x"] + box["width"] <= width
             expect(portrait).to_have_attribute("aria-hidden", "true")
         if path == "/index.html":
@@ -861,10 +869,21 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
             expect(page.locator("#team > h2")).to_have_text("Research team")
             assert page.locator("#team > h3").all_text_contents() == ["Coordinators", "Members"]
             assert page.locator('#team [aria-labelledby="coordinators-heading"] .person-name').all_text_contents() == names[:3]
-            assert page.locator(".person-portrait span").all_text_contents() == ["DPD", "GLT", "DDC", "JHL"]
+            expect(page.locator(".person-portrait img")).to_have_count(4)
+            for name, filename in zip(names, (
+                "deise-prina-dutra.jpg", "gustavo-leal-teixeira.webp",
+                "danilo-duarte-costa.jpg", "jhonatan-h-lopes.jpg",
+            ), strict=True):
+                person = page.locator(".person").filter(has=page.get_by_role("heading", name=name, exact=True))
+                image = person.locator("img")
+                image.scroll_into_view_if_needed()
+                expect(image).to_have_js_property("complete", True)
+                assert image.evaluate("node => node.naturalWidth > 0")
+                assert image.get_attribute("src").endswith("assets/people/" + filename)
+                expect(image).to_have_attribute("alt", "")
             expect(page.locator("#team .person--pending")).to_have_count(6)
             assert page.locator(".person--pending .person-name").all_text_contents() == ["Research team member"] * 6
-            assert all(not text.strip() for text in page.locator(".person--pending .person-portrait").all_text_contents())
+            expect(page.locator(".person--pending .person-portrait")).to_have_count(0)
             expect(page.locator("#data-platform .person-name")).to_have_text(names[3])
             expect(page.locator("#data-platform .person-role")).to_have_text("Data processing and web development")
             expect(page.locator("#data-platform .person-information")).to_have_text(
@@ -904,28 +923,31 @@ def test_course_main_uses_available_grid_width_with_bounded_prose(page, site, pa
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
-def test_optional_portrait_keeps_fallback_geometry_and_profile_access(page, site, documents, tmp_path, monkeypatch):
+def test_optional_portrait_and_text_only_entries_keep_profile_access(page, site, documents, tmp_path, monkeypatch):
     assets = tmp_path / "static"
     shutil.copytree(Path(__file__).resolve().parents[1] / "static", assets)
-    (assets / "people").mkdir()
+    (assets / "people").mkdir(exist_ok=True)
     # Local PNG fixture only: no portrait is fetched or published by this test.
     (assets / "people/test.png").write_bytes((assets / "institutions/logo-ufmg-fale.png").read_bytes())
     first = replace(renderer.COORDINATORS[0], portrait="people/test.png", profile_url="https://example.org/profile")
-    monkeypatch.setattr(renderer, "COORDINATORS", (first, *renderer.COORDINATORS[1:]))
+    monkeypatch.setattr(renderer, "COORDINATORS", (
+        first, *(replace(member, portrait=None) for member in renderer.COORDINATORS[1:]),
+    ))
+    monkeypatch.setattr(renderer, "DATA_PLATFORM", replace(renderer.DATA_PLATFORM, portrait=None))
     monkeypatch.setattr(renderer, "STATIC", assets)
     output = site[1].parent / "portrait-component"
     build_site(documents, output)
     page.goto(site[0].removesuffix("/study") + "/portrait-component/about/index.html")
     fields = page.locator(".person-portrait")
+    expect(fields).to_have_count(1)
     image = fields.first.locator("img")
     image.scroll_into_view_if_needed()
     expect(image).to_have_js_property("complete", True)
     assert image.evaluate("node => node.naturalWidth > 0")
     expect(image).to_have_attribute("alt", "")
-    real, fallback = fields.first.bounding_box(), fields.nth(1).bounding_box()
-    assert (real["width"], real["height"]) == pytest.approx((fallback["width"], fallback["height"]), abs=1)
-    assert fields.first.get_attribute("aria-hidden") is None
-    expect(fields.nth(1)).to_have_attribute("aria-hidden", "true")
+    expect(fields.first).to_have_attribute("aria-hidden", "true")
+    expect(page.locator(".person").nth(1).locator(".person-name")).to_have_text(renderer.COORDINATORS[1].name)
+    expect(page.locator(".person").nth(1).locator("img, .person-portrait")).to_have_count(0)
     profile = page.locator(".person-profile")
     expect(profile).to_have_attribute("href", first.profile_url)
     profile.focus()
@@ -945,7 +967,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     page.goto(site[0] + "/methods/index.html")
     page.evaluate("window.footerProbe = document.querySelector('.site-footer')")
     footer = page.get_by_role("contentinfo")
-    source = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
+    source = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)
+    content_licence = footer.get_by_role("link", name="Course materials CC BY-NC-SA 4.0", exact=True)
+    software_licence = footer.get_by_role("link", name="Software MIT", exact=True)
     expected_source = "https://github.com/coragrarian/academicwriting"
     expect(source).to_have_attribute("href", expected_source)
     expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
@@ -954,6 +978,8 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
         expect(page.locator("h1")).to_have_text(heading)
         assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
         expect(source).to_have_attribute("href", expected_source)
+        expect(content_licence).to_have_attribute("href", expected_source + "/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt")
+        expect(software_licence).to_have_attribute("href", expected_source + "/blob/main/LICENSES/MIT.txt")
         expect(page.locator(".course-link")).to_have_attribute("href", f"{site[0]}/index.html#course")
     # The footer has remained below the viewport while URL depth changed.
     # Its lazy images must still load from the original site's asset directory.
@@ -968,7 +994,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     expect(page.locator("h1")).to_have_text("Exercise 1")
     assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
     expect(source).to_have_attribute("href", expected_source)
-    page.locator(".about-link").click()
+    page.locator(".about-link").focus()
+    page.keyboard.press("Enter")
+    expect(page).to_have_url(f"{site[0]}/about/index.html")
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     assert page.evaluate("window.footerProbe") is None
 
@@ -978,13 +1006,17 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
         "/index.html", "/about/index.html", "/introduction/index.html",
-        "/methods/index.html",
+        "/methods/purpose-of-the-methods-section/index.html",
         "/results/grammar-and-vocabulary-in-the-results-section/exercise-7/index.html",
     ):
         page.goto(site[0] + path)
         page.evaluate("document.fonts.ready")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), path
-        expect(page.locator(".site-name")).to_have_text("CorAgrarian")
+        assert page.locator(".site-header-inner").evaluate(
+            "node => [...node.children].map(child => [child.tagName, child.className])"
+        ) == [["A", "site-name"], ["NAV", "site-links"]]
+        expect(page.locator(".site-header a")).to_have_count(3)
+        expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
         about = page.locator(".about-link")
         expect(about).to_be_visible()
         assert about.bounding_box()["height"] >= 44
@@ -1018,57 +1050,53 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         footer = page.get_by_role("contentinfo")
         expect(footer).to_have_count(1)
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
-        expect(footer.locator(".footer-links a")).to_have_count(1)
-        institution_group = footer.locator(".footer-institutions").bounding_box()
+        expect(footer.locator(".footer-group")).to_have_count(2)
+        expect(footer.locator(".footer-links a")).to_have_count(2)
+        expect(footer.locator(".footer-heading")).to_have_text("Use and reuse")
+        expect(footer.locator(".footer-bottom .footer-source")).to_have_text("github.com/coragrarian/academicwriting")
+        expect(footer.get_by_role("link", name="About the course", exact=True)).to_have_count(0)
+        expect(footer.get_by_role("link", name="Corpus and research", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
-        expect(provenance).to_have_text("Developed at UFMG · Supported by FAPEMIG and CAPES · APQ-01173-22")
-        provenance_box = provenance.bounding_box()
-        repository = footer.get_by_role("link", name="GitHub repository: coragrarian/academicwriting", exact=True)
-        expect(repository).to_have_text("coragrarian/academicwriting")
-        expect(footer.get_by_role("link", name="Source code", exact=True)).to_have_count(0)
+        expect(provenance).to_have_text(
+            "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
+            "Supported by FAPEMIG and CAPES. Grant APQ-01173-22."
+        )
+        repository = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)
         expect(repository.locator("svg")).to_have_attribute("aria-hidden", "true")
-        source_link = repository.bounding_box()
-        assert provenance_box["y"] >= institution_group["y"] + institution_group["height"]
-        assert source_link["y"] >= provenance_box["y"] + provenance_box["height"]
         layout = page.locator(".layout").bounding_box()
         assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
         for name, href in (
             ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
-            ("GitHub repository: coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
+            ("Course materials CC BY-NC-SA 4.0", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt"),
+            ("Software MIT", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/MIT.txt"),
+            ("github.com/coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
         ):
             link = footer.get_by_role("link", name=name, exact=True)
             expect(link).to_have_attribute("href", href)
             assert link.get_attribute("target") is None
             assert link.bounding_box()["height"] >= 44
-        if width >= 768:
-            marks = [mark.bounding_box() for mark in page.locator(".footer-institutions a").all()]
-            assert all(
-                following["x"] >= current["x"] + current["width"]
-                for current, following in pairwise(marks)
-            )
-            centres = [mark["y"] + mark["height"] / 2 for mark in marks]
-            assert centres == pytest.approx([centres[0]] * 3, abs=0.02)
         if path == "/index.html":
-            expect(page.locator(".project-actions, .project-start, .page-head a")).to_have_count(0)
+            expect(page.locator(".project-actions, .project-start")).to_have_count(0)
+            primary = page.get_by_role("link", name="Begin with Introduction", exact=True)
+            expect(primary).to_have_attribute("href", "introduction/index.html")
+            assert primary.bounding_box()["height"] >= 44
+            expect(page.locator(".page-head a")).to_have_count(1)
             expect(page.get_by_role("link", name="Start the course", exact=True)).to_have_count(0)
             expect(page.get_by_role("link", name="About the project", exact=True)).to_have_count(0)
             expect(page.locator("#course .contents-link")).to_have_count(3)
             assert page.locator(".contents-title").all_text_contents() == [
                 "Introduction", "Methods", "Results",
             ]
-            expect(page.locator("#course button, #course .action-link, .page-head .eyebrow")).to_have_count(0)
+            expect(page.locator("#course button, #course .action-link")).to_have_count(0)
+            expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
+            expect(page.locator(".home-facts dt")).to_have_count(5)
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
-            expect(page.locator(".page-head .lead")).to_have_text(
-                "CorAgrarian Academic Writing is an interactive self-study resource for "
-                "students and researchers in the Agrarian Sciences. Organised around the "
-                "major sections of research articles, it offers guided practice with "
-                "disciplinary rhetorical conventions, grammar, vocabulary and phraseology. "
-                "The materials are informed by the CorAgrarian corpus and research into "
-                "academic English in the field."
+            expect(page.locator(".page-head .lead")).to_contain_text(
+                "Academic Writing for Agrarian Sciences is an interactive self-study resource"
             )
-            expect(page.get_by_role("link", name="About CorAgrarian and the research", exact=True)).to_have_attribute(
+            expect(page.get_by_role("link", name="About the corpus and research", exact=True)).to_have_attribute(
                 "href", "about/index.html"
             )
             assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03"]
@@ -1089,7 +1117,9 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                 assert link.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
         if path in {"/index.html", "/about/index.html"}:
             expect(page.locator(".public-layout")).to_have_count(1)
-            expect(page.locator("script, #site-data, main .institution-logo")).to_have_count(0)
+            expect(page.locator("main .institution-logo")).to_have_count(0)
+            if path == "/about/index.html":
+                expect(page.locator("script, #site-data")).to_have_count(0)
             expect(page.locator(".course-panel, [data-site-navigation], [data-progress-module], [data-progress-other-module]")).to_have_count(0)
             public_edge = page.locator("main").evaluate("node => node.getBoundingClientRect().x + parseFloat(getComputedStyle(node).paddingLeft)")
             assert page.locator(".site-name").bounding_box()["x"] == pytest.approx(public_edge, abs=0.02)
@@ -1104,7 +1134,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
                     assert facts["y"] >= narrative["y"] + narrative["height"]
         else:
             expect(page.locator(".course-panel, [data-site-navigation]")).to_have_count(1)
-            expect(page.locator(".module-link")).to_be_visible()
+            expect(course).to_have_attribute("aria-current", "true")
             expect(page.locator("#site-data, script[src$='exercises.js'], script[src$='navigation.js']")).to_have_count(3)
 
 

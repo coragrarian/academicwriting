@@ -26,9 +26,18 @@ class Person:
 
 
 COORDINATORS = (
-    Person(name="Deise Prina Dutra", role="Coordinator"),
-    Person(name="Gustavo Leal Teixeira", role="Coordinator"),
-    Person(name="Danilo Duarte Costa", role="Coordinator"),
+    Person(
+        name="Deise Prina Dutra", role="Coordinator",
+        portrait="people/deise-prina-dutra.jpg",
+    ),
+    Person(
+        name="Gustavo Leal Teixeira", role="Coordinator",
+        portrait="people/gustavo-leal-teixeira.webp",
+    ),
+    Person(
+        name="Danilo Duarte Costa", role="Coordinator",
+        portrait="people/danilo-duarte-costa.jpg",
+    ),
 )
 
 RESEARCH_TEAM = tuple(Person(placeholder=True) for _ in range(6))
@@ -36,4 +45,5 @@ RESEARCH_TEAM = tuple(Person(placeholder=True) for _ in range(6))
 DATA_PLATFORM = Person(
     name="Jhonatan H. Lopes",
     role="Data processing and web development",
+    portrait="people/jhonatan-h-lopes.jpg",
 )

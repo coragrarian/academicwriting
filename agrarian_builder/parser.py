@@ -876,7 +876,8 @@ def _exercise(
 def _front_matter(source: str, context: str) -> tuple[dict, str]:
     """Remove and validate an optional leading YAML module declaration.
 
-    Present front matter requires ``id`` and ``title``; ``order`` is optional.
+    Present front matter requires ``id`` and ``title``; ``order`` and ``summary``
+    are optional. A present summary must be a nonempty string after trimming.
     It is removed before heading analysis so YAML is never mistaken for teaching
     content. Without front matter, the caller derives identity and title from
     its fallback name and the level-one heading.
@@ -888,7 +889,7 @@ def _front_matter(source: str, context: str) -> tuple[dict, str]:
     if end is None:
         raise SourceError(f"{context}: unterminated front matter")
     data = _yaml_mapping("".join(lines[1:end]), f"{context}, front matter")
-    unknown = set(data) - {"id", "title", "order"}
+    unknown = set(data) - {"id", "title", "order", "summary"}
     if unknown:
         raise SourceError(f"{context}: unsupported front matter fields {list(unknown)!r}")
     for key in ("id", "title"):
@@ -898,6 +899,10 @@ def _front_matter(source: str, context: str) -> tuple[dict, str]:
         raise SourceError(f"{context}: module id must be a lowercase URL-safe slug")
     if type(data.get("order", 0)) is not int:
         raise SourceError(f"{context}: front matter order must be an integer")
+    if "summary" in data:
+        if not isinstance(data["summary"], str) or not data["summary"].strip():
+            raise SourceError(f"{context}: front matter summary must be a nonempty string")
+        data["summary"] = data["summary"].strip()
     return data, "".join(lines[end + 1 :])
 
 
@@ -954,6 +959,7 @@ def parse_document(
         markdown.render("".join(lines[headings[0].end : first_section])),
         order=data.get("order", 0),
         source_path=source_path,
+        summary=data.get("summary"),
     )
     current_section = None
     exercise_started = False

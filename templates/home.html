@@ -1,9 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="project-page project-page--home">
-<div class="page-head">
-  <h1>Academic Writing for Agrarian Sciences</h1>
-  <p class="lead">CorAgrarian Academic Writing is an interactive self-study resource for students and researchers in the Agrarian Sciences. Organised around the major sections of research articles, it offers guided practice with disciplinary rhetorical conventions, grammar, vocabulary and phraseology. The materials are informed by the CorAgrarian corpus and research into academic English in the field.</p>
+<div class="page-head home-hero">
+  <div class="home-hero-copy">
+    <p class="eyebrow">Self-study course</p>
+    <h1>Academic Writing for Agrarian Sciences</h1>
+    <p class="lead">Academic Writing for Agrarian Sciences is an interactive self-study resource for students and researchers in the Agrarian Sciences. Working section by section through research articles, it helps learners recognise disciplinary rhetorical conventions and practise the grammar, vocabulary and phraseology used to realise them. The materials are informed by the CorAgrarian corpus, published Agrarian Sciences research and academic-writing scholarship.</p>
+    <a class="action-link action-link--primary" data-home-entry href="{{ module_link(documents[0]) }}"><span data-home-entry-label>Begin with {{ home_module_title(documents[0].title) }}</span> {% include "_chevron_right.html" %}</a>
+  </div>
+  <aside class="home-facts" aria-labelledby="course-facts-heading">
+    <h2 id="course-facts-heading" class="eyebrow">At a glance</h2>
+    <dl>
+      <div><dt>Modules</dt><dd>{{ documents | length }}</dd></div>
+      <div><dt>Exercises</dt><dd>{{ total_exercises }} interactive</dd></div>
+      <div><dt>Format</dt><dd>Self-paced</dd></div>
+      <div><dt>Access</dt><dd>Free</dd></div>
+      <div><dt>For</dt><dd>Students and researchers in the Agrarian Sciences</dd></div>
+    </dl>
+  </aside>
 </div>
 <section id="course" class="resource-section" aria-labelledby="modules-heading">
   <h2 id="modules-heading" class="section-heading">Course contents</h2>
@@ -12,11 +26,16 @@
     {% set subsection_count = module.sections | length %}
     {% set exercise_count = module_exercise_counts[module.slug] %}
     <li>
-      <a class="contents-link" href="{{ module_link(module) }}">
+      <a class="contents-link" data-home-module="{{ module.slug }}" href="{{ module_link(module) }}">
         <span class="contents-number" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
         <span class="contents-copy">
           <strong class="contents-title">{{ home_module_title(module.title) }}</strong>
+          {% if module.summary %}<span class="contents-summary">{{ module.summary }}</span>{% endif %}
           <span class="contents-counts">{{ subsection_count }} subsection{% if subsection_count != 1 %}s{% endif %} · {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}</span>
+        </span>
+        <span class="contents-progress" hidden>
+          <span class="contents-progress-status"></span>
+          <span class="contents-progress-track" aria-hidden="true"><span class="contents-progress-fill"></span></span>
         </span>
         {% include "_chevron_right.html" %}
       </a>
@@ -25,11 +44,11 @@
   </ol>
 </section>
 <section class="resource-section" aria-labelledby="project-heading">
-  <h2 id="project-heading" class="section-heading">Built on CorAgrarian</h2>
+  <h2 id="project-heading" class="section-heading">The CorAgrarian corpus</h2>
   <div class="prose">
-    <p>The course grows out of research on academic English in the Agrarian Sciences. CorAgrarian brings together disciplinary research writing for linguistic and rhetorical analysis; findings from that work inform the explanations, examples and activities used throughout this resource.</p>
+    <p>CorAgrarian is a specialised corpus of academic writing in the Agrarian Sciences and one of the empirical resources informing this course. Corpus evidence is used alongside published research examples and academic-writing scholarship throughout the materials.</p>
   </div>
-  <a class="project-detail-link directional-link" href="{{ about_url }}">About CorAgrarian and the research {% include "_chevron_right.html" %}</a>
+  <a class="project-detail-link directional-link" href="{{ about_url }}">About the corpus and research {% include "_chevron_right.html" %}</a>
 </section>
 </div>
 {% endblock %}

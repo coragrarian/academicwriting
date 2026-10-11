@@ -6,62 +6,8 @@
   "use strict";
 
   const siteData = JSON.parse(document.getElementById("site-data").textContent);
-  // Each module stores progress, raw responses and a checked flag by exercise
-  // ID; responses are keyed again by question ID. Display order is irrelevant
-  // to restoration, so semantic IDs must stay stable when rows are reordered.
-  const storageKey = (module) => `agrarian-writing-v2:${module}`;
-
-  function migrateIntroduction(saved) {
-    let changed = false;
-    // A subsection rename changed exercise IDs. Move all three records
-    // together, preserving a current record if both old and new IDs exist.
-    for (let number = 1; number <= 3; number++) {
-      const previous = `introduction--further-practice--exercise-${number}`;
-      const current = `introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-${number}`;
-      for (const record of [saved.progress, saved.responses, saved.checked]) {
-        if (!Object.hasOwn(record, previous)) continue;
-        if (!Object.hasOwn(record, current)) record[current] = record[previous];
-        delete record[previous];
-        changed = true;
-      }
-    }
-    // Only previously checked canonical constructions are carried forward.
-    // Arbitrary learner text remains untouched; there is no answer inference.
-    const gapExercise = "introduction--indicating-a-research-gap--exercise-1";
-    const responses = saved.responses[gapExercise];
-    if (saved.checked[gapExercise] && responses && typeof responses === "object") {
-      for (const [id, previous, current] of [
-        ["context-q1", "has primarily concentrated", "has concentrated"],
-        ["context-q3", "have only examined", "have examined"],
-      ]) {
-        if (typeof responses[id] === "string" && normaliseAnswer(responses[id]) === previous) {
-          responses[id] = current;
-          changed = true;
-        }
-      }
-    }
-    return changed;
-  }
-
-  function loadState(module) {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey(module)) || "{}");
-      const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
-      const saved = { progress: object(parsed.progress), responses: object(parsed.responses), checked: object(parsed.checked) };
-      if (module === "introduction" && migrateIntroduction(saved)) {
-        try {
-          localStorage.setItem(storageKey(module), JSON.stringify(saved));
-        } catch {
-          // The migrated state remains usable if storage is read-only.
-        }
-      }
-      return saved;
-    } catch {
-      return { progress: {}, responses: {}, checked: {} };
-    }
-  }
-
-  const states = Object.fromEntries(Object.keys(siteData.modules).map((module) => [module, loadState(module)]));
+  const { storageKey, readState, countCompleted } = window.AgrarianProgress;
+  const states = Object.fromEntries(Object.keys(siteData.modules).map((module) => [module, readState(module, { persistRepair: true })]));
   const state = states[siteData.module];
 
   function saveState() {
@@ -76,7 +22,7 @@
     // Count the renderer's current exercise IDs, rather than every saved key:
     // an obsolete record must not inflate module or subsection completion.
     for (const [module, ids] of Object.entries(siteData.modules)) {
-      const completed = ids.filter((id) => states[module].progress[id] === "completed").length;
+      const completed = countCompleted(states[module], ids);
       document.querySelectorAll(`[data-progress-other-module="${module}"]`).forEach((node) => {
         node.textContent = `${completed}/${ids.length}`;
       });
@@ -88,7 +34,7 @@
         }
       });
       for (const [slug, sectionIds] of Object.entries(siteData.course_sections[module])) {
-        const sectionCompleted = sectionIds.filter((id) => states[module].progress[id] === "completed").length;
+        const sectionCompleted = countCompleted(states[module], sectionIds);
         document.querySelectorAll(`[data-progress-section="${slug}"][data-progress-module-id="${module}"]`).forEach((node) => {
           node.textContent = `${sectionCompleted}/${sectionIds.length}`;
           const description = node.nextElementSibling;

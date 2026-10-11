@@ -2,6 +2,9 @@
 id: methods
 title: The Methods section
 order: 2
+summary: >-
+  Study design and reporting: participants or materials, procedures,
+  measurements, data collection and analysis.
 ---
 
 # The Methods section

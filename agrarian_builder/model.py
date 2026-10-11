@@ -205,7 +205,8 @@ class Document:
     ``slug`` is the module's URL and persistence identity. Front matter can
     supply it independently of the title. ``order`` controls module sequencing,
     with the slug breaking ties. ``source_path`` is diagnostic context for
-    authored-source errors, not a generated page path.
+    authored-source errors, not a generated page path. Optional ``summary``
+    is plain text describing the module's coverage.
     """
 
     title: str
@@ -214,3 +215,4 @@ class Document:
     sections: list[Section] = field(default_factory=list)
     order: int = 0
     source_path: str = "document"
+    summary: str | None = None

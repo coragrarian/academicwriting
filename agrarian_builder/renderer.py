@@ -33,7 +33,8 @@ from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 STATIC = ROOT / "static"
-SITE_TITLE = "Academic Writing for Agrarian Sciences"
+SITE_TITLE = "CorAgrarian"
+RESOURCE_TITLE = "Academic Writing for Agrarian Sciences"
 SITE_URL = "https://coragrarian.github.io/academicwriting/"
 
 
@@ -92,11 +93,13 @@ def _page_metadata(
         )
     else:
         description = (
-            "Interactive self-study activities for academic writing in research "
-            "articles in the Agrarian Sciences."
+            "An interactive self-study resource for students and researchers in the "
+            "Agrarian Sciences, informed by the CorAgrarian corpus, published "
+            "research and academic-writing scholarship."
         )
     return PageMetadata(
-        title=f"{page_title} · {SITE_TITLE}" if page_title else SITE_TITLE,
+        title=(f"{page_title} · {RESOURCE_TITLE}" if page_title else RESOURCE_TITLE)
+        + f" | {SITE_TITLE}",
         description=description,
         # A fallback can be served at any missing URL; none is canonical content.
         canonical_url=None if not_found else SITE_URL + path.as_posix().removesuffix("index.html"),
@@ -404,9 +407,10 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
     Normal content pages use relative asset/page links, including single-module builds.
-    Home, About and the 404 fallback use the public shell without course runtime
-    data. Only normal content URLs enter the sitemap. Home terminates the course
-    rather than becoming another learning node.
+    Home uses the public shell with only the progress exercise catalogue;
+    About and the 404 fallback have no runtime data. Only normal content URLs
+    enter the sitemap. Home terminates the course rather than becoming another
+    learning node.
 
     Rendering occurs in a marked sibling directory, leaving an existing site
     intact if rendering fails. Only after every page is written is recognised
@@ -512,13 +516,15 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                 },
             }
             if document
-            else None,
+            else {"modules": module_ids} if path == Path("index.html") else None,
             total_exercises=len(module_ids[document.slug])
             if document
             else sum(map(len, module_ids.values())),
             asset_css=link(Path("assets/styles.css")),
             asset_js=link(Path("assets/exercises.js")),
             asset_navigation=link(Path("assets/navigation.js")),
+            asset_progress=link(Path("assets/progress.js")),
+            asset_home=link(Path("assets/home.js")),
             asset_favicon=link(Path("assets/favicon.svg")),
             asset_touch_icon=link(Path("assets/apple-touch-icon.png")),
             institution_asset=lambda filename: link(Path("assets/institutions") / filename),

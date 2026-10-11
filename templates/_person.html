@@ -1,9 +1,11 @@
 {% macro entry(person, heading_level=3) -%}
 <li class="person{% if person.placeholder %} person--pending{% endif %}">
-  <div class="person-portrait"{% if not person.portrait %} aria-hidden="true"{% endif %}>
-    {% if person.portrait %}<img src="{{ person_asset(person.portrait) }}" alt="" width="144" height="144" loading="lazy">
-    {% elif not person.placeholder %}<span>{{ person.initials }}</span>{% endif %}
+  {% if person.portrait %}
+  {# The adjacent name identifies the person; the photograph adds no spoken label. #}
+  <div class="person-portrait" aria-hidden="true">
+    <img src="{{ person_asset(person.portrait) }}" alt="" width="144" height="180" loading="lazy">
   </div>
+  {% endif %}
   <div class="person-information">
     <h{{ heading_level }} class="person-name">{{ person.name if not person.placeholder else 'Research team member' }}</h{{ heading_level }}>
     {% if person.placeholder %}<p class="person-role">Details to be added</p>

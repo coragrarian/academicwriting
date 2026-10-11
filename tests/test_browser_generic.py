@@ -58,6 +58,48 @@ def contrast_ratio(first, second):
     return (light + 0.05) / (dark + 0.05)
 
 
+def test_home_orientation_and_primary_entry_follow_course_model(page, synthetic_site, synthetic_documents):
+    page.goto(f"{synthetic_site[0]}/index.html")
+    expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
+    assert page.locator(".home-facts dt").all_text_contents() == [
+        "Modules", "Exercises", "Format", "Access", "For",
+    ]
+    exercises = sum(len(section.exercises) for doc in synthetic_documents for section in doc.sections)
+    assert page.locator(".home-facts dd").all_text_contents() == [
+        str(len(synthetic_documents)), f"{exercises} interactive", "Self-paced", "Free",
+        "Students and researchers in the Agrarian Sciences",
+    ]
+    primary = page.locator(".home-hero .action-link--primary")
+    expect(primary).to_have_count(1)
+    expect(primary).to_have_attribute("href", f"{synthetic_documents[0].slug}/index.html")
+    ink, surface = primary.evaluate("n => [getComputedStyle(n).color, getComputedStyle(n).backgroundColor]")
+    assert contrast_ratio(ink, surface) >= 4.5
+    primary.focus()
+    assert primary.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    page.keyboard.press("Enter")
+    expect(page.locator("h1")).to_have_text(synthetic_documents[0].title)
+    expect(page.get_by_role("link", name="Begin module")).to_have_class("directional-link")
+
+
+def test_home_continuation_follows_course_order_and_public_labels(page, synthetic_site, synthetic_documents):
+    page.goto(synthetic_site[0] + "/index.html")
+    modules = json.loads(page.locator("#site-data").text_content())["modules"]
+    # JSON object keys need not follow course order; the ordered rows do.
+    for completed_modules, next_module in ((["alpha"], "beta"), (["alpha", "beta"], "gamma")):
+        page.evaluate("""({modules, completed}) => {
+          for (const module of completed) {
+            localStorage.setItem(`agrarian-writing-v2:${module}`, JSON.stringify({
+              progress: Object.fromEntries(modules[module].map(id => [id, 'completed']))
+            }));
+          }
+        }""", {"modules": modules, "completed": completed_modules})
+        page.reload()
+        row = page.locator(f'[data-home-module="{next_module}"]')
+        expect(page.locator("[data-home-entry]")).to_have_text("Continue with " + row.locator(".contents-title").text_content())
+        expect(page.locator("[data-home-entry]")).to_have_attribute("href", f"{next_module}/index.html")
+    assert page.locator(".contents-link").count() == len(synthetic_documents)
+
+
 def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_site):
     page.goto(f"{synthetic_site[0]}/index.html")
     header = page.locator(".site-header")
@@ -68,19 +110,29 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
     assert header_surface != paper
     # The footer supplies neutral dark closure, with its own light focus colour.
     assert len(set(re.findall(r"\d+", footer_surface))) == 1
-    assert contrast_ratio(header_surface, footer_surface) >= 7
+    assert header_surface != footer_surface and footer_surface != paper
     for selector, surface in (
         (".site-name, .site-name span, .site-links a", header_surface),
-        (".footer-provenance, .footer-links a", footer_surface),
+        (".footer-heading, .footer-provenance, .footer-licence-label, .footer-links a, .footer-source", footer_surface),
     ):
         for text in page.locator(selector).all():
             colour = text.evaluate("n => getComputedStyle(n).color")
             assert contrast_ratio(colour, surface) >= 4.5
-    for selector, surface in ((".about-link", header_surface), (".footer-links a", footer_surface)):
-        link = page.locator(selector)
-        link.focus()
-        colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
-        assert outline == "solid" and contrast_ratio(colour, surface) >= 3
+    for selector, surface in ((".site-header a", header_surface), (".footer-links a, .footer-source", footer_surface)):
+        for link in page.locator(selector).all():
+            if selector == ".footer-links a, .footer-source":
+                assert "underline" not in link.evaluate("n => getComputedStyle(n).textDecorationLine")
+            link.focus()
+            colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
+            assert outline == "solid" and contrast_ratio(colour, surface) >= 3
+            if selector == ".footer-links a, .footer-source":
+                ink, background, decoration = link.evaluate("""n => {
+                  const style = getComputedStyle(n);
+                  let parent = n;
+                  while (getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement;
+                  return [style.color, getComputedStyle(parent).backgroundColor, style.textDecorationLine];
+                }""")
+                assert contrast_ratio(ink, background) >= 4.5 and "underline" not in decoration
     for image in footer.locator(".institution-logo").all():
         filter_, opacity = image.evaluate("n => [getComputedStyle(n).filter, +getComputedStyle(n).opacity]")
         assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
@@ -155,8 +207,9 @@ def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page,
     hover_surfaces.append(colours(option)[1])
     option.locator("input").check()
     assert colours(option)[1] == current_surface
+    # The fallback retains the tertiary action; Home uses a directional link.
     serve_not_found_candidate(page, synthetic_site)
-    page.goto(f"{synthetic_site[0]}/404.html")
+    page.goto(f"{synthetic_site[0]}/missing/action")
     tertiary = page.locator(".action-link--tertiary")
     assert neutral(colours(tertiary)[0])
     tertiary.hover()
@@ -319,10 +372,8 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
     expect(page.locator("main")).to_be_focused()
     page.keyboard.press("Tab")
     assert page.locator(":focus").evaluate("n => !!n.closest('main')")
-    expect(page.locator(".course-link, .module-link")).to_have_count(2)
-    assert page.locator(".course-link, .module-link").evaluate_all(
-        "nodes => nodes.every(n => n.getAttribute('aria-current') === 'true')"
-    )
+    expect(page.locator(".course-link")).to_have_count(1)
+    expect(page.locator(".course-link")).to_have_attribute("aria-current", "true")
     toggle = page.locator(".course-toggle")
     assert not toggle.evaluate("n => n.parentElement.open")
     toggle.focus()
@@ -375,7 +426,11 @@ def test_short_public_shell_and_about_follow_natural_document_order(page, synthe
         page.goto(synthetic_site[0] + "/404.html")
         page.evaluate("document.fonts.ready")
         footer = page.locator(".site-footer").bounding_box()
-        assert footer["y"] + footer["height"] == pytest.approx(1200, abs=1)
+        layout = page.locator(".layout").bounding_box()
+        assert footer["y"] >= layout["y"] + layout["height"]
+        document_height = page.evaluate("document.documentElement.scrollHeight")
+        assert document_height >= 1200
+        assert footer["y"] + footer["height"] == pytest.approx(document_height, abs=1)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.goto(synthetic_site[0] + "/about/index.html")
         page.evaluate("document.fonts.ready")
@@ -490,7 +545,8 @@ def test_entire_synthetic_sequence_from_home_and_back_with_generic_shell(page, s
         else:
             assert page.evaluate("window.navigationProbe") is None
     assert visited == [path.as_posix() for path in sequence]
-    expect(page.locator(".course-panel, .page-navigation, #site-data")).to_have_count(0)
+    expect(page.locator(".course-panel, .page-navigation")).to_have_count(0)
+    assert set(json.loads(page.locator("#site-data").text_content())) == {"modules"}
     page.goto(f"{base}/{sequence[-1].as_posix()}")
     backwards = []
     while page.url != home:

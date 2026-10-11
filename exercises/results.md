@@ -2,6 +2,9 @@
 id: results
 title: The Results section
 order: 3
+summary: >-
+  Reporting findings: patterns, comparisons, organisation, tables and
+  figures, grammar and vocabulary.
 ---
 
 # The Results section

@@ -50,7 +50,32 @@ order: 3
     )
     assert (document.slug, document.title, document.order) == ("stable-id", "Configured title", 3)
     assert not document.introduction_html
+    assert document.summary is None
     assert document.sections[0].exercises[0].id.startswith("stable-id--")
+
+
+@pytest.mark.parametrize("declaration", [
+    "summary: A clear overview.",
+    'summary: "  A clear overview.  "',
+    "summary: >-\n  A clear\n  overview.",
+])
+def test_front_matter_summary_is_trimmed_plain_text(declaration):
+    document = parse_document(
+        f"---\nid: module\ntitle: Module\n{declaration}\n---\n# Module\n\n## Section\n"
+    )
+    assert document.summary == "A clear overview."
+
+
+@pytest.mark.parametrize("value", [
+    '""', '"   "', r'"\t \n"', "null", "true", "1", "1.5", "[Overview]", "{topic: Overview}",
+])
+def test_front_matter_summary_rejects_empty_text_and_invalid_types(value):
+    with pytest.raises(SourceError, match="summary must be a nonempty string") as error:
+        parse_document(
+            f"---\nid: module\ntitle: Module\nsummary: {value}\n---\n# Module\n\n## Section\n",
+            source_path="summary.md",
+        )
+    assert "summary.md" in str(error.value)
 
 
 def test_front_matter_allows_a_following_thematic_break():
@@ -604,7 +629,7 @@ def test_invalid_matching(entries, mappings, message):
             "duplicate YAML key",
         ),
         (
-            "---\nid: module\ntitle: Title\nextra: value\n---\n# Module\n",
+            "---\nid: module\ntitle: Title\nsummary: Overview\nextra: value\n---\n# Module\n",
             "unsupported front matter fields",
         ),
         ("---\nid: [broken\ntitle: Title\n---\n# Module\n", "malformed YAML"),

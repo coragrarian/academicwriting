@@ -2,6 +2,9 @@
 id: introduction
 title: The Introduction section
 order: 1
+summary: >-
+  Context and background, previous research, research gaps, objectives,
+  grammar and vocabulary.
 ---
 
 # The Introduction section

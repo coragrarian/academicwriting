@@ -40,6 +40,8 @@ uv run --frozen playwright install --with-deps chromium
 uv run --frozen pytest -m browser -q
 node --check static/exercises.js
 node --check static/navigation.js
+node --check static/progress.js
+node --check static/home.js
 git diff --check
 ```
 
