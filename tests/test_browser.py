@@ -967,9 +967,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     page.goto(site[0] + "/methods/index.html")
     page.evaluate("window.footerProbe = document.querySelector('.site-footer')")
     footer = page.get_by_role("contentinfo")
-    source = footer.get_by_role("link", name="Source code on GitHub", exact=True)
-    course_about = footer.get_by_role("link", name="About the course", exact=True)
-    corpus_about = footer.get_by_role("link", name="Corpus and research", exact=True)
+    source = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)
+    content_licence = footer.get_by_role("link", name="Course materials CC BY-NC-SA 4.0", exact=True)
+    software_licence = footer.get_by_role("link", name="Software MIT", exact=True)
     expected_source = "https://github.com/coragrarian/academicwriting"
     expect(source).to_have_attribute("href", expected_source)
     expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
@@ -978,8 +978,8 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
         expect(page.locator("h1")).to_have_text(heading)
         assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
         expect(source).to_have_attribute("href", expected_source)
-        assert course_about.evaluate("node => node.href") == f"{site[0]}/about/index.html"
-        assert corpus_about.evaluate("node => node.href") == f"{site[0]}/about/index.html#corpus-heading"
+        expect(content_licence).to_have_attribute("href", expected_source + "/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt")
+        expect(software_licence).to_have_attribute("href", expected_source + "/blob/main/LICENSES/MIT.txt")
         expect(page.locator(".course-link")).to_have_attribute("href", f"{site[0]}/index.html#course")
     # The footer has remained below the viewport while URL depth changed.
     # Its lazy images must still load from the original site's asset directory.
@@ -994,9 +994,9 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     expect(page.locator("h1")).to_have_text("Exercise 1")
     assert page.evaluate("window.footerProbe === document.querySelector('.site-footer')")
     expect(source).to_have_attribute("href", expected_source)
-    corpus_about.focus()
+    page.locator(".about-link").focus()
     page.keyboard.press("Enter")
-    expect(page).to_have_url(f"{site[0]}/about/index.html#corpus-heading")
+    expect(page).to_have_url(f"{site[0]}/about/index.html")
     expect(page.locator("h1")).to_have_text("About Academic Writing for Agrarian Sciences")
     assert page.evaluate("window.footerProbe") is None
 
@@ -1051,16 +1051,16 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
         expect(footer.locator(".footer-group")).to_have_count(2)
         expect(footer.locator(".footer-links a")).to_have_count(2)
-        expect(footer.locator(".footer-bottom .footer-source")).to_have_text("Source code on GitHub")
-        expect(footer.locator(".footer-licence")).to_have_text("Course materials — CC BY-NC-SA 4.0")
-        expect(footer.locator(".footer-group .footer-licence")).to_have_count(0)
-        expect(footer.get_by_role("link", name="Course materials — CC BY-NC-SA 4.0", exact=True)).to_have_count(0)
+        expect(footer.locator(".footer-heading")).to_have_text("Use and reuse")
+        expect(footer.locator(".footer-bottom .footer-source")).to_have_text("github.com/coragrarian/academicwriting")
+        expect(footer.get_by_role("link", name="About the course", exact=True)).to_have_count(0)
+        expect(footer.get_by_role("link", name="Corpus and research", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
         expect(provenance).to_have_text(
             "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
-            "Supported by FAPEMIG and CAPES. FAPEMIG APQ-01173-22."
+            "Supported by FAPEMIG and CAPES. Grant APQ-01173-22."
         )
-        repository = footer.get_by_role("link", name="Source code on GitHub", exact=True)
+        repository = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)
         expect(repository.locator("svg")).to_have_attribute("aria-hidden", "true")
         layout = page.locator(".layout").bounding_box()
         assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
@@ -1068,7 +1068,9 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
-            ("Source code on GitHub", "https://github.com/coragrarian/academicwriting"),
+            ("Course materials CC BY-NC-SA 4.0", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt"),
+            ("Software MIT", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/MIT.txt"),
+            ("github.com/coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
         ):
             link = footer.get_by_role("link", name=name, exact=True)
             expect(link).to_have_attribute("href", href)

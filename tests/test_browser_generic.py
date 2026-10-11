@@ -113,7 +113,7 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
     assert header_surface != footer_surface and footer_surface != paper
     for selector, surface in (
         (".site-name, .site-name span, .site-links a", header_surface),
-        (".footer-heading, .footer-provenance, .footer-licence, .footer-links a, .footer-source", footer_surface),
+        (".footer-heading, .footer-provenance, .footer-licence-label, .footer-links a, .footer-source", footer_surface),
     ):
         for text in page.locator(selector).all():
             colour = text.evaluate("n => getComputedStyle(n).color")
@@ -122,16 +122,16 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
         for link in page.locator(selector).all():
             if selector == ".footer-links a, .footer-source":
                 assert "underline" not in link.evaluate("n => getComputedStyle(n).textDecorationLine")
-                assert int(link.evaluate("n => getComputedStyle(n).fontWeight")) > int(
-                    footer.locator(".footer-licence").evaluate("n => getComputedStyle(n).fontWeight")
-                )
             link.focus()
             colour, outline = link.evaluate("n => [getComputedStyle(n).outlineColor, getComputedStyle(n).outlineStyle]")
             assert outline == "solid" and contrast_ratio(colour, surface) >= 3
             if selector == ".footer-links a, .footer-source":
-                ink, background, decoration = link.evaluate(
-                    "n => [getComputedStyle(n).color, getComputedStyle(n).backgroundColor, getComputedStyle(n).textDecorationLine]"
-                )
+                ink, background, decoration = link.evaluate("""n => {
+                  const style = getComputedStyle(n);
+                  let parent = n;
+                  while (getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement;
+                  return [style.color, getComputedStyle(parent).backgroundColor, style.textDecorationLine];
+                }""")
                 assert contrast_ratio(ink, background) >= 4.5 and "underline" not in decoration
     for image in footer.locator(".institution-logo").all():
         filter_, opacity = image.evaluate("n => [getComputedStyle(n).filter, +getComputedStyle(n).opacity]")

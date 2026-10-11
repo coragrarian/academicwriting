@@ -1,6 +1,7 @@
 """Verify the complete site, portable links, semantic markup and output safety."""
 
 import json
+import re
 import shutil
 import struct
 import subprocess
@@ -693,41 +694,28 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             assert image["alt"] == name
         utility_links = [attrs["href"] for tag, attrs in page.regions["footer"] if tag == "a"]
         repository_url = "https://github.com/coragrarian/academicwriting"
-        project_links = {
-            "About the course": None,
-            "Corpus and research": "corpus-heading",
-        }
         external_links = {
-            "Source code on GitHub": repository_url,
+            "github.com/coragrarian/academicwriting": repository_url,
+            "CC BY-NC-SA 4.0": f"{repository_url}/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt",
+            "MIT": f"{repository_url}/blob/main/LICENSES/MIT.txt",
         }
         assert len(utility_links) == len(set(utility_links)) == 6
         assert {href for href, _ in destinations.values()} | set(external_links.values()) <= set(utility_links)
         footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
-        assert '<p class="footer-licence">Course materials — CC BY-NC-SA 4.0</p>' in footer
-        assert footer.index('class="footer-licence"') > footer.index("Source code on GitHub")
-        assert not any("CC-BY-NC-SA-4.0.txt" in href for href in utility_links)
-        for label, fragment in project_links.items():
-            assert label in footer
-            assert any(
-                tag == "a"
-                and local_link_target(output, path, attrs["href"]) == output / "about/index.html"
-                and urlsplit(attrs["href"]).fragment == (fragment or "")
-                for tag, attrs in page.regions["footer"]
-            )
-            if fragment:
-                assert fragment in Page((output / "about/index.html").read_text()).ids
+        footer_text = " ".join(re.sub(r"<[^>]+>", "", footer).split())
         for label, href in external_links.items():
-            assert label in footer and href in utility_links
+            assert label in footer_text and href in utility_links
         for text in (
-            "Developed and supported by", "Project",
+            "Use and reuse", "Course materials", "Software",
             "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
-            "Supported by FAPEMIG and CAPES. FAPEMIG", "APQ-01173-22",
+            "Supported by FAPEMIG and CAPES. Grant APQ-01173-22.",
         ):
-            assert text in footer
+            assert text in footer_text
         for excluded in (
             "<strong>", "FUNDEP", "Contact", "mailto:", "#team", "Cite this resource",
             "doi.org", "Version", "[Year]", "[Surname", "[record]", "[date]", "FAPEMIG reference",
-            "Use and reuse", "Software — MIT", "Third-party rights and notices",
+            "Developed and supported by", "Project", "About the course", "Corpus and research",
+            "Source code on GitHub", "Third-party rights and notices",
         ):
             assert excluded not in footer
         icon = next(attrs for tag, attrs in page.regions["footer"] if tag == "svg")
