@@ -19,8 +19,23 @@ def documents():
 
 
 @pytest.fixture(scope="session")
+def introduction(documents):
+    return next(document for document in documents if document.slug == "introduction")
+
+
+@pytest.fixture(scope="session")
 def methods(documents):
     return next(document for document in documents if document.slug == "methods")
+
+
+@pytest.fixture(scope="session")
+def results(documents):
+    return next(document for document in documents if document.slug == "results")
+
+
+@pytest.fixture(scope="session")
+def discussion(documents):
+    return next(document for document in documents if document.slug == "discussion")
 
 
 @pytest.fixture(scope="session")

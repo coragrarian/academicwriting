@@ -23,11 +23,11 @@ behaviour, and keep existing checks meaningful rather than weakening them to
 accept a new result.
 
 The canonical teaching content is `exercises/introduction.md`,
-`exercises/methods.md` and `exercises/results.md`. When editing content, preserve
-response identities and answer mappings unless the change deliberately
-requires otherwise. Check the Introduction matching display order separately
-from its stored question identities. Verify quotations and scholarly
-attribution against their sources, and respect the content scope in
+`exercises/methods.md`, `exercises/results.md` and `exercises/discussion.md`.
+When editing content, preserve response identities and answer mappings unless
+the change deliberately requires otherwise. Check the Introduction matching
+display order separately from its stored question identities. Verify quotations
+and scholarly attribution against their sources, and respect the content scope in
 `NOTICE.md`.
 
 Build and verify the source before submitting it:

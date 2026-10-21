@@ -11,7 +11,15 @@ pytestmark = [pytest.mark.browser, pytest.mark.canonical]
 
 def seed_progress(page, counts):
     """Seed saved completion, retaining stale and draft records to test counting."""
-    modules = json.loads(page.locator("#site-data").text_content())["modules"]
+    catalogue = json.loads(page.locator("#site-data").text_content())["modules"]
+    # JSON object keys are serialised alphabetically; progress vectors follow
+    # the authored course order displayed by the Home rows.
+    modules = {
+        slug: catalogue[slug]
+        for slug in page.locator("[data-home-module]").evaluate_all(
+            "nodes => nodes.map(node => node.dataset.homeModule)"
+        )
+    }
     records = {}
     for (module, ids), count in zip(modules.items(), counts, strict=True):
         progress = dict.fromkeys(ids[:count], "completed")
@@ -27,12 +35,14 @@ def seed_progress(page, counts):
 
 
 @pytest.mark.parametrize(("counts", "label", "destination"), [
-    ([0, 0, 0], "Begin with Introduction", "introduction/index.html"),
-    ([2, 0, 0], "Continue with Introduction", "introduction/index.html"),
-    ([14, 2, 0], "Continue with Methods", "methods/index.html"),
-    ([14, 7, 0], "Continue with Results", "results/index.html"),
-    ([14, 7, 9], "Review the course", "#course"),
-    ([0, 1, 0], "Continue with Introduction", "introduction/index.html"),
+    ([0, 0, 0, 0], "Begin with Introduction", "introduction/index.html"),
+    ([2, 0, 0, 0], "Continue with Introduction", "introduction/index.html"),
+    ([14, 2, 0, 0], "Continue with Methods", "methods/index.html"),
+    ([14, 7, 0, 0], "Continue with Results", "results/index.html"),
+    ([14, 7, 9, 0], "Continue with Discussion", "discussion/index.html"),
+    ([14, 7, 9, 3], "Continue with Discussion", "discussion/index.html"),
+    ([14, 7, 9, 9], "Review the course", "#course"),
+    ([0, 1, 0, 0], "Continue with Introduction", "introduction/index.html"),
 ])
 def test_home_progress_states_entry_and_course_agreement(page, site, counts, label, destination):
     page.goto(site[0] + "/index.html")
@@ -60,10 +70,30 @@ def test_home_progress_states_entry_and_course_agreement(page, site, counts, lab
         expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(f"{count}/{len(ids)}")
 
 
+def test_pre_discussion_saved_state_continues_with_new_module(page, site):
+    page.goto(site[0] + "/index.html")
+    seed_progress(page, [14, 7, 9, 0])
+    page.evaluate("localStorage.removeItem('agrarian-writing-v2:discussion')")
+    saved = page.evaluate("JSON.stringify({...localStorage})")
+    page.reload()
+    assert page.locator(".contents-progress-status").all_text_contents() == [
+        "Completed", "Completed", "Completed", "Not started",
+    ]
+    entry = page.locator("[data-home-entry]")
+    expect(entry).to_have_text("Continue with Discussion")
+    expect(entry).to_have_attribute("href", "discussion/index.html")
+    assert page.evaluate("JSON.stringify({...localStorage})") == saved
+    entry.click()
+    for module, total in [("introduction", 14), ("methods", 7), ("results", 9)]:
+        expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(f"{total}/{total}")
+    expect(page.locator('[data-progress-module="discussion"]')).to_have_text("0/9")
+    assert page.evaluate("JSON.stringify({...localStorage})") == saved
+
+
 def test_home_fresh_browser_and_actual_checked_attempts(page, site):
     page.goto(site[0] + "/index.html")
     expect(page.locator("[data-home-entry]")).to_have_text("Begin with Introduction")
-    assert page.locator(".contents-progress-status").all_text_contents() == ["Not started"] * 3
+    assert page.locator(".contents-progress-status").all_text_contents() == ["Not started"] * 4
     assert page.evaluate("JSON.stringify({...localStorage})") == "{}"
     key = open_exercise(page, site, "introduction", "the-introduction-section-of-research-papers", 1)
     respond(page, key)
@@ -101,7 +131,7 @@ def test_home_malformed_storage_is_read_only_and_unstarted(page, site, value):
     expect(page.locator(".contents-progress-status").first).to_have_text("Not started")
     assert page.evaluate("localStorage.getItem('agrarian-writing-v2:introduction')") == value
     assert page.locator(".contents-progress-fill").evaluate_all("nodes => nodes.every(n => parseFloat(n.style.width) === 0)")
-    expect(page.locator(".contents-link")).to_have_count(3)
+    expect(page.locator(".contents-link")).to_have_count(4)
     page.locator(".contents-link").first.click()
     expect(page.locator('[data-progress-module="introduction"]')).to_have_text("0/14")
 
@@ -143,7 +173,7 @@ def test_home_storage_unavailable_falls_back_without_errors(page, site):
     });""")
     page.goto(site[0] + "/index.html")
     expect(page.locator("[data-home-entry]")).to_have_text("Begin with Introduction")
-    assert page.locator(".contents-progress-status").all_text_contents() == ["Not started"] * 3
+    assert page.locator(".contents-progress-status").all_text_contents() == ["Not started"] * 4
 
 
 def test_home_without_javascript_preserves_static_entry_and_contents(browser, site, documents):
@@ -154,16 +184,19 @@ def test_home_without_javascript_preserves_static_entry_and_contents(browser, si
         entry = page.get_by_role("link", name="Begin with Introduction", exact=True)
         expect(entry).to_be_visible()
         expect(entry).to_have_attribute("href", "introduction/index.html")
-        assert page.locator(".contents-title").all_text_contents() == ["Introduction", "Methods", "Results"]
+        assert page.locator(".contents-title").all_text_contents() == [
+            "Introduction", "Methods", "Results", "Discussion",
+        ]
         assert page.locator(".contents-summary").all_text_contents() == [doc.summary for doc in documents]
         assert page.locator(".contents-counts").all_text_contents() == [
             "6 subsections · 14 exercises", "2 subsections · 7 exercises", "2 subsections · 9 exercises",
+            "1 subsection · 9 exercises",
         ]
         assert page.locator(".contents-link").evaluate_all("nodes => nodes.map(n => n.getAttribute('href'))") == [
             f"{doc.slug}/index.html" for doc in documents
         ]
         expect(page.locator(".contents-progress:visible")).to_have_count(0)
-        assert page.locator(".contents-progress-status").all_text_contents() == [""] * 3
+        assert page.locator(".contents-progress-status").all_text_contents() == [""] * 4
         entry.focus()
         page.keyboard.press("Enter")
         expect(page).to_have_url(site[0] + "/introduction/index.html")
@@ -177,13 +210,13 @@ def test_home_without_javascript_preserves_static_entry_and_contents(browser, si
 def test_progress_rows_reflow_without_obscuring_content_or_navigation(page, site, width, text_scale):
     page.set_viewport_size({"width": width, "height": 900})
     page.goto(site[0] + "/index.html")
-    seed_progress(page, [14, 2, 0])
+    seed_progress(page, [14, 2, 0, 0])
     page.reload()
     if text_scale == 2:
         page.add_style_tag(content="html { font-size: 200%; }")
     page.evaluate("document.fonts.ready")
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-    expect(page.locator(".contents-progress:visible")).to_have_count(3)
+    expect(page.locator(".contents-progress:visible")).to_have_count(4)
     assert page.locator("#course a").count() == page.locator(".contents-link").count()
     for row in page.locator(".contents-link").all():
         expect(row.locator("a, button, input, select, textarea, [tabindex]")).to_have_count(0)
