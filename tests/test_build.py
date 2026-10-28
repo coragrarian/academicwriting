@@ -999,10 +999,44 @@ def test_context_and_instructions_are_outside_cards(tmp_path, methods):
         tmp_path / "site" / methods.slug / methods.sections[1].slug / exercise.slug / "index.html"
     ).read_text()
     card_start = source.index('<section class="exercise-item"')
-    assert source.index("In these exercises,") < card_start
+    assert source.index("In academic writing,") < card_start
     assert source.index('class="instructions"') < card_start
     assert source.count('class="exercise-item"') == 3
     assert "Exercise content" not in source
+
+
+@pytest.mark.canonical
+def test_revised_objectives_and_synonyms_keep_keys_sources_and_feedback(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    introduction = Page((output / "introduction/stating-the-objectives/exercise-1/index.html").read_text())
+    key = json.loads(introduction.scripts["answer-key"])
+    assert len(key["questions"]) == 1
+    question = key["questions"]["context-q1"]
+    assert question["kind"] == "single-choice" and question["expected"] == [2]
+    assert set(question["option_feedback"]) == {"0", "1", "2"}
+    assert "reduce emissions" in question["option_feedback"]["2"]
+    assert any(
+        attrs.get("href") == "https://www.sciencedirect.com/science/article/abs/pii/S030147971731160X"
+        for _, attrs in introduction.elements
+    )
+    source = (output / "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/index.html").read_text()
+    page = Page(source)
+    key = json.loads(page.scripts["answer-key"])
+    assert [group["title"] for group in key["groups"]] == ["Item A", "Item B", "Item C"]
+    assert {identifier: question["expected"] for identifier, question in key["questions"].items()} == {
+        "item-a-q1": [1], "item-b-q1": [2], "item-c-q1": [1],
+    }
+    for question in key["questions"].values():
+        assert question["kind"] == "single-choice"
+        assert set(question["option_feedback"]) == {"0", "1", "2"}
+    assert source.count('class="instructions"') == 1
+    assert "select the alternative that cannot replace the word in bold" in source
+    assert "least appropriate" not in source
+    for word in ("taken", "described", "presented"):
+        assert f"<strong>{word}</strong>" in source
+    for doi in ("10.1007/s42773-024-00312-7", "10.1016/j.aninu.2017.04.007", "10.1016/j.aninu.2017.06.010"):
+        assert any(attrs.get("href") == "https://doi.org/" + doi for _, attrs in page.elements)
 
 
 @pytest.mark.parametrize("directory", ["site", "site.building"])

@@ -17,6 +17,7 @@ from agrarian_builder.renderer import build_site
 pytestmark = [pytest.mark.browser, pytest.mark.canonical]
 
 DISCUSSION_MATCHING = ("discussion", "the-discussion-section-of-research-papers", 1)
+INTRODUCTION_OBJECTIVES = ("introduction", "stating-the-objectives", 1)
 
 
 CASES = [
@@ -44,7 +45,7 @@ LIFECYCLE_CASES = [case for case in CASES if case not in {
     ("introduction", "grammar-and-vocabulary-in-the-introduction-section", 1),
     ("results", "grammar-and-vocabulary-in-the-results-section", 6),
     ("results", "grammar-and-vocabulary-in-the-results-section", 7),
-}]
+}] + [INTRODUCTION_OBJECTIVES]
 
 
 @pytest.mark.parametrize(("module", "section", "number"), LIFECYCLE_CASES)
@@ -120,6 +121,39 @@ def test_option_feedback_follows_selected_option(page, site):
             key["questions"][question_id]["option_feedback"][str(index)]
         )
     expect(page.locator("[data-current-status]")).to_have_text("Completed")
+
+
+@pytest.mark.parametrize(("module", "section", "expected"), [
+    ("introduction", "stating-the-objectives", {"context-q1": [2]}),
+    ("methods", "grammar-and-vocabulary-in-the-methods-section", {
+        "item-a-q1": [1], "item-b-q1": [2], "item-c-q1": [1],
+    }),
+])
+def test_revised_exercises_explain_each_selected_alternative(page, site, module, section, expected):
+    key = open_exercise(page, site, module, section, 1 if module == "introduction" else 2)
+    assert {identifier: question["expected"] for identifier, question in key["questions"].items()} == expected
+    if module == "methods":
+        expect(page.locator(".instructions")).to_have_count(1)
+        expect(page.locator(".instructions")).to_contain_text("cannot replace the word in bold")
+        expect(page.locator(".exercise-item .instructions, .exercise-item select")).to_have_count(0)
+        expect(page.locator(".exercise-item .choice-question")).to_have_count(3)
+    for identifier, question in key["questions"].items():
+        control = page.locator(f'[data-question="{identifier}"]')
+        group = page.locator("[data-response-group]").filter(has=control)
+        for index in range(3):
+            control.locator(f'input[value="{index}"]').check()
+            page.locator("button[type=submit]").click()
+            expect(group.locator("[data-item-feedback]")).to_contain_text(
+                question["option_feedback"][str(index)].removeprefix("Correct.").strip()
+            )
+            expect(control).to_have_attribute("data-result", "correct" if index in expected[identifier] else "incorrect")
+    respond(page, key)
+    page.locator("button[type=submit]").click()
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.locator("#reset-exercise").click()
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
 
 
 def test_typed_normalisation_remains_exact(page, site):
@@ -257,7 +291,7 @@ def test_every_canonical_exercise_can_complete(page, site, documents):
 
 @pytest.mark.parametrize(
     ("module", "section", "number"),
-    CASES + [DISCUSSION_MATCHING],
+    CASES + [INTRODUCTION_OBJECTIVES, DISCUSSION_MATCHING],
 )
 def test_mobile_layout(page, site, module, section, number):
     page.set_viewport_size({"width": 375, "height": 812})

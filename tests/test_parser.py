@@ -473,7 +473,7 @@ def test_canonical_feedback_scopes(methods, documents):
     synonyms = methods.sections[1].exercises[1]
     assert synonyms.metadata.feedback.correct is None
     assert all(
-        item.metadata.feedback.correct and item.metadata.feedback.incorrect
+        set(item.metadata.feedback.options) == {"a", "b", "c"}
         for item in synonyms.items
     )
     shared = documents[2].sections[1].exercises[1]
