@@ -370,6 +370,10 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid var(--contro
 .typed-gap + .response-feedback + em { color: var(--ink); font-weight: 600; margin-inline-start: .1em; }
 [data-question][data-result="correct"] { border-color: var(--success); }
 [data-question][data-result="incorrect"] { border-color: var(--danger); background-color: var(--surface-incorrect); }
+/* Gap controls retain the runtime's textual and ARIA result cues. A second
+   border style distinguishes review even when colour is unavailable. */
+:is(.typed-gap, .inline-select)[data-result="correct"] { background-color: var(--surface-correct); border-width: 2px; }
+:is(.typed-gap, .inline-select)[data-result="incorrect"] { background-color: var(--surface-incorrect); border-width: 2px; border-style: dashed; }
 /* Overlay the result rule so selected row surfaces cannot obscure it, while
    preserving unchecked control geometry and text measure. */
 .choice-question[data-result] { position: relative; }

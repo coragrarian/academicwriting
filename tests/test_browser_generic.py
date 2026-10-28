@@ -21,6 +21,57 @@ def exercise_path(documents, kind):
     raise AssertionError(f"Fixture does not exercise {kind}")
 
 
+@pytest.mark.parametrize("kind", ["typed-gap", "gap", "inline-choice"])
+def test_gap_result_surfaces_accessibility_retry_and_persistence(page, synthetic_site, synthetic_documents, kind):
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+    key = json.loads(page.locator("#answer-key").text_content())
+    identifier = next(identifier for identifier, question in key["questions"].items() if question["kind"] == kind)
+    control = page.locator(f'[data-question="{identifier}"]')
+
+    def appearance():
+        return control.evaluate("""n => {
+          const s = getComputedStyle(n);
+          return [s.backgroundColor, s.borderColor, s.borderStyle, s.color];
+        }""")
+
+    neutral = appearance()
+    respond(page, key, wrong_id=identifier)
+    page.locator("button[type=submit]").click()
+    expect(control).to_have_attribute("data-result", "incorrect")
+    expect(control).to_have_attribute("aria-invalid", "true")
+    expect(page.locator(f"#{identifier}-feedback")).to_contain_text("Review this response")
+    incorrect = appearance()
+    assert incorrect[0] != neutral[0] and incorrect[2] == "dashed"
+    page.reload()
+    expect(control).to_have_attribute("data-result", "incorrect")
+    assert appearance() == incorrect
+    respond(page, key)
+    expect(control).not_to_have_attribute("data-result")
+    expect(control).not_to_have_attribute("aria-invalid")
+    assert appearance() == neutral
+    page.locator("button[type=submit]").click()
+    expect(control).to_have_attribute("data-result", "correct")
+    expect(control).to_have_attribute("aria-invalid", "false")
+    expect(page.locator(f"#{identifier}-feedback")).to_contain_text("Correct.")
+    correct = appearance()
+    assert correct[0] not in {neutral[0], incorrect[0]}
+    assert correct[1] != incorrect[1] and correct[2] == "solid"
+    for surface, border, _, ink in (correct, incorrect):
+        assert contrast_ratio(ink, surface) >= 4.5
+        assert contrast_ratio(border, surface) >= 3
+    control.focus()
+    assert control.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    assert appearance() == correct
+    page.locator("#reset-exercise").click()
+    expect(control).not_to_have_attribute("data-result")
+    expect(control).not_to_have_attribute("aria-invalid")
+    assert appearance() == neutral
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
+
+
 def assert_accessible_structure(page):
     headings = page.locator("h1,h2,h3,h4,h5,h6").evaluate_all(
         "nodes => nodes.map(n => [+n.tagName[1], n.textContent.trim()])"
