@@ -9,9 +9,15 @@ summary: >-
 
 # The Discussion section
 
+The Discussion section interprets and contextualises the study's findings. Writers commonly select findings for comment, relate them to previous research, propose explanations for observed patterns or unexpected results, develop claims about their significance, acknowledge limitations, and consider implications or directions for further research.
+
+The organisation of a Discussion section varies across disciplines, studies, and journals. These functions may appear in different orders and may recur as individual findings are discussed. Because Discussion writing often moves from observed results to interpretation and explanation, writers also need to calibrate their claims according to the strength and certainty of the available evidence.
+
+*See [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on the rhetorical structure of Agricultural Science research articles and [Peacock (2002)](https://doi.org/10.1016/S0346-251X(02)00050-7) on communicative moves and disciplinary variation in Discussion sections.*
+
 ## The Discussion section of research papers
 
-The exercises that follow will help you explore how authors interpret findings, relate results to previous research, propose tentative explanations, highlight contributions, and express different degrees of likelihood in the Discussion section of research papers.
+The exercises that follow focus on several recurring functions of Discussion writing and on the language used to realise them: interpreting findings, relating results to previous research, proposing tentative explanations, highlighting contributions, and expressing different degrees of likelihood.
 
 ### Exercise 1
 
