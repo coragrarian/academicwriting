@@ -16,6 +16,8 @@ from agrarian_builder.renderer import build_site
 
 pytestmark = [pytest.mark.browser, pytest.mark.canonical]
 
+DISCUSSION_MATCHING = ("discussion", "the-discussion-section-of-research-papers", 1)
+
 
 CASES = [
     ("methods", "grammar-and-vocabulary-in-the-methods-section", 2),
@@ -175,7 +177,7 @@ def test_partial_navigation_history_focus_and_reinitialisation(page, site):
 
 
 def test_public_gateway_preserves_independent_module_progress(page, site):
-    for module, section, number in [CASES[0], CASES[3], CASES[-1]]:
+    for module, section, number in [CASES[0], CASES[3], CASES[-1], DISCUSSION_MATCHING]:
         key = open_exercise(page, site, module, section, number)
         respond(page, key)
         page.locator("button[type=submit]").click()
@@ -186,10 +188,53 @@ def test_public_gateway_preserves_independent_module_progress(page, site):
     expect(page.locator(".course-panel, [data-progress-other-module], [data-progress-module]")).to_have_count(0)
     page.locator(".contents-link").first.click()
     expect(page.locator("h1")).to_have_text("The Introduction section")
-    for module, total in [("introduction", 14), ("methods", 7), ("results", 9)]:
+    for module, total in [("introduction", 14), ("methods", 7), ("results", 9), ("discussion", 9)]:
         expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(
             f"1/{total}"
         )
+
+
+def test_discussion_matching_and_single_choice_progress_persists(page, site):
+    key = open_exercise(page, site, *DISCUSSION_MATCHING)
+    expect(page.locator(".matching-question select")).to_have_count(4)
+    respond(page, key, wrong_id="context-q1")
+    page.locator("button[type=submit]").click()
+    expect(page.locator("#exercise-feedback")).to_have_text(
+        "3 of 4 responses correct. Review Match 1."
+    )
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    respond(page, key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    assert page.locator(".matching-question select").evaluate_all(
+        "nodes => nodes.map(node => node.value)"
+    ) == ["2", "3", "0", "1"]
+    expect(page.locator('[data-progress-module="discussion"]')).to_have_text("1/9")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:discussion'))")
+    exercise_id = "discussion--the-discussion-section-of-research-papers--exercise-1"
+    assert saved["progress"][exercise_id] == "completed"
+    assert saved["responses"][exercise_id] == {
+        identifier: question["expected"] for identifier, question in key["questions"].items()
+    }
+    screenshots = os.environ.get("AGRARIAN_SCREENSHOTS")
+    if screenshots:
+        directory = Path(screenshots)
+        directory.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(directory / "discussion-matching-desktop.png"), full_page=True)
+    page.get_by_role("link", name="Next", exact=True).click()
+    expect(page.locator("h1")).to_have_text("Exercise 2")
+    key = json.loads(page.locator("#answer-key").text_content())
+    expect(page.locator('input[type="radio"]')).to_have_count(12)
+    respond(page, key)
+    page.locator("button[type=submit]").click()
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(page.locator('[data-progress-module="discussion"]')).to_have_text("2/9")
+    page.locator("#reset-exercise").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
+    expect(page.locator('[data-progress-module="discussion"]')).to_have_text("1/9")
 
 
 def test_every_canonical_exercise_can_complete(page, site, documents):
@@ -212,7 +257,7 @@ def test_every_canonical_exercise_can_complete(page, site, documents):
 
 @pytest.mark.parametrize(
     ("module", "section", "number"),
-    CASES,
+    CASES + [DISCUSSION_MATCHING],
 )
 def test_mobile_layout(page, site, module, section, number):
     page.set_viewport_size({"width": 375, "height": 812})
@@ -455,9 +500,9 @@ def test_global_course_tree_defaults_and_current_page(page, site, level):
         expect(page.locator(".course-panel, [data-site-navigation], [data-course-navigator]")).to_have_count(0)
         expect(page.locator(".nav-module-group, .nav-section-group, [data-exercise-link]")).to_have_count(0)
     else:
-        expect(page.locator(".nav-module-group")).to_have_count(3)
-        expect(page.locator(".nav-section-group")).to_have_count(10)
-        expect(page.locator(".course-panel [data-exercise-link]")).to_have_count(30)
+        expect(page.locator(".nav-module-group")).to_have_count(4)
+        expect(page.locator(".nav-section-group")).to_have_count(11)
+        expect(page.locator(".course-panel [data-exercise-link]")).to_have_count(39)
         expect(page.locator('.course-panel [aria-current="page"]')).to_have_count(1)
         expect(page.locator(".nav-module-group[open]")).to_have_count(1)
         assert page.locator(".nav-section-group[open]").count() == (1 if level in {"section", "exercise"} else 0)
@@ -633,7 +678,7 @@ def test_public_page_links_and_skip_link_work_without_javascript(browser, site):
 
 
 def test_home_contents_keyboard_focus_and_module_entry(page, site):
-    for index, module in enumerate(("introduction", "methods", "results")):
+    for index, module in enumerate(("introduction", "methods", "results", "discussion")):
         page.goto(site[0] + "/index.html")
         # The skip link, three header links and primary entry precede the rows.
         for _ in range(6 + index):
@@ -1085,9 +1130,9 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             expect(page.locator(".page-head a")).to_have_count(1)
             expect(page.get_by_role("link", name="Start the course", exact=True)).to_have_count(0)
             expect(page.get_by_role("link", name="About the project", exact=True)).to_have_count(0)
-            expect(page.locator("#course .contents-link")).to_have_count(3)
+            expect(page.locator("#course .contents-link")).to_have_count(4)
             assert page.locator(".contents-title").all_text_contents() == [
-                "Introduction", "Methods", "Results",
+                "Introduction", "Methods", "Results", "Discussion",
             ]
             expect(page.locator("#course button, #course .action-link")).to_have_count(0)
             expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
@@ -1099,9 +1144,10 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             expect(page.get_by_role("link", name="About the corpus and research", exact=True)).to_have_attribute(
                 "href", "about/index.html"
             )
-            assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03"]
+            assert page.locator(".contents-number").all_text_contents() == ["01", "02", "03", "04"]
             assert page.locator(".contents-counts").all_text_contents() == [
                 "6 subsections · 14 exercises", "2 subsections · 7 exercises", "2 subsections · 9 exercises",
+                "1 subsection · 9 exercises",
             ]
             start = page.locator(".contents-link").first
             expect(start).to_have_attribute("href", "introduction/index.html")
@@ -1190,7 +1236,7 @@ def test_every_sequential_course_page_forward_and_backward(page, site, documents
             sequence.extend(
                 f"{subsection}/{exercise.slug}/index.html" for exercise in section.exercises
             )
-    assert len(sequence) == 43
+    assert len(sequence) == 54
     home = f"{site[0]}/index.html"
     page.goto(site[0] + sequence[0])
     visited = []
@@ -1238,6 +1284,10 @@ def test_editorial_components_and_contents_at_required_widths(page, site, width)
         "/methods/purpose-of-the-methods-section/exercise-1/index.html",
         "/results/grammar-and-vocabulary-in-the-results-section/exercise-4/index.html",
         "/introduction/the-introduction-section-of-research-papers/exercise-1/index.html",
+        "/discussion/index.html",
+        "/discussion/the-discussion-section-of-research-papers/index.html",
+        "/discussion/the-discussion-section-of-research-papers/exercise-1/index.html",
+        "/discussion/the-discussion-section-of-research-papers/exercise-2/index.html",
     ]
     for path in paths:
         page.goto(site[0] + path)

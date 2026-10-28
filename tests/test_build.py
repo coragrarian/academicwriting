@@ -9,6 +9,7 @@ import sys
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, replace
 from hashlib import sha256
+from itertools import pairwise
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -287,7 +288,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     home = Page(home_source)
     assert "course" in home.ids
     rows = [attrs for _, attrs in home.elements if attrs.get("class") == "contents-link"]
-    assert len(rows) == 3
+    assert len(rows) == 4
     start = rows[0]
     assert "project-start" not in home_source and "project-actions" not in home_source
     hero = home_source.split('<div class="home-hero-copy">', 1)[1].split("</div>", 1)[0]
@@ -317,15 +318,20 @@ def test_home_and_about_public_content(tmp_path, documents):
     ) in hero
     assert [row["href"] for row in rows] == [
         "introduction/index.html", "methods/index.html", "results/index.html",
+        "discussion/index.html",
     ]
-    for label in ("Introduction", "Methods", "Results"):
+    for label in ("Introduction", "Methods", "Results", "Discussion"):
         assert f'<strong class="contents-title">{label}</strong>' in home_source
     for number, document in enumerate(sorted(documents, key=lambda doc: (doc.order, doc.slug)), 1):
         exercise_count = sum(len(section.exercises) for section in document.sections)
         assert f'>{number:02d}</span>' in home_source
         assert document.summary
         assert f'<span class="contents-summary">{document.summary}</span>' in home_source
-        assert f"{len(document.sections)} subsections · {exercise_count} exercises" in home_source
+        subsection_count = len(document.sections)
+        assert (
+            f"{subsection_count} subsection{'s' if subsection_count != 1 else ''}"
+            f" · {exercise_count} exercises"
+        ) in home_source
         module_page = Page((output / document.slug / "index.html").read_text())
         assert ("h1", document.title) in module_page.headings
     public_pages = (
@@ -920,9 +926,49 @@ def test_normal_cli_discovers_all_modules(tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert "Learning pages: 43" in result.stdout
-    assert "Content pages: 45; HTML files including 404: 46" in result.stdout
-    assert len(list((tmp_path / "site").rglob("*.html"))) == 46
+    assert "Modules: 4; subsections: 11; exercises: 39" in result.stdout
+    assert "Learning pages: 54" in result.stdout
+    assert "Content pages: 56; HTML files including 404: 57" in result.stdout
+    assert len(list((tmp_path / "site").rglob("*.html"))) == 57
+
+
+@pytest.mark.canonical
+def test_discussion_follows_results_and_terminates_course(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    section = Path("discussion/the-discussion-section-of-research-papers")
+    transition = [
+        Path("results/grammar-and-vocabulary-in-the-results-section/exercise-7/index.html"),
+        Path("discussion/index.html"),
+        section / "index.html",
+        section / "exercise-1/index.html",
+    ]
+    sequence = course_sequence(documents)
+    assert sequence[-12:-8] == transition
+    assert sequence[-1] == section / "exercise-9/index.html"
+    for current, following in pairwise(transition):
+        assert navigation_targets(output, current)[1:] == (following, False)
+        assert navigation_targets(output, following)[0] == current
+    final = sequence[-1]
+    assert navigation_targets(output, final) == (
+        section / "exercise-8/index.html", Path("index.html"), True,
+    )
+    assert "Back to contents" in (output / final).read_text()
+
+
+@pytest.mark.canonical
+def test_discussion_preserves_scientific_notation_and_inline_formatting(tmp_path, discussion):
+    output = tmp_path / "site"
+    build_site(discussion, output)
+    section = output / discussion.slug / discussion.sections[0].slug
+    matching = (section / "exercise-1/index.html").read_text()
+    assert '<table class="matching-sentences">' in matching
+    assert "<em>Q</em><sub>10-soil</sub>" in matching
+    assert "<strong>is consistent with</strong>" in (section / "exercise-2/index.html").read_text()
+    assert "N₂O" in (section / "exercise-3/index.html").read_text()
+    assert "CO₂" in (section / "exercise-7/index.html").read_text()
+    assert "__________ report" in (section / "exercise-8/index.html").read_text()
+    assert "WFPS was &lt;60" in (section / "exercise-9/index.html").read_text()
 
 
 @pytest.mark.canonical

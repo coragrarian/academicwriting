@@ -103,19 +103,64 @@ title: Module
 
 @pytest.mark.canonical
 def test_module_discovery_and_canonical_counts(documents):
-    assert [document.slug for document in documents] == ["introduction", "methods", "results"]
-    assert [document.order for document in documents] == [1, 2, 3]
-    assert [len(document.sections) for document in documents] == [6, 2, 2]
+    assert [document.slug for document in documents] == [
+        "introduction", "methods", "results", "discussion",
+    ]
+    assert [document.order for document in documents] == [1, 2, 3, 4]
+    assert [len(document.sections) for document in documents] == [6, 2, 2, 1]
     assert [
         sum(len(section.exercises) for section in document.sections) for document in documents
-    ] == [14, 7, 9]
+    ] == [14, 7, 9, 9]
     ids = [
         item.id
         for document in documents
         for section in document.sections
         for item in section.exercises
     ]
-    assert len(set(ids)) == 30
+    assert len(ids) == len(set(ids)) == 39
+
+
+@pytest.mark.canonical
+def test_discussion_structure_and_canonical_answer_keys(discussion):
+    """Lock the converted source keys independently of the compiler output."""
+    assert discussion.title == "The Discussion section"
+    assert discussion.order == 4
+    assert len(discussion.sections) == 1
+    section = discussion.sections[0]
+    assert section.slug == "the-discussion-section-of-research-papers"
+    assert [entry.title for entry in section.exercises] == [
+        f"Exercise {number}" for number in range(1, 10)
+    ]
+    # Exercise 1 maps the four questions to excerpts C, D, A, B. The
+    # remaining keys are zero-based authored a), b), c) option indices.
+    expected_keys = [
+        [2, 3, 0, 1],
+        [1, 2, 1, 0],
+        [2, 1],
+        [2, 1, 1, 0, 1, 2],
+        [1, 2, 2, 0, 1, 0],
+        [2, 2, 0, 1],
+        [0, 1, 0, 2, 1],
+        [0, 2, 1, 2],
+        [1, 2, 1, 0],
+    ]
+    for number, (entry, keys) in enumerate(zip(section.exercises, expected_keys, strict=True), 1):
+        matching = number == 1
+        assert entry.id == f"discussion--{section.slug}--exercise-{number}"
+        assert [question.id for question in entry.questions] == [
+            f"context-q{index}" if matching else f"item-{index}-q1"
+            for index in range(1, len(keys) + 1)
+        ]
+        assert [question.kind for question in entry.questions] == [
+            "matching" if matching else "single-choice"
+        ] * len(keys)
+        assert [question.correct_indices for question in entry.questions] == [
+            [index] for index in keys
+        ]
+        assert [len(question.options) for question in entry.questions] == [
+            4 if matching else 3
+        ] * len(keys)
+    assert sum(len(entry.questions) for entry in section.exercises) == 39
 
 
 def test_discovery_orders_by_metadata_and_rejects_duplicate_ids(tmp_path):
@@ -238,8 +283,7 @@ def test_gaps_inside_numbered_and_bulleted_passages():
 
 
 @pytest.mark.canonical
-def test_bank_distractors_and_repeated_answers(documents):
-    introduction, _, results = documents
+def test_bank_distractors_and_repeated_answers(introduction, results):
     repeated = introduction.sections[-1].exercises[-1].questions
     assert repeated[2].correct_indices == repeated[3].correct_indices
     assert len(repeated[0].options) == 6
@@ -319,8 +363,7 @@ def test_shared_passage_links_to_item_answers_without_treating_citations_as_gaps
 
 
 @pytest.mark.canonical
-def test_typed_gap_and_shared_answer_key_across_items(documents):
-    introduction, _, results = documents
+def test_typed_gap_and_shared_answer_key_across_items(introduction, results):
     parsed = introduction.sections[3].exercises[0]
     assert parsed.metadata.interaction == "typed-gap"
     assert [question.answer for question in parsed.questions] == [
@@ -412,8 +455,7 @@ def test_gap_feedback_requires_valid_labels_and_text(entry):
 
 
 @pytest.mark.canonical
-def test_worked_models_are_not_scored(documents):
-    introduction, _, results = documents
+def test_worked_models_are_not_scored(introduction, results):
     for parsed in [
         introduction.sections[3].exercises[2],
         introduction.sections[4].exercises[1],

@@ -20,11 +20,11 @@ website.
 
 ## Course content
 
-The course covers the **Introduction**, **Methods** and **Results** sections
-of research articles.
+The course covers the **Introduction**, **Methods**, **Results** and
+**Discussion** sections of research articles.
 
-It currently contains **3 modules**, **10 subsections** and **30 exercises**,
-published as **43 learning pages**, alongside Home and About.
+It currently contains **4 modules**, **11 subsections** and **39 exercises**,
+published as **54 learning pages**, alongside Home and About.
 
 ## Project context
 
