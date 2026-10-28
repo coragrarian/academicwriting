@@ -1144,7 +1144,6 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         expect(footer.get_by_role("link", name="Corpus and research", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
         expect(provenance).to_have_text(
-            "Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
             "Funded by FAPEMIG and CAPES. Grant APQ-01173-22."
         )
         repository = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)

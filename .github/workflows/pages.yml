@@ -16,7 +16,7 @@ jobs:
   build:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: read
       pages: read
@@ -32,10 +32,26 @@ jobs:
           version: '0.12.6'
           enable-cache: true
       - name: Install locked dependencies
-        run: uv sync --locked --no-dev
+        run: uv sync --locked
+      - name: Validate canonical sources
+        run: uv run --frozen agrarian validate
+      - name: Check Python
+        run: uv run --frozen ruff check . --no-cache
+      - name: Check JavaScript syntax
+        run: |
+          node --check static/exercises.js
+          node --check static/navigation.js
+          node --check static/progress.js
+          node --check static/home.js
+      - name: Run ordinary tests
+        run: uv run --frozen pytest -q
+      - name: Install Chromium and browser dependencies
+        run: uv run --frozen playwright install --with-deps chromium
+      - name: Run full browser suite
+        run: uv run --frozen pytest -m browser -q
       - uses: actions/configure-pages@v6
       - name: Build static site
-        run: uv run --frozen --no-dev python build.py
+        run: uv run --frozen agrarian build
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

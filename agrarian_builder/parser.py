@@ -7,9 +7,10 @@ structure; the project-specific grammar resolves response semantics into
 become ``@@question-id@@`` placeholders for the renderer.
 
 One module has a level-one title, level-two subsections and level-three
-``Exercise N`` headings. Within exercises, level-four headings introduce
-``Item <label>`` or ``Model`` containers. Answer declarations and YAML comments
-are gathered before responses are parsed, so a shared bank may follow its gaps.
+``Exercise N`` headings (or explicitly identified exercise headings). Within
+exercises, level-four headings introduce ``Item <label>`` or ``Model`` containers.
+Answer declarations and YAML comments are gathered before responses are parsed,
+so a shared bank may follow its gaps.
 
 The parser rejects unsupported or ambiguous answer structures with source
 context rather than guessing. It does not rewrite teaching content, choose
@@ -71,6 +72,7 @@ INLINE_RE = re.compile(
 )
 INSTRUCTION_RE = re.compile(r"^\*\*Instructions:\*\*\s*", re.IGNORECASE)
 AGRARIAN_RE = re.compile(r"\s*<!--\s*agrarian\s*\n(.*?)-->\s*", re.DOTALL)
+ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
 class _UniqueSafeLoader(yaml.SafeLoader):
@@ -227,6 +229,63 @@ def _headings(tokens: list[Token]) -> list[Heading]:
             title = re.sub(r"<[^>]+>", "", tokens[index + 1].content).strip()
             result.append(Heading(int(token.tag[1]), title, *token.map))
     return result
+
+
+def _heading_identities(
+    tokens: list[Token], lines: list[str], source_path: str
+) -> dict[int, str]:
+    """Consume dedicated ``agrarian`` ID comments immediately after h2/h3.
+
+    The comment contains only ``id: <slug>``: lowercase ASCII letters/digits
+    separated by single hyphens. Blank lines are allowed after the heading,
+    but intervening Markdown blocks are not. Consumed lines stay blank so token
+    line ranges remain valid and identity metadata never enters rendered prose.
+    """
+    identities = {}
+    scope = {}
+    heading = None
+    for index, token in enumerate(tokens):
+        if token.type == "heading_open":
+            level = int(token.tag[1])
+            scope = {key: value for key, value in scope.items() if key < level}
+            scope[level] = tokens[index + 1].content
+            heading = token
+        if token.type != "html_block" or not re.match(
+            r"\s*<!--\s*agrarian\b", token.content
+        ):
+            continue
+        context = ", ".join([
+            source_path, *(title for level, title in scope.items() if level >= 2)
+        ])
+        match = AGRARIAN_RE.fullmatch(token.content)
+        if match is None:
+            raise SourceError(f"{context}: malformed agrarian metadata comment")
+        data = _yaml_mapping(match.group(1), f"{context}, agrarian metadata")
+        if "id" not in data:
+            continue
+        if (
+            heading is None
+            or heading.tag not in {"h2", "h3"}
+            or tokens[index - 1].type != "heading_close"
+            or token.level != heading.level
+        ):
+            raise SourceError(
+                f"{context}: id comment must immediately follow a subsection or exercise heading"
+            )
+        if set(data) != {"id"}:
+            raise SourceError(
+                f"{context}: heading id requires a separate comment containing only id"
+            )
+        identifier = data["id"]
+        if not isinstance(identifier, str) or not ID_RE.fullmatch(identifier):
+            raise SourceError(
+                f"{context}: heading id must be a nonempty lowercase URL-safe slug"
+            )
+        assert heading.map is not None and token.map is not None
+        identities[heading.map[0]] = identifier
+        for line in range(*token.map):
+            lines[line] = "\n"
+    return identities
 
 
 def _chunks(tokens: list[Token]) -> list[list[Token]]:
@@ -716,7 +775,7 @@ def _validate_gap_feedback(metadata: Metadata, questions: list[Question], contex
 
 
 def _exercise(
-    markdown: MarkdownIt, source: str, title: str, identifier: str, context: str
+    markdown: MarkdownIt, source: str, title: str, slug: str, identifier: str, context: str
 ) -> Exercise:
     """Resolve shared declarations and scoped content into one scored exercise.
 
@@ -742,7 +801,7 @@ def _exercise(
         Boundaries, metadata scope, mappings or response structures cannot be
         interpreted according to the supported exercise conventions.
     """
-    exercise = Exercise(title, slugify(title), identifier)
+    exercise = Exercise(title, slug, identifier)
     root = _Container(None, "context")
     containers = [root]
     current = root
@@ -895,7 +954,7 @@ def _front_matter(source: str, context: str) -> tuple[dict, str]:
     for key in ("id", "title"):
         if key not in data or not isinstance(data[key], str) or not data[key].strip():
             raise SourceError(f"{context}: front matter requires nonempty {key}")
-    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", data["id"]):
+    if not ID_RE.fullmatch(data["id"]):
         raise SourceError(f"{context}: module id must be a lowercase URL-safe slug")
     if type(data.get("order", 0)) is not int:
         raise SourceError(f"{context}: front matter order must be an integer")
@@ -936,14 +995,19 @@ def parse_document(
     Notes
     -----
     Exactly one level-one title and at least one level-two subsection are
-    required. Level-three headings must be ``Exercise N``; their numbers can
-    repeat across subsections because IDs include the subsection slug.
+    required. Without an explicit ID, level-three headings must be ``Exercise N``;
+    their numbers can repeat across subsections because IDs include the subsection
+    slug. Explicitly identified exercises may use independently worded titles.
     Level-four boundaries inside an exercise are interpreted by ``_exercise``.
+    Dedicated ``agrarian`` comments immediately after subsection/exercise
+    headings may supply stable IDs; otherwise the original title slug is used.
     """
     data, source = _front_matter(source, source_path)
     markdown = MarkdownIt("commonmark", {"html": True}).enable("table")
-    headings = _headings(markdown.parse(source))
+    tokens = markdown.parse(source)
+    headings = _headings(tokens)
     lines = source.splitlines(keepends=True)
+    identities = _heading_identities(tokens, lines, source_path)
     if not headings or headings[0].level != 1:
         raise SourceError(f"{source_path}: expected a level-one title")
     if sum(heading.level == 1 for heading in headings) != 1:
@@ -966,9 +1030,11 @@ def parse_document(
     seen_sections = set()
     for index, heading in enumerate(headings):
         if heading.level == 2:
-            section_slug = slugify(heading.title)
+            section_slug = identities.get(heading.start, slugify(heading.title))
             if section_slug in seen_sections:
-                raise SourceError(f"{source_path}: duplicate subsection slug {section_slug}")
+                raise SourceError(
+                    f"{source_path}, {heading.title}: duplicate subsection slug {section_slug}"
+                )
             seen_sections.add(section_slug)
             end = next(
                 (later.start for later in headings[index + 1 :] if later.level <= 3), len(lines)
@@ -983,22 +1049,28 @@ def parse_document(
                 raise SourceError(
                     f"{source_path}, {heading.title}: exercise without a subsection"
                 )
-            if not re.fullmatch(r"Exercise\s+\d+", heading.title):
+            if heading.start not in identities and not re.fullmatch(
+                r"Exercise\s+\d+", heading.title
+            ):
                 raise SourceError(
                     f"{source_path}: unsupported exercise heading {heading.title!r}"
                 )
             end = next(
                 (later.start for later in headings[index + 1 :] if later.level <= 3), len(lines)
             )
-            identifier = f"{slug}--{current_section.slug}--{slugify(heading.title)}"
+            exercise_slug = identities.get(heading.start, slugify(heading.title))
+            identifier = f"{slug}--{current_section.slug}--{exercise_slug}"
             context = f"{source_path}, {current_section.title}, {heading.title}"
             if any(exercise.id == identifier for exercise in current_section.exercises):
-                raise SourceError(f"{context}: duplicate exercise title within subsection")
+                raise SourceError(
+                    f"{context}: duplicate exercise id {exercise_slug!r} within subsection"
+                )
             current_section.exercises.append(
                 _exercise(
                     markdown,
                     "".join(lines[heading.end : end]),
                     heading.title,
+                    exercise_slug,
                     identifier,
                     context,
                 )
@@ -1040,6 +1112,8 @@ def discover_documents(source: Path) -> list[Document]:
         document = parse_document(
             path.read_text(encoding="utf-8"), path.stem, source_path=str(path)
         )
+        if document.slug == "about":
+            raise SourceError(f"{path}: module id 'about' conflicts with the public About page")
         if document.slug in seen_ids:
             raise SourceError(
                 f"{path}: duplicate module id {document.slug!r}; also in {seen_ids[document.slug]}"

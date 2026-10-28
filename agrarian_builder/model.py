@@ -146,7 +146,8 @@ class Exercise:
     id
         Module/subsection/exercise identity used for progress and saved answers.
     slug
-        Exercise path component, unique within its subsection.
+        Exercise path component, unique within its subsection. An authored ID
+        takes precedence over the title-derived fallback.
     blocks, direct_questions
         Shared exercise content and responses outside named items. Blocks keep
         content order; questions are the semantic response catalogue.
@@ -189,7 +190,8 @@ class Section:
     """A subsection overview followed by exercises in authored order.
 
     ``introduction_html`` is prose before the subsection's first exercise.
-    ``slug`` supplies its module-relative path component.
+    ``slug`` supplies its module-relative path component, using an authored ID
+    when present and otherwise deriving it from the title.
     """
 
     title: str

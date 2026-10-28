@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 [[package]]
 name = "agrarian-writing-builder"
 version = "0.2.0a1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
     { name = "markdown-it-py" },

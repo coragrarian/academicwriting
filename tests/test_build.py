@@ -744,7 +744,6 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             assert label in footer_text and href in utility_links
         for text in (
             "Use and reuse", "Course materials", "Software",
-            "Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
             "Executing institutions", "Funding agencies",
             "Funded by FAPEMIG and CAPES. Grant APQ-01173-22.",
         ):
@@ -754,6 +753,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             "doi.org", "Version", "[Year]", "[Surname", "[record]", "[date]", "FAPEMIG reference",
             "Developed and supported by", "Project", "About the course", "Corpus and research",
             "Source code on GitHub", "Third-party rights and notices",
+            "Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
         ):
             assert excluded not in footer
         icon = next(attrs for tag, attrs in page.regions["footer"] if tag == "svg")

@@ -16,6 +16,7 @@ from jinja2 import TemplateNotFound
 from site_support import PRODUCTION_URL, Page, course_sequence, navigation_targets
 
 from agrarian_builder import renderer
+from agrarian_builder.cli import main
 from agrarian_builder.parser import discover_documents
 from agrarian_builder.renderer import build_site
 
@@ -113,13 +114,13 @@ def test_synthetic_authoring_contract_and_cli(tmp_path, synthetic_documents):
     matching = delta.sections[0].exercises[0].questions
     assert [q.id for q in matching] == ["context-q1", "context-q2"]
     assert [q.correct_indices for q in matching] == [[1], [0]]
-    source = tmp_path / "source"
+    source = tmp_path / "exercises"
     shutil.copytree(SYNTHETIC_COURSE, source)
     (source / "nested").mkdir()
     (source / "00-last.md").rename(source / "nested/00-last.md")
     assert [doc.slug for doc in discover_documents(source)] == [doc.slug for doc in synthetic_documents]
     result = subprocess.run(
-        [sys.executable, str(ROOT / "build.py"), str(source), "--output", str(tmp_path / "site")],
+        [sys.executable, str(ROOT / "build.py"), "--output", str(tmp_path / "site")],
         cwd=tmp_path, capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
@@ -255,3 +256,101 @@ def test_reserved_module_path_cannot_replace_about_or_existing_output(tmp_path, 
         build_site(document, output)
     assert file_bytes(output) == before
     assert not (tmp_path / "site.building").exists()
+
+
+def test_fifth_markdown_module_automatically_enters_the_complete_site(tmp_path, monkeypatch, capsys):
+    source = tmp_path / "exercises"
+    shutil.copytree(SYNTHETIC_COURSE, source)
+    monkeypatch.chdir(tmp_path)
+    assert main(["build"]) == 0
+    before_documents = discover_documents(source)
+    before = structure(tmp_path / "_site", before_documents)
+    (source / "conclusion.md").write_text("""---
+id: conclusion
+title: Concluding a synthetic course
+order: 50
+---
+
+# Conclusion
+
+This fifth module is discovered from Markdown alone.
+
+## Reviewing a conclusion
+
+<!-- agrarian
+id: review
+-->
+
+Review the synthetic labels.
+
+### Exercise 1
+
+<!-- agrarian
+id: final-choice
+-->
+
+Choose the final label.
+
+- [ ] First
+- [x] Final
+""")
+    capsys.readouterr()
+    assert main(["build"]) == 0
+    assert "Modules: 5; subsections: 6; exercises: 7" in capsys.readouterr().out
+    documents = discover_documents(source)
+    assert [doc.slug for doc in documents] == ["alpha", "beta", "gamma", "delta", "conclusion"]
+    output = tmp_path / "_site"
+    after = structure(output, documents)
+    assert_shape(after, documents)
+    expected_paths = {
+        Path("conclusion/index.html"), Path("conclusion/review/index.html"),
+        Path("conclusion/review/final-choice/index.html"),
+    }
+    assert after["paths"] - before["paths"] == expected_paths
+    assert not before["paths"] - after["paths"]
+    assert "This fifth module is discovered from Markdown alone." in (output / "conclusion/index.html").read_text()
+    assert "Review the synthetic labels." in (output / "conclusion/review/index.html").read_text()
+    assert "Choose the final label." in (output / "conclusion/review/final-choice/index.html").read_text()
+    home = Page((output / "index.html").read_text())
+    identifier = "conclusion--review--final-choice"
+    assert json.loads(home.scripts["site-data"])["modules"]["conclusion"] == [identifier]
+    assert after["answers"][identifier]["questions"]["context-q1"]["expected"] == [1]
+
+
+def test_editing_source_replaces_existing_pages_with_stable_identity(tmp_path, monkeypatch):
+    source = tmp_path / "exercises"
+    shutil.copytree(SYNTHETIC_COURSE, source)
+    path = source / "30-first.md"
+    authored = path.read_text().replace(
+        "## Choosing a label\n", "## Choosing a label\n\n<!-- agrarian\nid: choosing-a-label\n-->\n", 1
+    ).replace(
+        "### Exercise 1\n", "### Exercise 1\n\n<!-- agrarian\nid: exercise-1\n-->\n", 1
+    )
+    path.write_text(authored)
+    monkeypatch.chdir(tmp_path)
+    assert main(["build"]) == 0
+    output = tmp_path / "_site"
+    documents = discover_documents(source)
+    before = structure(output, documents)
+    exercise_path = output / "alpha/choosing-a-label/exercise-1/index.html"
+    assert "A label identifies a record." in exercise_path.read_text()
+
+    path.write_text(authored.replace(
+        "Choosing a label", "Revising the subsection title"
+    ).replace("Exercise 1", "Revised exercise wording", 1).replace(
+        "A label identifies a record.", "A revised label describes the current record."
+    ))
+    assert main(["build"]) == 0
+    documents = discover_documents(source)
+    after = structure(output, documents)
+    assert_shape(after, documents)
+    assert after == before
+    rendered = exercise_path.read_text()
+    assert "A revised label describes the current record." in rendered
+    assert "A label identifies a record." not in rendered
+    assert "Revised exercise wording" in rendered and "Revising the subsection title" in rendered
+    assert "Revising the subsection title" in (output / "alpha/choosing-a-label/index.html").read_text()
+    assert 'data-exercise-id="alpha--choosing-a-label--exercise-1"' in rendered
+    updated_bytes = file_bytes(output)
+    assert main(["build"]) == 0
+    assert file_bytes(output) == updated_bytes

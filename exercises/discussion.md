@@ -9,11 +9,25 @@ summary: >-
 
 # The Discussion section
 
+The Discussion section interprets and contextualises the study's findings. Writers commonly select findings for comment, relate them to previous research, propose explanations for observed patterns or unexpected results, develop claims about their significance, acknowledge limitations, and consider implications or directions for further research.
+
+The organisation of a Discussion section varies across disciplines, studies, and journals. These functions may appear in different orders and may recur as individual findings are discussed. Because Discussion writing often moves from observed results to interpretation and explanation, writers also need to calibrate their claims according to the strength and certainty of the available evidence.
+
+*See [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on the rhetorical structure of Agricultural Science research articles and [Peacock (2002)](https://doi.org/10.1016/S0346-251X(02)00050-7) on communicative moves and disciplinary variation in Discussion sections.*
+
 ## The Discussion section of research papers
 
-The exercises that follow will help you explore how authors interpret findings, relate results to previous research, propose tentative explanations, highlight contributions, and express different degrees of likelihood in the Discussion section of research papers.
+<!-- agrarian
+id: the-discussion-section-of-research-papers
+-->
+
+The exercises that follow focus on several recurring functions of Discussion writing and on the language used to realise them: interpreting findings, relating results to previous research, proposing tentative explanations, highlighting contributions, and expressing different degrees of likelihood.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 In the Discussion section, writers address different questions as they interpret and discuss their findings.
 
@@ -34,6 +48,10 @@ In the Discussion section, writers address different questions as they interpret
 - <mark class="correct-answer">B</mark> What may have caused this result? What is a possible explanation for the result?
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 In the Discussion section, authors often relate their findings to previous studies.
 
@@ -73,6 +91,10 @@ We did not find consistently higher abundances and species richness in mixed sta
 
 ### Exercise 3
 
+<!-- agrarian
+id: exercise-3
+-->
+
 When authors are not sure why a result occurred, they may suggest a possible explanation.
 
 **Instructions:** Read the sentences below and select the alternative that can replace the expression in **bold**.
@@ -94,6 +116,10 @@ Nano-selenium exhibited a significant increase in the ejaculate volume, sperm li
 - [ ] c) may be independent of
 
 ### Exercise 4
+
+<!-- agrarian
+id: exercise-4
+-->
 
 Word choice is important in academic writing because authors need to express their ideas clearly and precisely.
 
@@ -149,6 +175,10 @@ Ward et al. (2007) concluded that the photochemical reflectance index, determine
 
 ### Exercise 5
 
+<!-- agrarian
+id: exercise-5
+-->
+
 The excerpts below were extracted from the Discussion section of research papers.
 
 **Instructions:** In each sentence, the word in **bold** is not appropriate for academic writing. Select the correct word to replace it.
@@ -203,6 +233,10 @@ The production structure of construction became more carbon intensive, owing to 
 
 ### Exercise 6
 
+<!-- agrarian
+id: exercise-6
+-->
+
 In academic writing, authors use conventional phrases (expressions) to connect ideas and describe relationships precisely.
 
 **Instructions:** In each sentence below, the expression in **bold** is not appropriate for academic writing. Select the correct expression to replace it.
@@ -240,6 +274,10 @@ Most of the farm tasks are carried out by machinery equipped with rotating knive
 - [ ] c) rather than
 
 ### Exercise 7
+
+<!-- agrarian
+id: exercise-7
+-->
 
 Phrasal verbs are often associated with spoken English, but some phrasal verbs are also commonly used in academic writing.
 
@@ -287,6 +325,10 @@ In this study we **set up** a test to determine breed composition and purity and
 
 ### Exercise 8
 
+<!-- agrarian
+id: exercise-8
+-->
+
 In the Discussion section, authors often emphasize what is new or important about their study and how it contributes to existing knowledge.
 
 **Instructions:** Complete each sentence below by selecting the one word that best expresses novelty or contribution in that context.
@@ -324,6 +366,10 @@ Our study provides ________ support for allocating secondary growth forests as a
 - [x] c) strong
 
 ### Exercise 9
+
+<!-- agrarian
+id: exercise-9
+-->
 
 In the Discussion section, adverbs of likelihood help writers avoid presenting interpretations or predictions as absolute facts.
 

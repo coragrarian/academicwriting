@@ -11,6 +11,10 @@ summary: >-
 
 ## Purpose of the Methods section
 
+<!-- agrarian
+id: purpose-of-the-methods-section
+-->
+
 The Methods section explains how a study was designed and carried out. Depending on the research design, it may describe participants or materials, procedures, measurements, data collection, and methods of analysis. This information helps readers understand how the evidence was produced and assess whether the methods are appropriate for the research question.
 
 The content and organisation of Methods sections vary across disciplines and study designs. Clear and sufficiently detailed reporting can also support later checking or repetition of the work, where applicable.
@@ -20,6 +24,10 @@ The section may be titled *Methods* or *Materials and Methods*, depending on jou
 *See the [National Academies (2019)](https://doi.org/10.17226/25303) on transparent reporting and replication/reproducibility, and [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on Methods functions in Agricultural Science research articles.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Based on your own knowledge about research articles, what is the main purpose of the Methods section? Choose the option that best summarises it.
 
@@ -53,6 +61,10 @@ feedback:
 
 ### Exercise 2
 
+<!-- agrarian
+id: exercise-2
+-->
+
 **Instructions:** Read the Methods excerpt from a research article that investigated consumers' preferences and attitudes for organic dried strawberries.
 
 Read the text to get an overview of its content. Some parts of the text were removed. Choose the alternative that correctly completes each gap.
@@ -82,6 +94,10 @@ feedback:
 -->
 
 ### Exercise 3
+
+<!-- agrarian
+id: exercise-3
+-->
 
 **Instructions:** Read the following sentences extracted from the text. Match each sentence with its main function (purpose) in the text.
 
@@ -115,6 +131,10 @@ feedback:
 
 ## Grammar and vocabulary in the Methods section
 
+<!-- agrarian
+id: grammar-and-vocabulary-in-the-methods-section
+-->
+
 Methods sections often describe procedures that were completed as part of the study, so past-tense forms are useful in this kind of reporting. Passive constructions can also be useful when the procedure, material, or measurement is more important than the person who performed it.
 
 These are not the only grammatical choices available in Methods writing. Writers also use active constructions and other tense and aspect choices depending on what they are describing and what they want to emphasise.
@@ -122,6 +142,10 @@ These are not the only grammatical choices available in Methods writing. Writers
 *See the University of Manchester's [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/describing-methods/), [Caplan (2019)](https://press.umich.edu/elt/tm/9780472037315-key.pdf), and [Le, Yu and Hao (2025)](https://doi.org/10.1057/s41599-025-06007-z) on Methods grammar and variation. The branches sampled by Le et al. do not establish universal Agrarian frequencies.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** You are going to read an excerpt of the Methods section of a research article about potential pesticide exposure and health risks for small-scale farmers.
 
@@ -148,6 +172,10 @@ feedback:
 -->
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 In academic writing, some words and expressions can be replaced with alternatives without substantially changing the meaning of a sentence.
 
@@ -238,6 +266,10 @@ feedback:
 
 ### Exercise 3
 
+<!-- agrarian
+id: exercise-3
+-->
+
 **Instructions:** For each item below, select the **two** alternatives that express the same meaning as the original sentence.
 
 #### Item A
@@ -290,6 +322,10 @@ feedback:
 -->
 
 ### Exercise 4
+
+<!-- agrarian
+id: exercise-4
+-->
 
 **Instructions:** Each item below contains three sentences with the same word combination omitted. Select the one option that correctly completes all three sentences.
 
