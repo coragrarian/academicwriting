@@ -149,57 +149,64 @@ feedback:
 
 ### Exercise 2
 
-In these exercises, more than one alternative may be grammatically possible. Choose according to the meaning and relationship expressed in the sentence, not grammar alone. Replacing one word with another can change the meaning, attribution, or reporting emphasis even when both forms are grammatical.
+In academic writing, some words and expressions can be replaced with alternatives without substantially changing the meaning of a sentence.
 
-**Instructions:** In Items A and C, choose the alternative that is **least appropriate in this context** as a replacement for the word in **bold**. In Item B, choose the expression that refers to a description in an earlier source without changing that relationship.
+**Instructions:** In each sentence below, select the alternative that cannot replace the word in bold without changing the meaning in this context.
 
 #### Item A
 
-*Using GPS guidance and markers, trafficked areas of each plot were marked out to ensure that samples were **taken** from the correct location.*
+*Soils were **taken** from the surface layer (0–20 cm) of rice fields in Jinjing Township, Changsha City.*
 
-*Source: [Hobson et al. (2022)](https://doi.org/10.5194/soil-8-391-2022).*
-
-- [ ] collected
-- [x] made
-- [ ] obtained
+*Adapted from [Liu et al. (2024)](https://doi.org/10.1007/s42773-024-00312-7).*
 
 <!-- agrarian
 feedback:
-  correct: >
-    Correct. "Taken", "collected", and "obtained" can all describe acquiring
-    samples in an appropriate context. "Made" changes the relationship here:
-    the sentence concerns collecting existing material from a location,
-    rather than producing the samples.
-  incorrect: >
-    Review the source/location relationship. Samples can be made or prepared
-    in other contexts, but this sentence describes acquiring material from
-    the correct plot location.
+  options:
+    a: >
+      "Collected" can replace "taken": both describe removing existing soil
+      samples from the stated location. The task asks for the alternative
+      that changes this meaning.
+    b: >
+      Correct. "Made" would imply producing or creating the soils or samples.
+      Here, "taken", "collected", and "obtained" describe acquiring existing
+      material from the surface layer of the rice fields.
+    c: >
+      "Obtained" preserves the acquisition of soil samples from the stated
+      location. It does not imply creating the soils, so it is a possible
+      replacement in this context.
 -->
+
+- [ ] a) collected
+- [x] b) made
+- [ ] c) obtained
 
 #### Item B
 
-Which expression refers to a description in an earlier source, without asserting the method's origination or introducing a premise?
+*The amino acid content was determined by HPLC as **described** by Ravindran et al. (2009).*
 
-> The amino acid content was determined by HPLC (Agilent 1200, Santa Clara, CA, USA) __________ Ravindran et al. (2009).
-
-*Source: [Yin et al. (2017)](https://doi.org/10.1016/j.aninu.2017.04.007).*
-
-- [x] as described by
-- [ ] as first developed by
-- [ ] as assumed by
+*Adapted from [Yin et al. (2017)](https://doi.org/10.1016/j.aninu.2017.04.007).*
 
 <!-- agrarian
 feedback:
-  correct: >
-    Correct. "As described by" refers to how the procedure is presented in
-    an earlier source. "Outlined by" can perform a similar reference function,
-    with a summarising nuance, so it is not an alternative in this item.
-  incorrect: >
-    "As first developed by" attributes origination, while "as assumed by"
-    introduces a premise. "Proposed by" would attribute putting the method
-    forward. These change the relationship rather than being universally
-    ungrammatical expressions.
+  options:
+    a: >
+      "Outlined" preserves the reference to how an earlier source presents
+      the procedure, with an emphasis on its main features. It does not
+      change the relationship into a premise or a claim of origination.
+    b: >
+      "Detailed" also refers to how the earlier source presents the procedure.
+      It suggests a fuller account than "outlined", but preserves the
+      description/reporting relationship tested here.
+    c: >
+      Correct. "Assumed" introduces a premise taken for granted by the earlier
+      authors. "Described", "outlined", and "detailed" instead refer to how
+      their source presents the procedure; they do not attribute its
+      origination or treat it as an assumption.
 -->
+
+- [ ] a) outlined
+- [ ] b) detailed
+- [x] c) assumed
 
 #### Item C
 
@@ -207,22 +214,27 @@ feedback:
 
 *Source: [Lutakome et al. (2017)](https://doi.org/10.1016/j.aninu.2017.06.010).*
 
-- [ ] given
-- [x] seen
-- [ ] shown
-
 <!-- agrarian
 feedback:
-  correct: >
-    Correct. In this sentence, "given" and "shown" fit a direct presentation
-    frame such as "are given/shown in Table 1". "Seen" is possible in other
-    table-reference constructions, for example "as can be seen from Table 1",
-    but it does not fit the same pattern here.
-  incorrect: >
-    Judge the alternatives in this direct presentation frame. "Given" and
-    "shown" express where the equations are presented. This local choice
-    does not mean that "seen" is generally wrong in table references.
+  options:
+    a: >
+      "Given" fits the direct passive frame "are given in Table 1" and
+      preserves where the equations are presented. It can replace
+      "presented" in this sentence.
+    b: >
+      Correct. "Given" and "shown" fit the direct passive presentation frame
+      "are given/shown in Table 1". "Seen" works in constructions such as
+      "as can be seen in/from Table 1", but is not a direct equivalent in
+      this sentence.
+    c: >
+      "Shown" fits the direct passive frame "are shown in Table 1" and
+      preserves where the equations are presented. "Seen" needs a different
+      construction, such as "as can be seen from Table 1".
 -->
+
+- [ ] a) given
+- [x] b) seen
+- [ ] c) shown
 
 ### Exercise 3
 

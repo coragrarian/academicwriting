@@ -1,20 +1,36 @@
 <footer class="site-footer">
   <div class="site-footer-inner">
     <div class="footer-group footer-support">
-      <nav class="footer-institutions" aria-label="Institutions and supporters">
-        <a class="institution-link--ufmg-fale" href="https://www.letras.ufmg.br/site/">
-          <img class="institution-logo institution-logo--ufmg-fale" src="{{ institution_asset('logo-ufmg-fale.png') }}" alt="Faculdade de Letras da UFMG" width="400" height="141" loading="lazy">
-        </a>
-        <a href="https://fapemig.br/">
-          <img class="institution-logo institution-logo--fapemig" src="{{ institution_asset('logo-fapemig.png') }}" alt="FAPEMIG" width="251" height="251" loading="lazy">
-        </a>
-        <a href="https://www.gov.br/capes/pt-br/">
-          <img class="institution-logo institution-logo--capes" src="{{ institution_asset('logo-capes.png') }}" alt="CAPES" width="3332" height="3085" loading="lazy">
-        </a>
-      </nav>
+      <div class="footer-institution-groups">
+        <nav aria-labelledby="footer-executing-heading">
+          <p id="footer-executing-heading" class="footer-heading">Executing institutions</p>
+          <div class="footer-institutions">
+            <a class="institution-link--ufmg-fale" href="https://www.ufmg.br/">
+              <img class="institution-logo institution-logo--ufmg-fale" src="{{ institution_asset('logo-ufmg-fale.png') }}" alt="UFMG (Faculdade de Letras)" width="400" height="141" loading="lazy">
+            </a>
+            <a href="https://portal.ufvjm.edu.br/">
+              <img class="institution-logo institution-logo--ufvjm" src="{{ institution_asset('logo-ufvjm.png') }}" alt="UFVJM" width="1707" height="321" loading="lazy">
+            </a>
+            <a href="https://www.ufrgs.br/">
+              <img class="institution-logo institution-logo--ufrgs" src="{{ institution_asset('logo-ufrgs.svg') }}" alt="UFRGS" width="600" height="500" loading="lazy">
+            </a>
+          </div>
+        </nav>
+        <nav aria-labelledby="footer-funding-heading">
+          <p id="footer-funding-heading" class="footer-heading">Funding agencies</p>
+          <div class="footer-institutions">
+            <a href="https://fapemig.br/">
+              <img class="institution-logo institution-logo--fapemig" src="{{ institution_asset('logo-fapemig.png') }}" alt="FAPEMIG" width="251" height="251" loading="lazy">
+            </a>
+            <a href="https://www.gov.br/capes/pt-br/">
+              <img class="institution-logo institution-logo--capes" src="{{ institution_asset('logo-capes.png') }}" alt="CAPES" width="3332" height="3085" loading="lazy">
+            </a>
+          </div>
+        </nav>
+      </div>
       <div class="footer-provenance">
-        <p>Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.</p>
-        <p>Supported by FAPEMIG and CAPES. Grant <span class="footer-reference">APQ-01173-22</span>.</p>
+        <p>Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.</p>
+        <p>Funded by FAPEMIG and CAPES. Grant <span class="footer-reference">APQ-01173-22</span>.</p>
       </div>
     </div>
     <nav class="footer-group footer-reuse" aria-labelledby="footer-reuse-heading">

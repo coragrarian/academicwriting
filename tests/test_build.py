@@ -374,9 +374,13 @@ def test_home_and_about_public_content(tmp_path, documents):
         "necessidades e insumos para aplicações pedagógicas"
     ) in about_source
     for fact in (
-        "APQ-01173-22", "UFMG", "FUNDEP", "Executing institution", "Fund administrator",
+        "APQ-01173-22", "UFMG", "FUNDEP", "Executing institutions", "Fund administrator", "UFVJM", "UFRGS",
         "FAPEMIG", "CAPES", "lexical and syntactic", "rhetorical functions",
-        "specialised corpus of English-language journal articles", "classroom use",
+        "English-language research articles published in high-impact journals", "classroom use",
+        "Fundação de Amparo à Pesquisa do Estado de Minas Gerais (FAPEMIG)",
+        "Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES)",
+        "Universidade Federal dos Vales do Jequitinhonha e Mucuri (UFVJM)",
+        "Universidade Federal do Rio Grande do Sul (UFRGS)",
         "independent online study", "undergraduate and postgraduate",
     ):
         assert fact in about_source
@@ -450,8 +454,9 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     project = home_source.split('aria-labelledby="project-heading"', 1)[1].split("</section>", 1)[0]
     assert project.count("<p>") == 1
     assert (
-        "CorAgrarian is a specialised corpus of academic writing in the Agrarian "
-        "Sciences and one of the empirical resources informing this course. Corpus "
+        "CorAgrarian is a specialised corpus of English-language research articles "
+        "published in high-impact journals in the Agrarian Sciences and one of the "
+        "empirical resources informing this course. Corpus "
         "evidence is used alongside published research examples and academic-writing "
         "scholarship throughout the materials."
     ) in project
@@ -705,7 +710,9 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
     output = tmp_path / "site"
     build_site(documents, output)
     destinations = {
-        "logo-ufmg-fale.png": ("https://www.letras.ufmg.br/site/", "Faculdade de Letras da UFMG"),
+        "logo-ufmg-fale.png": ("https://www.ufmg.br/", "UFMG (Faculdade de Letras)"),
+        "logo-ufvjm.png": ("https://portal.ufvjm.edu.br/", "UFVJM"),
+        "logo-ufrgs.svg": ("https://www.ufrgs.br/", "UFRGS"),
         "logo-fapemig.png": ("https://fapemig.br/", "FAPEMIG"),
         "logo-capes.png": ("https://www.gov.br/capes/pt-br/", "CAPES"),
     }
@@ -716,7 +723,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         assert source.index("</main>") < source.index('<footer class="site-footer">')
         assert not any(tag == "img" and "institution-logo" in attrs.get("class", "").split() for tag, attrs in page.regions["main"])
         assert len(page.image_links) == len(destinations)
-        assert sum(tag == "img" for tag, _ in page.regions["footer"]) == 3
+        assert sum(tag == "img" for tag, _ in page.regions["footer"]) == 5
         for image, link in page.image_links:
             href, name = destinations[Path(image["src"]).name]
             assert link["href"] == href
@@ -729,7 +736,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             "CC BY-NC-SA 4.0": f"{repository_url}/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt",
             "MIT": f"{repository_url}/blob/main/LICENSES/MIT.txt",
         }
-        assert len(utility_links) == len(set(utility_links)) == 6
+        assert len(utility_links) == len(set(utility_links)) == 8
         assert {href for href, _ in destinations.values()} | set(external_links.values()) <= set(utility_links)
         footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
         footer_text = " ".join(re.sub(r"<[^>]+>", "", footer).split())
@@ -737,8 +744,9 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             assert label in footer_text and href in utility_links
         for text in (
             "Use and reuse", "Course materials", "Software",
-            "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
-            "Supported by FAPEMIG and CAPES. Grant APQ-01173-22.",
+            "Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais.",
+            "Executing institutions", "Funding agencies",
+            "Funded by FAPEMIG and CAPES. Grant APQ-01173-22.",
         ):
             assert text in footer_text
         for excluded in (
@@ -766,7 +774,8 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, synthetic_do
     page = Page(page_path.read_text())
     images = [attrs for tag, attrs in page.elements if tag == "img" and "institution-logo" in attrs.get("class", "").split()]
     assert {Path(attrs["src"]).name for attrs in images} == {
-        "logo-ufmg-fale.png", "logo-fapemig.png", "logo-capes.png",
+        "logo-ufmg-fale.png", "logo-ufvjm.png", "logo-ufrgs.svg",
+        "logo-fapemig.png", "logo-capes.png",
     }
     for attrs in images:
         assert attrs["alt"]
@@ -775,9 +784,20 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, synthetic_do
         source = ROOT / "static/institutions" / image.name
         source_bytes = source.read_bytes()
         assert image.read_bytes() == source_bytes
-        # PNG's IHDR stores intrinsic width and height as big-endian integers.
-        assert int(attrs["width"]) == int.from_bytes(source_bytes[16:20])
-        assert int(attrs["height"]) == int.from_bytes(source_bytes[20:24])
+        if image.suffix == ".svg":
+            root = ET.fromstring(source_bytes)
+            _, _, width, height = map(float, root.attrib["viewBox"].split())
+            assert float(attrs["width"]) / float(attrs["height"]) == pytest.approx(width / height)
+            # The local vector must be self-contained, without active content.
+            assert not any(
+                node.tag.split("}")[-1] in {"script", "foreignObject", "image", "use"}
+                or any(key.split("}")[-1] == "href" or key.startswith("on") for key in node.attrib)
+                for node in root.iter()
+            )
+        else:
+            # PNG's IHDR stores intrinsic dimensions as big-endian integers.
+            assert int(attrs["width"]) == int.from_bytes(source_bytes[16:20])
+            assert int(attrs["height"]) == int.from_bytes(source_bytes[20:24])
 
 
 def test_single_module_build_remains_available(tmp_path, synthetic_documents):
@@ -979,10 +999,44 @@ def test_context_and_instructions_are_outside_cards(tmp_path, methods):
         tmp_path / "site" / methods.slug / methods.sections[1].slug / exercise.slug / "index.html"
     ).read_text()
     card_start = source.index('<section class="exercise-item"')
-    assert source.index("In these exercises,") < card_start
+    assert source.index("In academic writing,") < card_start
     assert source.index('class="instructions"') < card_start
     assert source.count('class="exercise-item"') == 3
     assert "Exercise content" not in source
+
+
+@pytest.mark.canonical
+def test_revised_objectives_and_synonyms_keep_keys_sources_and_feedback(tmp_path, documents):
+    output = tmp_path / "site"
+    build_site(documents, output)
+    introduction = Page((output / "introduction/stating-the-objectives/exercise-1/index.html").read_text())
+    key = json.loads(introduction.scripts["answer-key"])
+    assert len(key["questions"]) == 1
+    question = key["questions"]["context-q1"]
+    assert question["kind"] == "single-choice" and question["expected"] == [2]
+    assert set(question["option_feedback"]) == {"0", "1", "2"}
+    assert "reduce emissions" in question["option_feedback"]["2"]
+    assert any(
+        attrs.get("href") == "https://www.sciencedirect.com/science/article/abs/pii/S030147971731160X"
+        for _, attrs in introduction.elements
+    )
+    source = (output / "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/index.html").read_text()
+    page = Page(source)
+    key = json.loads(page.scripts["answer-key"])
+    assert [group["title"] for group in key["groups"]] == ["Item A", "Item B", "Item C"]
+    assert {identifier: question["expected"] for identifier, question in key["questions"].items()} == {
+        "item-a-q1": [1], "item-b-q1": [2], "item-c-q1": [1],
+    }
+    for question in key["questions"].values():
+        assert question["kind"] == "single-choice"
+        assert set(question["option_feedback"]) == {"0", "1", "2"}
+    assert source.count('class="instructions"') == 1
+    assert "select the alternative that cannot replace the word in bold" in source
+    assert "least appropriate" not in source
+    for word in ("taken", "described", "presented"):
+        assert f"<strong>{word}</strong>" in source
+    for doi in ("10.1007/s42773-024-00312-7", "10.1016/j.aninu.2017.04.007", "10.1016/j.aninu.2017.06.010"):
+        assert any(attrs.get("href") == "https://doi.org/" + doi for _, attrs in page.elements)
 
 
 @pytest.mark.parametrize("directory", ["site", "site.building"])

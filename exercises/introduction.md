@@ -522,32 +522,37 @@ One recurrent way of stating objectives is to use a **to-infinitive**, as in *th
 
 ### Exercise 1
 
-This exercise focuses on the objectives stated in the excerpt below.
+This exercise focuses on the two research objectives stated in the excerpt below.
 
-*The objective below is adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
+*Source: [Bento et al. (2018)](https://www.sciencedirect.com/science/article/abs/pii/S030147971731160X), “Impacts of sugarcane agriculture expansion over low-intensity cattle ranch pasture in Brazil on greenhouse gases”.*
 
-> *The primary aims of this study were twofold: firstly, to ascertain the impact of varying levels of soil salinity on the distribution of nutrients in cotton plants; secondly, to assess the growth of cotton, lint yield, and nitrogen use efficiency in the presence of soil salt stress.*
+> In this context, the goal of this study was 1) to quantify GHG emissions associated with the conversion of low-intensity pasture to management-intensive pasture and sugarcane agriculture in Brazil, and 2) to determine how environmental conditions and management practices commonly used in these land uses affect emissions.
 
 **Instructions:** Which option **does not** paraphrase the original sentence?
 
-- [ ] a) The goals of this paper were to investigate how different levels of soil salinity affected nutrient distribution in cotton plants and to examine cotton growth, lint yield, and nitrogen use efficiency under salt stress.
-- [ ] b) The present study aimed at examining the effects of different degrees of soil salinity on nutrient distribution in cotton plants and evaluating cotton growth, lint yield, and nitrogen use efficiency in conditions of soil salt stress.
-- [x] c) The purpose of this research was to demonstrate how varying degrees of soil salinity reduce nutrient distribution in cotton plants and to evaluate cotton growth, lint yield, and nitrogen use efficiency in a soil salinity environment.
+- [ ] a) This study aimed to measure GHG emissions associated with converting low-intensity pasture into management-intensive pasture and sugarcane agriculture in Brazil, and to establish how environmental conditions and common management practices in these land uses affect emissions.
+- [ ] b) The study had two objectives: to quantify GHG emissions linked to the conversion of low-intensity pasture to management-intensive pasture and sugarcane agriculture in Brazil, and to investigate the effects of environmental conditions and management practices commonly used in these land uses on emissions.
+- [x] c) This study aimed to measure GHG emissions associated with converting low-intensity pasture into management-intensive pasture and sugarcane agriculture in Brazil, and to demonstrate that environmental conditions and common management practices in these land uses reduce emissions.
 
 <!-- agrarian
 feedback:
   options:
     a: >
-      This preserves the two objectives: investigating the effect of salinity
-      on nutrient distribution and examining growth, yield, and nitrogen-use
-      efficiency.
+      This preserves both objectives: measuring GHG emissions associated with
+      the conversion of low-intensity pasture to the two stated land uses in
+      Brazil, and establishing how environmental conditions and common
+      management practices affect emissions. The task asks for the option
+      that changes the meaning.
     b: >
-      This also preserves the two original research objectives using different
-      wording.
+      This also preserves both objectives: quantifying conversion-associated
+      GHG emissions in Brazil and investigating the effects of environmental
+      conditions and common management practices on emissions in these land
+      uses. Different wording does not change those objectives.
     c: >
-      Correct. The original objective is to ascertain the impact of salinity;
-      it does not state in advance that salinity reduces nutrient distribution.
-      This option adds a directional conclusion that is absent from the original.
+      Correct. The first objective is preserved, but the second now asserts
+      that environmental conditions and management practices reduce emissions.
+      The original asks how they affect emissions; it does not specify a
+      direction or set out to demonstrate a reduction.
 -->
 
 ### Exercise 2

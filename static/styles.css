@@ -214,6 +214,7 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .project-facts dt { color: var(--muted); font-size: var(--text-small); font-weight: 600; }
 .project-facts dd { margin: .25rem 0 var(--space-block); font-size: var(--text-ui); line-height: 1.5; overflow-wrap: anywhere; }
 .project-facts dd:last-child { margin-bottom: 0; }
+.project-facts dd + dd { margin-top: -.75rem; }
 /* Approved portraits share one crop; entries without photographs remain text-only. */
 .people-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-group); margin: var(--space-block) 0 0; padding: 0; list-style: none; }
 .person { min-width: 0; }
@@ -227,12 +228,14 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .team-group-heading { margin-top: var(--space-section); }
 /* Site chrome stays outside the course grid and the regions replaced by navigation. */
 .site-footer { --focus: var(--footer-ink); container-type: inline-size; background: var(--surface-footer); color: var(--footer-ink); }
-.site-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-text) var(--space-section); max-width: 90rem; margin: auto; padding: var(--space-block) clamp(1.35rem, 5vw, 4.5rem); }
+.site-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-text) var(--space-section); max-width: 104rem; margin: auto; padding: var(--space-block) clamp(1.35rem, 5vw, 4.5rem); }
 .footer-group { min-width: 0; }
 .footer-reuse { justify-self: end; max-width: 100%; }
 .footer-heading { margin: 0 0 .5rem; font-size: var(--text-eyebrow); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
-.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; max-width: 100%; gap: .75rem 1rem; margin-bottom: .75rem; }
-.footer-institutions a { display: flex; align-items: center; min-width: 0; max-width: 100%; min-height: 2.75rem; height: 64px; }
+.footer-institution-groups { display: flex; flex-wrap: wrap; gap: var(--space-block) var(--space-section); margin-bottom: var(--space-text); }
+.footer-institution-groups nav { min-width: 0; max-width: 100%; }
+.footer-institutions { display: flex; flex-wrap: wrap; align-items: center; max-width: 100%; gap: .75rem 1.5rem; }
+.footer-institutions a { display: flex; align-items: center; justify-content: center; min-width: 0; max-width: 100%; min-height: 2.75rem; height: 76px; }
 .footer-provenance { color: var(--footer-muted); font-size: var(--text-small); line-height: 1.6; }
 .footer-provenance p { margin: 0; }
 .footer-reference { white-space: nowrap; }
@@ -248,26 +251,17 @@ h3 { font-size: var(--text-h3); line-height: 1.25; margin: var(--space-block) 0 
 .footer-links a:hover .footer-licence-label, .footer-links a:focus-visible .footer-licence-label { color: inherit; }
 .github-mark { flex: none; fill: currentColor; }
 .institution-logo { display: block; max-width: 100%; height: auto; }
-.institution-logo--ufmg-fale { width: 18rem; }
-.institution-logo--fapemig { width: 7rem; }
-.institution-logo--capes { width: 6rem; }
-/* A single pale neutral keeps all marks legible on graphite, preserving the
-   original artwork and its alpha channel for other institutional contexts. */
-.site-footer .institution-logo { filter: grayscale(1) brightness(0) invert(.902); opacity: .94; transition: opacity var(--motion-fast) var(--ease-standard); }
-.site-footer .footer-institutions a:hover .institution-logo, .site-footer .footer-institutions a:focus-visible .institution-logo { opacity: 1; }
-/* The combined artwork has padding on every side; its larger image fits a
-   shorter wrapper without clipping. Horizontal compensation aligns visible
-   ink and balances gaps. Text enlargement need not enlarge the artwork. */
-.institution-link--ufmg-fale { margin-inline: -17px -16px; }
-.site-footer .institution-logo--ufmg-fale { width: 272px; }
-.site-footer .institution-logo--fapemig { width: 70px; }
-.site-footer .institution-logo--capes { width: 54px; }
+.institution-logo--ufmg-fale { width: 220px; }
+.institution-logo--ufvjm { width: 132px; }
+.institution-logo--ufrgs { width: 84px; }
+.institution-logo--fapemig { width: 70px; }
+.institution-logo--capes { width: 54px; }
+/* The new university marks are official white variants. Retain the
+   established monochrome treatment only for the three existing assets. */
+.site-footer :is(.institution-logo--ufmg-fale, .institution-logo--fapemig, .institution-logo--capes) { filter: grayscale(1) brightness(0) invert(.902); }
 @container (max-width: 40rem) {
   .site-footer-inner { grid-template-columns: minmax(0, 1fr); }
   .footer-reuse { justify-self: start; }
-}
-@container (max-width: 36rem) {
-  .institution-link--ufmg-fale { flex-basis: 100%; }
 }
 /* Home responds to its reading width, including enlarged text on desktop. */
 @container (max-width: 60rem) {
@@ -376,6 +370,10 @@ select { max-width: 100%; padding: .44rem .65rem; border: 1px solid var(--contro
 .typed-gap + .response-feedback + em { color: var(--ink); font-weight: 600; margin-inline-start: .1em; }
 [data-question][data-result="correct"] { border-color: var(--success); }
 [data-question][data-result="incorrect"] { border-color: var(--danger); background-color: var(--surface-incorrect); }
+/* Gap controls retain the runtime's textual and ARIA result cues. A second
+   border style distinguishes review even when colour is unavailable. */
+:is(.typed-gap, .inline-select)[data-result="correct"] { background-color: var(--surface-correct); border-width: 2px; }
+:is(.typed-gap, .inline-select)[data-result="incorrect"] { background-color: var(--surface-incorrect); border-width: 2px; border-style: dashed; }
 /* Overlay the result rule so selected row surfaces cannot obscure it, while
    preserving unchecked control geometry and text measure. */
 .choice-question[data-result] { position: relative; }

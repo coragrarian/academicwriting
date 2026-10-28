@@ -21,6 +21,57 @@ def exercise_path(documents, kind):
     raise AssertionError(f"Fixture does not exercise {kind}")
 
 
+@pytest.mark.parametrize("kind", ["typed-gap", "gap", "inline-choice"])
+def test_gap_result_surfaces_accessibility_retry_and_persistence(page, synthetic_site, synthetic_documents, kind):
+    page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, kind)}")
+    key = json.loads(page.locator("#answer-key").text_content())
+    identifier = next(identifier for identifier, question in key["questions"].items() if question["kind"] == kind)
+    control = page.locator(f'[data-question="{identifier}"]')
+
+    def appearance():
+        return control.evaluate("""n => {
+          const s = getComputedStyle(n);
+          return [s.backgroundColor, s.borderColor, s.borderStyle, s.color];
+        }""")
+
+    neutral = appearance()
+    respond(page, key, wrong_id=identifier)
+    page.locator("button[type=submit]").click()
+    expect(control).to_have_attribute("data-result", "incorrect")
+    expect(control).to_have_attribute("aria-invalid", "true")
+    expect(page.locator(f"#{identifier}-feedback")).to_contain_text("Review this response")
+    incorrect = appearance()
+    assert incorrect[0] != neutral[0] and incorrect[2] == "dashed"
+    page.reload()
+    expect(control).to_have_attribute("data-result", "incorrect")
+    assert appearance() == incorrect
+    respond(page, key)
+    expect(control).not_to_have_attribute("data-result")
+    expect(control).not_to_have_attribute("aria-invalid")
+    assert appearance() == neutral
+    page.locator("button[type=submit]").click()
+    expect(control).to_have_attribute("data-result", "correct")
+    expect(control).to_have_attribute("aria-invalid", "false")
+    expect(page.locator(f"#{identifier}-feedback")).to_contain_text("Correct.")
+    correct = appearance()
+    assert correct[0] not in {neutral[0], incorrect[0]}
+    assert correct[1] != incorrect[1] and correct[2] == "solid"
+    for surface, border, _, ink in (correct, incorrect):
+        assert contrast_ratio(ink, surface) >= 4.5
+        assert contrast_ratio(border, surface) >= 3
+    control.focus()
+    assert control.evaluate("n => getComputedStyle(n).outlineStyle") == "solid"
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    assert appearance() == correct
+    page.locator("#reset-exercise").click()
+    expect(control).not_to_have_attribute("data-result")
+    expect(control).not_to_have_attribute("aria-invalid")
+    assert appearance() == neutral
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
+
+
 def assert_accessible_structure(page):
     headings = page.locator("h1,h2,h3,h4,h5,h6").evaluate_all(
         "nodes => nodes.map(n => [+n.tagName[1], n.textContent.trim()])"
@@ -135,10 +186,11 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
                 assert contrast_ratio(ink, background) >= 4.5 and "underline" not in decoration
     for image in footer.locator(".institution-logo").all():
         filter_, opacity = image.evaluate("n => [getComputedStyle(n).filter, +getComputedStyle(n).opacity]")
-        assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
-        assert 0.9 <= opacity < 1
-        image.locator("xpath=..").hover()
-        assert image.evaluate("n => +getComputedStyle(n).opacity") == 1
+        if image.get_attribute("alt") in {"UFMG (Faculdade de Letras)", "FAPEMIG", "CAPES"}:
+            assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
+        else:
+            assert filter_ == "none"  # Official white university variants.
+        assert opacity == 1
 
 
 def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page, synthetic_site, synthetic_documents):
