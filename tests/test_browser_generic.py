@@ -135,10 +135,11 @@ def test_shell_tonal_regions_keep_local_text_and_focus_legible(page, synthetic_s
                 assert contrast_ratio(ink, background) >= 4.5 and "underline" not in decoration
     for image in footer.locator(".institution-logo").all():
         filter_, opacity = image.evaluate("n => [getComputedStyle(n).filter, +getComputedStyle(n).opacity]")
-        assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
-        assert 0.9 <= opacity < 1
-        image.locator("xpath=..").hover()
-        assert image.evaluate("n => +getComputedStyle(n).opacity") == 1
+        if image.get_attribute("alt") in {"UFMG (Faculdade de Letras)", "FAPEMIG", "CAPES"}:
+            assert "grayscale(1)" in filter_ and "brightness(0)" in filter_ and "invert(" in filter_
+        else:
+            assert filter_ == "none"  # Official white university variants.
+        assert opacity == 1
 
 
 def test_interaction_colours_distinguish_neutral_hover_current_and_primary(page, synthetic_site, synthetic_documents):

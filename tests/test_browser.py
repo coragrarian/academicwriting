@@ -1004,8 +1004,9 @@ def test_optional_portrait_and_text_only_entries_keep_profile_access(page, site,
         "nodes => nodes.slice(0, 2).map(n => n.id || n.className)"
     ) == ["about-narrative", "project-information"]
     page.keyboard.press("Shift+Tab")
-    expect(page.locator(".project-facts a")).to_be_focused()
-    assert page.locator(".project-facts a").bounding_box()["y"] < profile.bounding_box()["y"]
+    repository = page.locator(".project-facts").get_by_role("link", name="coragrarian/academicwriting", exact=True)
+    expect(repository).to_be_focused()
+    assert repository.bounding_box()["y"] < profile.bounding_box()["y"]
 
 
 def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
@@ -1046,7 +1047,7 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     assert page.evaluate("window.footerProbe") is None
 
 
-@pytest.mark.parametrize("width", [1440, 1280, 1024, 768, 375, 320])
+@pytest.mark.parametrize("width", [2378, 1920, 1440, 1280, 1024, 768, 375, 320])
 def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
@@ -1097,21 +1098,29 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         expect(footer.get_by_role("link", name="About", exact=True)).to_have_count(0)
         expect(footer.locator(".footer-group")).to_have_count(2)
         expect(footer.locator(".footer-links a")).to_have_count(2)
-        expect(footer.locator(".footer-heading")).to_have_text("Use and reuse")
+        expect(footer.locator(".footer-heading")).to_have_text([
+            "Executing institutions", "Funding agencies", "Use and reuse",
+        ])
+        executing = footer.get_by_role("navigation", name="Executing institutions", exact=True)
+        funding = footer.get_by_role("navigation", name="Funding agencies", exact=True)
+        assert executing.locator("img").evaluate_all("nodes => nodes.map(n => n.alt)") == ["UFMG (Faculdade de Letras)", "UFVJM", "UFRGS"]
+        assert funding.locator("img").evaluate_all("nodes => nodes.map(n => n.alt)") == ["FAPEMIG", "CAPES"]
         expect(footer.locator(".footer-bottom .footer-source")).to_have_text("github.com/coragrarian/academicwriting")
         expect(footer.get_by_role("link", name="About the course", exact=True)).to_have_count(0)
         expect(footer.get_by_role("link", name="Corpus and research", exact=True)).to_have_count(0)
         provenance = footer.locator(".footer-provenance")
         expect(provenance).to_have_text(
-            "Developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
-            "Supported by FAPEMIG and CAPES. Grant APQ-01173-22."
+            "Website developed at the Faculdade de Letras, Universidade Federal de Minas Gerais. "
+            "Funded by FAPEMIG and CAPES. Grant APQ-01173-22."
         )
         repository = footer.get_by_role("link", name="github.com/coragrarian/academicwriting", exact=True)
         expect(repository.locator("svg")).to_have_attribute("aria-hidden", "true")
         layout = page.locator(".layout").bounding_box()
         assert footer.bounding_box()["y"] >= layout["y"] + layout["height"]
         for name, href in (
-            ("Faculdade de Letras da UFMG", "https://www.letras.ufmg.br/site/"),
+            ("UFMG (Faculdade de Letras)", "https://www.ufmg.br/"),
+            ("UFVJM", "https://portal.ufvjm.edu.br/"),
+            ("UFRGS", "https://www.ufrgs.br/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
             ("Course materials CC BY-NC-SA 4.0", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt"),
