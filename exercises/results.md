@@ -11,6 +11,10 @@ summary: >-
 
 ## Purpose and organisation of the Results section
 
+<!-- agrarian
+id: purpose-and-organisation-of-the-results-section
+-->
+
 The Results section reports the findings produced by the study and presents the evidence relevant to its research questions or objectives. Writers organise the section so that readers can follow the main patterns, comparisons, and other important findings, while tables and figures can present supporting detail.
 
 There is no single mandatory way to organise a Results section. Findings may be organised around research objectives or questions, analyses, themes, or principal results, depending on the study, discipline, and journal.
@@ -18,6 +22,10 @@ There is no single mandatory way to organise a Results section. Findings may be 
 *See [Nair and Nair (2014)](https://doi.org/10.1007/978-3-319-03101-9_2) on organising and presenting Results, [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on reporting and commenting functions in Agricultural Science research articles, and ICMJE's [Preparing a Manuscript for Submission to a Medical Journal](https://www.icmje.org/recommendations/browse/manuscript-preparation/preparing-for-submission.html) on reporting Results and the relationship between prose, tables and figures.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Match each sentence beginning with the ending that completes it.
 
@@ -53,6 +61,10 @@ feedback:
 
 ### Exercise 2
 
+<!-- agrarian
+id: exercise-2
+-->
+
 **Instructions:** Read the following guidelines for writing a Results section. Choose the **incorrect** guideline.
 
 - [ ] a) Refer to each table and figure in the text using its number.
@@ -86,6 +98,10 @@ feedback:
 
 ## Grammar and vocabulary in the Results section
 
+<!-- agrarian
+id: grammar-and-vocabulary-in-the-results-section
+-->
+
 Results sections use a range of grammatical and lexical resources to report findings, compare groups or values, describe changes, and direct readers to tables and figures. Writers may also make limited interpretations of the findings when the article structure and disciplinary conventions allow it.
 
 The boundary between reporting and interpretation is not identical in every research article. Broader explanation, causal argument, and comparison with previous research may appear in a separate Discussion or in a combined Results and Discussion section.
@@ -93,6 +109,10 @@ The boundary between reporting and interpretation is not identical in every rese
 *See [Shi and Wannaruk (2014)](https://doi.org/10.5539/elt.v7n8p1) on reporting and commenting functions in Agricultural Science research articles. Journal conventions vary: [PLOS ONE](https://journals.plos.org/plosone/s/submission-guidelines), for example, permits separate or combined Results and Discussion sections. Follow the target journal's author guidelines.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Complete the passage with the verbs in the answer bank. Use was and were twice each. Use the other verbs once.
 
@@ -127,6 +147,10 @@ feedback:
 -->
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 This exercise focuses on expressions used to report, compare, and sometimes interpret results in Agrarian Sciences research articles.
 
@@ -234,6 +258,10 @@ feedback:
 
 ### Exercise 3
 
+<!-- agrarian
+id: exercise-3
+-->
+
 Results writers sometimes use adverbs to modify findings in different ways. Depending on the sentence, an adverb may express degree, statistical comparison, direction of effect, how clearly a pattern is observed, or the writer's level of commitment.
 
 **Instructions:** Transform the word in parentheses into the adverb that correctly completes each sentence. Follow the model.
@@ -287,6 +315,10 @@ feedback:
 -->
 
 ### Exercise 4
+
+<!-- agrarian
+id: exercise-4
+-->
 
 The passage below is adapted from [Wietzke et al. (2020)](https://doi.org/10.1016/j.agee.2020.107142), who investigated different measures to restore and maintain arable plant diversity in agricultural landscapes.
 
@@ -343,6 +375,10 @@ feedback:
 
 ### Exercise 5
 
+<!-- agrarian
+id: exercise-5
+-->
+
 This exercise focuses on language used to compare values, groups, and conditions in Results sections.
 
 **Instructions:** Complete each gap with an expression from the answer bank. One expression is not used.
@@ -381,6 +417,10 @@ feedback:
 -->
 
 ### Exercise 6
+
+<!-- agrarian
+id: exercise-6
+-->
 
 Writers use different reporting verbs to present findings and indicate relationships between analyses, observations, displays, and conclusions.
 
@@ -521,6 +561,10 @@ feedback:
 - [ ] suggests
 
 ### Exercise 7
+
+<!-- agrarian
+id: exercise-7
+-->
 
 This exercise focuses on verbs used to describe increases, decreases, stability, and other changes over time.
 

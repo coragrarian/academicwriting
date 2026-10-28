@@ -11,11 +11,19 @@ summary: >-
 
 ## The Introduction section of research papers
 
+<!-- agrarian
+id: the-introduction-section-of-research-papers
+-->
+
 Research-article Introductions vary in structure. In Agrarian Sciences articles, writers may establish the research context, relate the study to previous research, identify a gap or unresolved issue, and state the purpose or objectives of the present study.
 
 *See [Samraj (2002)](https://doi.org/10.1016/S0889-4906(00)00023-5), [del Saz Rubio (2011)](https://doi.org/10.1016/j.esp.2011.03.002), and [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on Introduction functions and structural variation.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 The sentences below are adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), which investigates the relationship between soil salinity and cotton growth.
 
@@ -49,11 +57,19 @@ feedback:
 
 ## Giving a context/background
 
+<!-- agrarian
+id: giving-a-context-background
+-->
+
 One recurring function of a research-article Introduction is to establish the context for the study. Writers may introduce a wider disciplinary or practical issue, explain why it matters, and relate it to the more specific setting or question addressed by the research. This movement is not a fixed sequence: importance can be established through consequences, scale, practical relevance, or previous research, and several functions may occur in the same passage.
 
 *See [Samraj (2002)](https://doi.org/10.1016/S0889-4906(00)00023-5), [del Saz Rubio (2011)](https://doi.org/10.1016/j.esp.2011.03.002), and [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on establishing research context.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 The passage below is adapted from the Introduction of [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), which investigates the relationship between soil salinity and cotton growth. In this passage, notice how the authors move from a wider research context towards the more specific problem addressed by the study.
 
@@ -80,6 +96,10 @@ feedback:
 -->
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 This exercise focuses on language that can help writers express the importance or relevance of a research topic.
 
@@ -137,6 +157,10 @@ feedback:
 
 ### Exercise 3
 
+<!-- agrarian
+id: exercise-3
+-->
+
 In background writing, the present perfect can be used to present earlier changes or developments as relevant to the current research context. This does not necessarily mean that the change itself is still continuing.
 
 > *In arid regions, there has been a noticeable upward trend in rhizosphere salt levels.*
@@ -180,6 +204,10 @@ feedback:
 
 ## Reviewing previous research
 
+<!-- agrarian
+id: reviewing-previous-research
+-->
+
 Research-article Introductions often relate the current study to previous research. Writers may report individual studies, summarise a broader body of work, or describe what has been investigated so far. These references help establish what is already known and position the present study in relation to earlier work.
 
 Tense can contribute to this framing. One useful tendency is to use the past simple when reporting a particular study and the present perfect when referring more broadly to an area of previous research. This is not a fixed grammar rule: writers can choose other tenses depending on what they want to emphasise.
@@ -205,6 +233,10 @@ Here, *have demonstrated* refers to a broader body of research in the present pe
 A named and dated study can also be reported using the present perfect. Author names and publication year do not by themselves determine tense.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 A useful pattern in literature reviews is to report a particular study in the **past simple** and refer to a broader body of previous research in the **present perfect**. This is a discourse tendency, not a universal grammar rule; other tense choices can frame the research differently.
 
@@ -244,6 +276,10 @@ feedback:
 -->
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 The passage below is adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229), who review previous research about soil salinity and cotton growth. The numbered citations refer to the original article's bibliography.
 
@@ -293,6 +329,10 @@ feedback:
 
 ## Indicating a research gap
 
+<!-- agrarian
+id: indicating-a-research-gap
+-->
+
 A research gap identifies something that previous research has not yet explained, examined, or resolved sufficiently for the question at hand. A gap does not necessarily mean that no research exists: earlier studies may leave a particular population, context, relationship, method, or question insufficiently understood.
 
 Gap statements help position the present study in relation to previous knowledge. They can point to limited research, limited understanding, an unresolved question, or a limitation in existing approaches. These distinctions can overlap, so the surrounding context matters.
@@ -300,6 +340,10 @@ Gap statements help position the present study in relation to previous knowledge
 *See [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) on establishing a research niche, [Robinson et al. (2011)](https://doi.org/10.1016/j.jclinepi.2011.06.009) on different forms of insufficient evidence, and [Hyland (2005)](https://doi.org/10.1177/1461445605050365) on epistemic stance and hedging.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 The excerpt below moves from previous research to a limitation in current understanding, thereby identifying a research gap.
 
@@ -342,6 +386,10 @@ feedback:
 
 ### Exercise 2
 
+<!-- agrarian
+id: exercise-2
+-->
+
 **Instructions:** Read the excerpt below. Which option best identifies the research gap?
 
 *Adapted from [Heng et al. (2024)](https://doi.org/10.3390/agronomy14010229).*
@@ -368,6 +416,10 @@ feedback:
 -->
 
 ### Exercise 3
+
+<!-- agrarian
+id: exercise-3
+-->
 
 Research gaps can be expressed through a range of phrases and grammatical patterns.
 
@@ -514,6 +566,10 @@ feedback:
 
 ## Stating the objectives
 
+<!-- agrarian
+id: stating-the-objectives
+-->
+
 Research-article Introductions can state what the present study sets out to investigate, test, compare, evaluate, or develop. A purpose or objective statement often helps position the present research in relation to the problem or gap established earlier, although its position in the Introduction can vary.
 
 One recurrent way of stating objectives is to use a **to-infinitive**, as in *the aim of this study was to examine...* or *this study aimed to evaluate...*. Authors can also present the current research through finite statements, research questions, hypotheses, and other grammatical patterns.
@@ -521,6 +577,10 @@ One recurrent way of stating objectives is to use a **to-infinitive**, as in *th
 *See [Bajwa et al. (2020)](https://doi.org/10.1007/s11192-020-03475-9) and the University of Manchester's [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/introducing-work/) on presenting the current research.*
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 This exercise focuses on the two research objectives stated in the excerpt below.
 
@@ -556,6 +616,10 @@ feedback:
 -->
 
 ### Exercise 2
+
+<!-- agrarian
+id: exercise-2
+-->
 
 One recurrent way of stating research objectives is to use a **to-infinitive**, such as *to examine*, *to evaluate*, or *to determine*.
 
@@ -693,11 +757,19 @@ feedback:
 
 ## Grammar and vocabulary in the Introduction section
 
+<!-- agrarian
+id: grammar-and-vocabulary-in-the-introduction-section
+-->
+
 This subsection practises grammar and vocabulary in published research-article Introductions. The exercises focus on how grammatical choices work in context, including subject–verb agreement, verb forms, voice, complementation, and lexical patterns.
 
 When more than one form is grammatically possible, consider the meaning and structure of the sentence rather than relying on a single mechanical rule.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Complete the Introduction excerpt with the expressions in the answer bank. Use each expression once.
 
@@ -740,6 +812,10 @@ feedback:
 
 ### Exercise 2
 
+<!-- agrarian
+id: exercise-2
+-->
+
 The passage below adapts the background presented in a 2010 article. Its present-tense forms refer to that historical context, not to conditions today.
 
 **Instructions:** Complete the Introduction excerpt with the expressions in the answer bank. Use each expression once.
@@ -773,6 +849,10 @@ feedback:
 -->
 
 ### Exercise 3
+
+<!-- agrarian
+id: exercise-3
+-->
 
 **Instructions:** Complete the Introduction excerpt with the expressions in the answer bank. Use each expression once. The expression *reduce* is used twice.
 
