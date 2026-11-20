@@ -147,7 +147,12 @@ def test_home_continuation_follows_course_order_and_public_labels(page, syntheti
         page.reload()
         row = page.locator(f'[data-home-module="{next_module}"]')
         expect(page.locator("[data-home-entry]")).to_have_text("Continue with " + row.locator(".contents-title").text_content())
-        expect(page.locator("[data-home-entry]")).to_have_attribute("href", f"{next_module}/index.html")
+        document = next(doc for doc in synthetic_documents if doc.slug == next_module)
+        section = next(section for section in document.sections if section.exercises)
+        exercise = section.exercises[0]
+        expect(page.locator("[data-home-entry]")).to_have_attribute(
+            "href", f"{next_module}/{section.slug}/{exercise.slug}/index.html"
+        )
     assert page.locator(".contents-link").count() == len(synthetic_documents)
 
 
@@ -598,7 +603,9 @@ def test_entire_synthetic_sequence_from_home_and_back_with_generic_shell(page, s
             assert page.evaluate("window.navigationProbe") is None
     assert visited == [path.as_posix() for path in sequence]
     expect(page.locator(".course-panel, .page-navigation")).to_have_count(0)
-    assert set(json.loads(page.locator("#site-data").text_content())) == {"modules"}
+    data = json.loads(page.locator("#site-data").text_content())
+    assert set(data) == {"modules", "exercise_urls"}
+    assert set(data["exercise_urls"].values()) <= set(visited)
     page.goto(f"{base}/{sequence[-1].as_posix()}")
     backwards = []
     while page.url != home:

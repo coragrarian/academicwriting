@@ -51,7 +51,7 @@
     </main>
   </div>
   {% include "_site_footer.html" %}
-  {% if site_data %}{# Home reads only the module exercise catalogue. Course
+  {% if site_data %}{# Home reads the exercise catalogue and resume destinations. Course
      pages also receive navigation data; answer-key remains inside exercises. #}<script id="site-data" type="application/json">{{ site_data | tojson }}</script>{% endif %}
 </body>
 </html>

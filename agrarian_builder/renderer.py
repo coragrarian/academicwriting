@@ -407,7 +407,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     The pipeline copies assets, derives global navigation, renders semantic
     blocks and checking payloads, then supplies page-specific Jinja context.
     Normal content pages use relative asset/page links, including single-module builds.
-    Home uses the public shell with only the progress exercise catalogue;
+    Home uses the public shell with the progress catalogue and exercise paths;
     About and the 404 fallback have no runtime data. Only normal content URLs
     enter the sitemap. Home terminates the course rather than becoming another
     learning node.
@@ -447,6 +447,15 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             exercise.id for section in document.sections for exercise in section.exercises
         ]
         for document in documents
+    }
+    home_data = {
+        "modules": module_ids,
+        "exercise_urls": {
+            exercise.id: _path_for(document, section, exercise).as_posix()
+            for document in documents
+            for section in document.sections
+            for exercise in section.exercises
+        },
     }
     page_navigation = _page_navigation(documents, temp)
     content_urls: list[str] = []
@@ -516,7 +525,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                 },
             }
             if document
-            else {"modules": module_ids} if path == Path("index.html") else None,
+            else home_data if path == Path("index.html") else None,
             total_exercises=len(module_ids[document.slug])
             if document
             else sum(map(len, module_ids.values())),

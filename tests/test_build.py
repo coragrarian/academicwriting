@@ -49,6 +49,12 @@ def test_complete_build(tmp_path, course_documents):
             doc.slug: [entry.id for section in doc.sections for entry in section.exercises]
             for doc in documents
         },
+        "exercise_urls": {
+            exercise.id: f"{doc.slug}/{section.slug}/{exercise.slug}/index.html"
+            for doc in documents
+            for section in doc.sections
+            for exercise in section.exercises
+        },
     }
     for path, page in pages.items():
         source = path.read_text()
@@ -251,7 +257,9 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, synthetic_d
     for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
         if path == Path("index.html"):
-            assert json.loads(page.scripts["site-data"]) == {"modules": expected_data["modules"]}
+            data = json.loads(page.scripts["site-data"])
+            assert set(data) == {"modules", "exercise_urls"}
+            assert data["modules"] == expected_data["modules"]
             scripts = [attrs for tag, attrs in page.elements if tag == "script" and "src" in attrs]
             assert [attrs["src"] for attrs in scripts] == ["assets/progress.js", "assets/home.js"]
             assert all("defer" in attrs for attrs in scripts)

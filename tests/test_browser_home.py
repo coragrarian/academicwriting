@@ -36,13 +36,13 @@ def seed_progress(page, counts):
 
 @pytest.mark.parametrize(("counts", "label", "destination"), [
     ([0, 0, 0, 0], "Begin with Introduction", "introduction/index.html"),
-    ([2, 0, 0, 0], "Continue with Introduction", "introduction/index.html"),
-    ([14, 2, 0, 0], "Continue with Methods", "methods/index.html"),
-    ([14, 7, 0, 0], "Continue with Results", "results/index.html"),
-    ([14, 7, 9, 0], "Continue with Discussion", "discussion/index.html"),
-    ([14, 7, 9, 3], "Continue with Discussion", "discussion/index.html"),
+    ([2, 0, 0, 0], "Continue with Introduction", "introduction/giving-a-context-background/exercise-2/index.html"),
+    ([14, 2, 0, 0], "Continue with Methods", "methods/purpose-of-the-methods-section/exercise-3/index.html"),
+    ([14, 7, 0, 0], "Continue with Results", "results/purpose-and-organisation-of-the-results-section/exercise-1/index.html"),
+    ([14, 7, 9, 0], "Continue with Discussion", "discussion/the-discussion-section-of-research-papers/exercise-1/index.html"),
+    ([14, 7, 9, 3], "Continue with Discussion", "discussion/the-discussion-section-of-research-papers/exercise-4/index.html"),
     ([14, 7, 9, 9], "Review the course", "#course"),
-    ([0, 1, 0, 0], "Continue with Introduction", "introduction/index.html"),
+    ([0, 1, 0, 0], "Continue with Introduction", "introduction/the-introduction-section-of-research-papers/exercise-1/index.html"),
 ])
 def test_home_progress_states_entry_and_course_agreement(page, site, counts, label, destination):
     page.goto(site[0] + "/index.html")
@@ -81,13 +81,32 @@ def test_pre_discussion_saved_state_continues_with_new_module(page, site):
     ]
     entry = page.locator("[data-home-entry]")
     expect(entry).to_have_text("Continue with Discussion")
-    expect(entry).to_have_attribute("href", "discussion/index.html")
+    expect(entry).to_have_attribute("href", "discussion/the-discussion-section-of-research-papers/exercise-1/index.html")
     assert page.evaluate("JSON.stringify({...localStorage})") == saved
     entry.click()
     for module, total in [("introduction", 14), ("methods", 7), ("results", 9)]:
         expect(page.locator(f'[data-progress-module="{module}"]')).to_have_text(f"{total}/{total}")
     expect(page.locator('[data-progress-module="discussion"]')).to_have_text("0/9")
     assert page.evaluate("JSON.stringify({...localStorage})") == saved
+
+
+def test_home_resumes_first_gap_after_out_of_order_completion(page, site):
+    page.goto(site[0] + "/")
+    page.evaluate("""() => localStorage.setItem('agrarian-writing-v2:introduction', JSON.stringify({
+      progress: {
+        'introduction--the-introduction-section-of-research-papers--exercise-1': 'completed',
+        'introduction--giving-a-context-background--exercise-1': 'in-progress',
+        'introduction--giving-a-context-background--exercise-2': 'completed'
+      }
+    }))""")
+    page.reload()
+    entry = page.get_by_role("link", name="Continue with Introduction", exact=True)
+    entry.click()
+    expect(page).to_have_url(site[0] + "/introduction/giving-a-context-background/exercise-1/index.html")
+    expect(page.locator("#exercise-form")).to_have_attribute(
+        "data-exercise-id", "introduction--giving-a-context-background--exercise-1"
+    )
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
 
 
 def test_home_fresh_browser_and_actual_checked_attempts(page, site):

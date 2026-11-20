@@ -24,8 +24,9 @@ On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
 
 Home uses ordinary links, the shared progress helper and `home.js` to show saved
-completion and suggest where to continue. Its JSON contains only the module
-exercise catalogue. About and the generated 404 fallback use the shared
+completion and suggest where to continue. Its JSON contains the module
+exercise catalogue and a map from exercise IDs to their generated paths.
+About and the generated 404 fallback use the shared
 stylesheet without scripts or learner-state JSON.
 
 There is no backend or database.
