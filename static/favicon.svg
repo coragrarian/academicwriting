@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="#285e51"/>
-  <text x="32" y="43" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-weight="600" letter-spacing="-1" fill="#fbfcfa">AW</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 86.152 86.152">
+  <title>CorAgrarian Academic Writing emblem</title>
+  <style>
+    @media (prefers-color-scheme: dark) { path { fill: #BDCFB9; } }
+  </style>
+  <path fill="#285e51" fill-rule="evenodd" d="
+    M39.070 0 C17.492 0 0 17.496 0 39.070 C0 60.656 17.492 78.152 39.070 78.152
+    C60.656 78.152 78.148 60.656 78.148 39.070 C78.148 17.496 60.656 0 39.070 0 Z
+    M49.012 49.016 C42.184 55.844 39.871 63.426 39.070 66.676
+    C38.281 63.426 35.965 55.844 29.129 49.016 C22.289 42.176 14.688 39.871 11.426 39.082
+    V39.070 C14.688 38.281 22.289 35.977 29.129 29.137 C35.965 22.309 38.281 14.727 39.070 11.477
+    C39.871 14.727 42.184 22.309 49.012 29.137 C55.863 35.977 63.465 38.281 66.727 39.070
+    V39.082 C63.465 39.871 55.863 42.176 49.012 49.016 Z"/>
 </svg>

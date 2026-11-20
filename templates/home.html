@@ -5,19 +5,14 @@
   <div class="home-hero-copy">
     <p class="eyebrow">Self-study course</p>
     <h1>Academic Writing for Agrarian Sciences</h1>
-    <p class="lead">Academic Writing for Agrarian Sciences is an interactive self-study resource for students and researchers in the Agrarian Sciences. Working section by section through research articles, it helps learners recognise disciplinary rhetorical conventions and practise the grammar, vocabulary and phraseology used to realise them. The materials are informed by the CorAgrarian corpus, published Agrarian Sciences research and academic-writing scholarship.</p>
+    <p class="lead">Study how research articles in English are organised and practise the language used in each section. The course is designed for students and researchers in the Agrarian Sciences.</p>
+    <ul class="home-facts" aria-label="Course at a glance" role="list">
+      <li>{{ documents | length }} module{% if documents | length != 1 %}s{% endif %}</li>
+      <li>{{ total_exercises }} interactive exercise{% if total_exercises != 1 %}s{% endif %}</li>
+      <li>Free, self-paced study</li>
+    </ul>
     <a class="action-link action-link--primary" data-home-entry href="{{ module_link(documents[0]) }}"><span data-home-entry-label>Begin with {{ home_module_title(documents[0].title) }}</span> {% include "_chevron_right.html" %}</a>
   </div>
-  <aside class="home-facts" aria-labelledby="course-facts-heading">
-    <h2 id="course-facts-heading" class="eyebrow">At a glance</h2>
-    <dl>
-      <div><dt>Modules</dt><dd>{{ documents | length }}</dd></div>
-      <div><dt>Exercises</dt><dd>{{ total_exercises }} interactive</dd></div>
-      <div><dt>Format</dt><dd>Self-paced</dd></div>
-      <div><dt>Access</dt><dd>Free</dd></div>
-      <div><dt>For</dt><dd>Students and researchers in the Agrarian Sciences</dd></div>
-    </dl>
-  </aside>
 </div>
 <section id="course" class="resource-section" aria-labelledby="modules-heading">
   <h2 id="modules-heading" class="section-heading">Course contents</h2>

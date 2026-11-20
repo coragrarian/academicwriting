@@ -34,7 +34,10 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-name" href="{{ home_url }}"{% if is_home %} aria-current="page"{% endif %}>CorAgrarian <span>Academic Writing</span></a>
+      <a class="site-name" href="{{ home_url }}"{% if is_home %} aria-current="page"{% endif %}>
+        <img class="site-mark" src="{{ asset_favicon }}" width="32" height="32" alt="">
+        <span class="site-name-text">CorAgrarian <span class="site-name-course">Academic Writing</span></span>
+      </a>
       <nav class="site-links" aria-label="Site">
         <a class="course-link" href="{{ course_url }}"{% if document %} aria-current="true"{% endif %}>Course</a>
         <a class="about-link" href="{{ about_url }}" {% if is_about %}aria-current="page"{% endif %}>About</a>

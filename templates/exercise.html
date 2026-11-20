@@ -4,12 +4,13 @@
   <li><a href="{{ home_url }}">Home</a></li>
   <li><span aria-hidden="true">/</span> <a href="{{ module_url }}">{{ document.title }}</a></li>
   <li><span aria-hidden="true">/</span> <a href="{{ section_url(section) }}">{{ section.title }}</a></li>
-  <li aria-current="page"><span aria-hidden="true">/</span> {{ exercise.title }}</li>
 </ol></nav>
 <div class="page-head exercise-head">
-  {% if total > 1 %}<p class="eyebrow">{{ position }} of {{ total }}</p>{% endif %}
   <h1>{{ exercise.title }}</h1>
-  <p class="exercise-state" data-current-status>Not started</p>
+  <div class="exercise-meta">
+    {% if total > 1 %}<p class="exercise-position">Exercise {{ position }} of {{ total }} in this subsection</p>{% endif %}
+    <p class="exercise-state" data-current-status>Not started</p>
+  </div>
 </div>
 <form id="exercise-form" data-exercise-id="{{ exercise.id }}" novalidate>
   <div class="exercise-content prose" data-response-group="exercise">

@@ -112,13 +112,9 @@ def contrast_ratio(first, second):
 def test_home_orientation_and_primary_entry_follow_course_model(page, synthetic_site, synthetic_documents):
     page.goto(f"{synthetic_site[0]}/index.html")
     expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
-    assert page.locator(".home-facts dt").all_text_contents() == [
-        "Modules", "Exercises", "Format", "Access", "For",
-    ]
     exercises = sum(len(section.exercises) for doc in synthetic_documents for section in doc.sections)
-    assert page.locator(".home-facts dd").all_text_contents() == [
-        str(len(synthetic_documents)), f"{exercises} interactive", "Self-paced", "Free",
-        "Students and researchers in the Agrarian Sciences",
+    assert page.locator(".home-facts li").all_text_contents() == [
+        f"{len(synthetic_documents)} modules", f"{exercises} interactive exercises", "Free, self-paced study",
     ]
     primary = page.locator(".home-hero .action-link--primary")
     expect(primary).to_have_count(1)
@@ -445,10 +441,9 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
 
     page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
     trail = page.get_by_role("navigation", name="Breadcrumb")
-    expect(trail.locator("ol > li")).to_have_count(4)
-    expect(trail.locator('[aria-current="page"]')).to_have_text(
-        "/ " + page.locator("h1").text_content()
-    )
+    expect(trail.locator("ol > li")).to_have_count(3)
+    subsection = trail.get_by_role("link").last
+    expect(subsection).to_have_attribute("href", "../index.html")
     expect(page.locator('.course-panel a[aria-current="page"]')).to_have_count(1)
     option = page.locator(".choice-option").first
     option.locator("input").focus()

@@ -48,8 +48,8 @@ class PageMetadata:
     image_url: str
     robots: str | None = None
     image_alt: str = (
-        "Academic Writing for Agrarian Sciences. Interactive self-study activities "
-        "for academic writing in the Agrarian Sciences. UFMG · FAPEMIG · CAPES."
+        "CorAgrarian. Academic Writing for Agrarian Sciences. Self-study for "
+        "students and researchers writing research articles in English."
     )
 
 
