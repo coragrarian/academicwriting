@@ -1,6 +1,6 @@
-**CorAgrarian**
+<p><a href="https://coragrarian.github.io/academicwriting/"><img src="static/favicon.svg" width="36" height="36" alt=""> <strong>CorAgrarian</strong></a></p>
 
-# <img src="static/favicon.svg" width="36" height="36" alt=""> Academic Writing for Agrarian Sciences
+# Academic Writing for Agrarian Sciences
 
 [![Course: live](https://img.shields.io/badge/Course-live-2b6f50)](https://coragrarian.github.io/academicwriting/)
 [![Validate](https://github.com/coragrarian/academicwriting/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/coragrarian/academicwriting/actions/workflows/ci.yml)
