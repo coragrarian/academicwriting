@@ -24,8 +24,9 @@ On learning pages, JavaScript adds the interactive behaviour: answer checking,
 feedback, saved responses, progress and partial navigation.
 
 Home uses ordinary links, the shared progress helper and `home.js` to show saved
-completion and suggest where to continue. Its JSON contains only the module
-exercise catalogue. About and the generated 404 fallback use the shared
+completion and suggest where to continue. Its JSON contains the module
+exercise catalogue and a map from exercise IDs to their generated paths.
+About and the generated 404 fallback use the shared
 stylesheet without scripts or learner-state JSON.
 
 There is no backend or database.
@@ -173,9 +174,10 @@ uses absolute production links so assets and recovery actions work from nested
 missing URLs; it has `noindex` and no canonical. The sitemap lists normal content
 only. No project-local `robots.txt` is generated: crawlers read it at the host root.
 
-The AW favicon is a browser identity, not a project logo. The social card and
-touch icon are committed PNGs; the production build only copies them. To render
-them again with local fonts and the existing development toolchain, run:
+The compact course emblem in `static/favicon.svg` also appears in the header,
+README and social card. The social card and touch icon are committed PNGs
+generated from local assets. The production build copies them as-is. To render
+them again with the existing development toolchain, run:
 
 ```sh
 uv run --frozen python tools/render_publication_assets.py

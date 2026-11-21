@@ -112,13 +112,9 @@ def contrast_ratio(first, second):
 def test_home_orientation_and_primary_entry_follow_course_model(page, synthetic_site, synthetic_documents):
     page.goto(f"{synthetic_site[0]}/index.html")
     expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
-    assert page.locator(".home-facts dt").all_text_contents() == [
-        "Modules", "Exercises", "Format", "Access", "For",
-    ]
     exercises = sum(len(section.exercises) for doc in synthetic_documents for section in doc.sections)
-    assert page.locator(".home-facts dd").all_text_contents() == [
-        str(len(synthetic_documents)), f"{exercises} interactive", "Self-paced", "Free",
-        "Students and researchers in the Agrarian Sciences",
+    assert page.locator(".home-facts li").all_text_contents() == [
+        f"{len(synthetic_documents)} modules", f"{exercises} interactive exercises", "Free, self-paced study",
     ]
     primary = page.locator(".home-hero .action-link--primary")
     expect(primary).to_have_count(1)
@@ -147,7 +143,12 @@ def test_home_continuation_follows_course_order_and_public_labels(page, syntheti
         page.reload()
         row = page.locator(f'[data-home-module="{next_module}"]')
         expect(page.locator("[data-home-entry]")).to_have_text("Continue with " + row.locator(".contents-title").text_content())
-        expect(page.locator("[data-home-entry]")).to_have_attribute("href", f"{next_module}/index.html")
+        document = next(doc for doc in synthetic_documents if doc.slug == next_module)
+        section = next(section for section in document.sections if section.exercises)
+        exercise = section.exercises[0]
+        expect(page.locator("[data-home-entry]")).to_have_attribute(
+            "href", f"{next_module}/{section.slug}/{exercise.slug}/index.html"
+        )
     assert page.locator(".contents-link").count() == len(synthetic_documents)
 
 
@@ -440,10 +441,9 @@ def test_mobile_disclosures_touch_targets_and_skip_focus(page, synthetic_site, s
 
     page.goto(f"{synthetic_site[0]}/{exercise_path(synthetic_documents, 'single-choice')}")
     trail = page.get_by_role("navigation", name="Breadcrumb")
-    expect(trail.locator("ol > li")).to_have_count(4)
-    expect(trail.locator('[aria-current="page"]')).to_have_text(
-        "/ " + page.locator("h1").text_content()
-    )
+    expect(trail.locator("ol > li")).to_have_count(3)
+    subsection = trail.get_by_role("link").last
+    expect(subsection).to_have_attribute("href", "../index.html")
     expect(page.locator('.course-panel a[aria-current="page"]')).to_have_count(1)
     option = page.locator(".choice-option").first
     option.locator("input").focus()
@@ -598,7 +598,9 @@ def test_entire_synthetic_sequence_from_home_and_back_with_generic_shell(page, s
             assert page.evaluate("window.navigationProbe") is None
     assert visited == [path.as_posix() for path in sequence]
     expect(page.locator(".course-panel, .page-navigation")).to_have_count(0)
-    assert set(json.loads(page.locator("#site-data").text_content())) == {"modules"}
+    data = json.loads(page.locator("#site-data").text_content())
+    assert set(data) == {"modules", "exercise_urls"}
+    assert set(data["exercise_urls"].values()) <= set(visited)
     page.goto(f"{base}/{sequence[-1].as_posix()}")
     backwards = []
     while page.url != home:

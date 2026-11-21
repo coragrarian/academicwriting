@@ -18,13 +18,22 @@ def main() -> None:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page(
-            viewport={"width": 1200, "height": 630}, device_scale_factor=1
+            viewport={"width": 1200, "height": 630}, device_scale_factor=1,
+            color_scheme="light",
         )
         page.goto((ROOT / "tools/social-preview.html").as_uri())
         page.evaluate("document.fonts.ready")
         page.screenshot(path=str(ROOT / "static/social-preview.png"))
+        paper = page.evaluate("getComputedStyle(document.body).backgroundColor")
         page.set_viewport_size({"width": 180, "height": 180})
         page.goto((ROOT / "static/favicon.svg").as_uri())
+        # The browser icon is transparent. The touch icon needs an opaque
+        # surface and room around the mark for the system's rounded mask.
+        page.locator("svg").evaluate("""(icon, paper) => {
+            icon.style.backgroundColor = paper;
+            icon.style.boxSizing = 'border-box';
+            icon.style.padding = '14px';
+        }""", paper)
         page.screenshot(path=str(ROOT / "static/apple-touch-icon.png"))
         browser.close()
 

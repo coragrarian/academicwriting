@@ -49,10 +49,16 @@ def test_complete_build(tmp_path, course_documents):
             doc.slug: [entry.id for section in doc.sections for entry in section.exercises]
             for doc in documents
         },
+        "exercise_urls": {
+            exercise.id: f"{doc.slug}/{section.slug}/{exercise.slug}/index.html"
+            for doc in documents
+            for section in doc.sections
+            for exercise in section.exercises
+        },
     }
     for path, page in pages.items():
         source = path.read_text()
-        assert ">CorAgrarian <span>Academic Writing</span></a>" in source.split("</header>", 1)[0]
+        assert 'CorAgrarian <span class="site-name-course">Academic Writing</span>' in source.split("</header>", 1)[0]
         not_found = path.relative_to(output) == Path("404.html")
         public_page = path.relative_to(output) in {
             Path("index.html"), Path("about/index.html"), Path("404.html"),
@@ -105,9 +111,12 @@ def test_complete_build(tmp_path, course_documents):
         ]
         assert len(current_links) == (0 if not_found else 1)
         assert all(local_link_target(output, path, attrs["href"]) == path for attrs in current_links)
+        has_current_crumb = "answer-key" not in page.scripts and relative_path not in {
+            Path("index.html"), Path("404.html"),
+        }
         assert sum(
             1 for tag, attrs in page.elements if tag == "li" and attrs.get("aria-current") == "page"
-        ) == (0 if path.relative_to(output) in {Path("index.html"), Path("404.html")} else 1)
+        ) == int(has_current_crumb)
         data = {}
         if public_page and path.relative_to(output) != Path("index.html"):
             assert "site-data" not in page.scripts
@@ -170,12 +179,12 @@ def test_complete_build(tmp_path, course_documents):
                 )[0]
                 if len(section.exercises) > 1:
                     assert (
-                        f'<p class="eyebrow">{position} of {len(section.exercises)}</p>'
+                        f'<p class="exercise-position">Exercise {position} of '
+                        f'{len(section.exercises)} in this subsection</p>'
                         in heading
                     )
                 else:
-                    assert 'class="eyebrow"' not in heading
-                assert f"Exercise {position} of {len(section.exercises)}" not in heading
+                    assert 'class="exercise-position"' not in heading
                 assert exercise.id not in ids
                 ids.add(exercise.id)
                 data = json.loads(page.scripts["site-data"])
@@ -251,7 +260,9 @@ def test_public_pages_exclude_course_runtime_and_traversal(tmp_path, synthetic_d
     for path in (Path("index.html"), Path("about/index.html"), Path("404.html")):
         page = Page((output / path).read_text())
         if path == Path("index.html"):
-            assert json.loads(page.scripts["site-data"]) == {"modules": expected_data["modules"]}
+            data = json.loads(page.scripts["site-data"])
+            assert set(data) == {"modules", "exercise_urls"}
+            assert data["modules"] == expected_data["modules"]
             scripts = [attrs for tag, attrs in page.elements if tag == "script" and "src" in attrs]
             assert [attrs["src"] for attrs in scripts] == ["assets/progress.js", "assets/home.js"]
             assert all("defer" in attrs for attrs in scripts)
@@ -308,13 +319,9 @@ def test_home_and_about_public_content(tmp_path, documents):
     assert "Start the course" not in home_source
     assert "About the corpus and research" in home_source
     assert (
-        "Academic Writing for Agrarian Sciences is an interactive self-study "
-        "resource for students and researchers in the Agrarian Sciences. Working "
-        "section by section through research articles, it helps learners recognise "
-        "disciplinary rhetorical conventions and practise the grammar, vocabulary "
-        "and phraseology used to realise them. The materials are informed by the "
-        "CorAgrarian corpus, published Agrarian Sciences research and "
-        "academic-writing scholarship."
+        "Study how research articles in English are organised and practise the "
+        "language used in each section. The course is designed for students and "
+        "researchers in the Agrarian Sciences."
     ) in hero
     assert [row["href"] for row in rows] == [
         "introduction/index.html", "methods/index.html", "results/index.html",
@@ -354,6 +361,7 @@ def test_home_and_about_public_content(tmp_path, documents):
     about = Page(about_source)
     assert '<h1>About Academic Writing for Agrarian Sciences</h1>' in about_source
     assert "Modules are organised around major sections of research articles." in about_source
+    assert "grammar, vocabulary and phraseology used to realise them" in about_source
     assert "The available modules cover" not in about_source
     assert {
         "research-heading", "corpus-heading", "materials-heading",
@@ -433,7 +441,7 @@ def test_public_team_uses_named_roles_and_anonymous_member_slots(tmp_path, docum
     about_source = (output / "about/index.html").read_text()
     home, about = Page(home_source), Page(about_source)
     assert [text for tag, text in home.headings if tag == "h2"] == [
-        "At a glance", "Course contents", "The CorAgrarian corpus",
+        "Course contents", "The CorAgrarian corpus",
     ]
     assert not any(name in home_source for name in names)
     assert not {"people-heading", "team", "data-platform"} & home.ids
@@ -541,15 +549,11 @@ def test_home_contents_follow_supplied_modules_and_preserve_unrecognised_titles(
     start = next(attrs for _, attrs in home.elements if attrs.get("class") == "contents-link")
     assert start["href"] == "beta/index.html"
     assert 'href="beta/index.html"><span data-home-entry-label>Begin with Neutral descriptions</span>' in source
-    facts = source.split('<aside class="home-facts"', 1)[1].split("</aside>", 1)[0]
-    assert f'<dt>Modules</dt><dd>{len(modules)}</dd>' in facts
+    facts = source.split('<ul class="home-facts"', 1)[1].split("</ul>", 1)[0]
+    assert f'<li>{len(modules)} modules</li>' in facts
     exercise_total = sum(len(section.exercises) for module in modules for section in module.sections)
-    assert f'<dt>Exercises</dt><dd>{exercise_total} interactive</dd>' in facts
-    for label, value in (
-        ("Format", "Self-paced"), ("Access", "Free"),
-        ("For", "Students and researchers in the Agrarian Sciences"),
-    ):
-        assert f"<dt>{label}</dt><dd>{value}</dd>" in facts
+    assert f'<li>{exercise_total} interactive exercises</li>' in facts
+    assert '<li>Free, self-paced study</li>' in facts
     rows = source.split('<ol class="course-contents" role="list">', 1)[1].split("</ol>", 1)[0]
     rows = rows.split("<li>")[1:]
     assert len(rows) == 2
@@ -641,8 +645,20 @@ def test_publication_assets_are_local_and_sized_for_their_purpose(tmp_path, synt
     output = tmp_path / "site"
     build_site(documents, output)
     favicon = ET.parse(output / "assets/favicon.svg").getroot()
-    assert favicon.attrib["viewBox"] == "0 0 64 64"
-    assert favicon.find("{http://www.w3.org/2000/svg}text").text == "AW"
+    _, _, width, height = map(float, favicon.attrib["viewBox"].split())
+    assert width == height > 0
+    paths = favicon.findall("{http://www.w3.org/2000/svg}path")
+    assert len(paths) == 1 and paths[0].get("fill-rule") == "evenodd"
+    assert {node.tag.split("}")[-1] for node in favicon.iter()} == {"svg", "path", "style", "title"}
+    for path in output.rglob("*.html"):
+        page = Page(path.read_text())
+        [(mark, home)] = [
+            (image, link) for image, link in page.image_links
+            if image.get("class") == "site-mark"
+        ]
+        assert mark["alt"] == "" and home["class"] == "site-name"
+        assert local_link_target(output, path, mark["src"]) == output / "assets/favicon.svg"
+        assert local_link_target(output, path, home["href"]) == output / "index.html"
     for filename, dimensions, limit in (
         ("social-preview.png", (1200, 630), 200_000),
         ("apple-touch-icon.png", (180, 180), 20_000),
@@ -715,6 +731,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         "logo-ufrgs.svg": ("https://www.ufrgs.br/", "UFRGS"),
         "logo-fapemig.png": ("https://fapemig.br/", "FAPEMIG"),
         "logo-capes.png": ("https://www.gov.br/capes/pt-br/", "CAPES"),
+        "logo-inpact.svg": ("https://www.inpact.net.br/", "Inpact"),
     }
     for path in output.rglob("*.html"):
         source = path.read_text()
@@ -722,9 +739,10 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
         assert sum(tag == "footer" for tag, _ in page.elements) == 1
         assert source.index("</main>") < source.index('<footer class="site-footer">')
         assert not any(tag == "img" and "institution-logo" in attrs.get("class", "").split() for tag, attrs in page.regions["main"])
-        assert len(page.image_links) == len(destinations)
-        assert sum(tag == "img" for tag, _ in page.regions["footer"]) == 5
-        for image, link in page.image_links:
+        footer_images = [attrs for tag, attrs in page.regions["footer"] if tag == "img"]
+        image_links = [(image, link) for image, link in page.image_links if image in footer_images]
+        assert len(image_links) == len(footer_images) == len(destinations)
+        for image, link in image_links:
             href, name = destinations[Path(image["src"]).name]
             assert link["href"] == href
             assert "target" not in link
@@ -736,7 +754,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             "CC BY-NC-SA 4.0": f"{repository_url}/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt",
             "MIT": f"{repository_url}/blob/main/LICENSES/MIT.txt",
         }
-        assert len(utility_links) == len(set(utility_links)) == 8
+        assert len(utility_links) == len(set(utility_links)) == len(destinations) + len(external_links)
         assert {href for href, _ in destinations.values()} | set(external_links.values()) <= set(utility_links)
         footer = source.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
         footer_text = " ".join(re.sub(r"<[^>]+>", "", footer).split())
@@ -744,7 +762,7 @@ def test_global_footer_has_portable_institutional_and_utility_links(tmp_path, sy
             assert label in footer_text and href in utility_links
         for text in (
             "Use and reuse", "Course materials", "Software",
-            "Executing institutions", "Funding agencies",
+            "Executing institutions", "Funding agencies", "Related project",
             "Funded by FAPEMIG and CAPES. Grant APQ-01173-22.",
         ):
             assert text in footer_text
@@ -775,7 +793,7 @@ def test_institutional_images_are_portable_and_unmodified(tmp_path, synthetic_do
     images = [attrs for tag, attrs in page.elements if tag == "img" and "institution-logo" in attrs.get("class", "").split()]
     assert {Path(attrs["src"]).name for attrs in images} == {
         "logo-ufmg-fale.png", "logo-ufvjm.png", "logo-ufrgs.svg",
-        "logo-fapemig.png", "logo-capes.png",
+        "logo-fapemig.png", "logo-capes.png", "logo-inpact.svg",
     }
     for attrs in images:
         assert attrs["alt"]

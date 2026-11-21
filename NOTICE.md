@@ -19,6 +19,15 @@ The inline GitHub mark is from GitHub Octicons, copyright (c) 2026 GitHub Inc.,
 and is licensed under MIT. Its terms are in `LICENSES/OCTICONS-MIT.txt`.
 Source: https://github.com/primer/octicons/blob/main/icons/mark-github-16.svg.
 
+## Inpact artwork
+
+The CorAgrarian Academic Writing emblem in `static/favicon.svg` adapts the
+supplied Inpact symbol to the course palette. The footer uses the standalone
+white Inpact wordmark in `static/institutions/logo-inpact.svg`. Both are based
+on vector outlines from the supplied Inpact identity artwork and are used with
+permission. The underlying artwork and marks retain their original rights.
+See the [Inpact project website](https://www.inpact.net.br/).
+
 ## Institutional artwork added for the executing institutions
 
 The following files were retrieved from official institutional sources on

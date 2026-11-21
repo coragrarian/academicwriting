@@ -2,53 +2,40 @@
 <html lang="en">
 <meta charset="utf-8">
 <title>Social preview source</title>
-<!-- Local source for static/social-preview.png; no remote assets.
-     Run: uv run --frozen python tools/render_publication_assets.py
-     This source is not copied into the site. -->
+<!-- Local source for static/social-preview.png. See render_publication_assets.py. -->
+<link rel="stylesheet" href="../static/styles.css">
 <style>
-  @font-face {
-    font-family: "Source Serif 4";
-    src: url("../static/fonts/source-serif-4/SourceSerif4Variable-Roman.ttf.woff2");
-    font-weight: 200 900;
-  }
-  @font-face {
-    font-family: "Source Sans 3";
-    src: url("../static/fonts/source-sans-3/SourceSans3VF-Upright.ttf.woff2");
-    font-weight: 200 900;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; }
   main {
     width: 1200px;
     height: 630px;
-    padding: 72px 88px 64px;
+    padding: 62px 84px;
     display: flex;
     flex-direction: column;
-    background: #fbfcfa;
-    color: #263331;
+    align-items: flex-start;
+    justify-content: center;
   }
-  .rule { width: 72px; height: 6px; flex: none; background: #285e51; }
-  h1 {
+  .preview-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 0 0 40px;
+    color: var(--accent-dark);
+    font-size: 28px;
+    font-weight: 600;
+  }
+  h1 { margin: 0; font-size: 74px; line-height: 1.07; }
+  .lead {
     margin: 34px 0 0;
-    font: 600 68px/1.1 "Source Serif 4", Georgia, serif;
-    letter-spacing: -1.3px;
-  }
-  p {
-    max-width: 850px;
-    margin: 30px 0 0;
-    font: 400 29px/1.4 "Source Sans 3", sans-serif;
-    color: #4a5a53;
-  }
-  footer {
-    margin-top: auto;
-    font: 400 22px/1.4 "Source Sans 3", sans-serif;
-    color: #285e51;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: 30px;
+    line-height: 1.35;
+    max-width: 740px;
   }
 </style>
 <main>
-  <div class="rule" aria-hidden="true"></div>
+  <p class="preview-identity"><img src="../static/favicon.svg" alt="" width="55" height="55"> CorAgrarian</p>
   <h1>Academic Writing<br>for Agrarian Sciences</h1>
-  <p>Interactive self-study activities for academic writing<br>in the Agrarian Sciences</p>
-  <footer>UFMG · FAPEMIG · CAPES</footer>
+  <p class="lead">Self-study for students and researchers writing research articles in English.</p>
 </main>
 </html>

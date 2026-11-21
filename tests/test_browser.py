@@ -940,10 +940,11 @@ def test_project_people_and_typography_at_required_widths(page, site, width):
                 hero = page.locator(".page-head").bounding_box()
                 course = page.locator("#course").bounding_box()
                 gap = course["y"] - hero["y"] - hero["height"]
-                ordinary_gap = page.locator("html").evaluate(
-                    "node => 3 * parseFloat(getComputedStyle(node).fontSize)"
+                button_margin = page.locator(".home-facts").evaluate(
+                    "node => parseFloat(getComputedStyle(node).marginBottom)"
                 )
-                assert gap > ordinary_gap
+                corpus = page.locator('[aria-labelledby="project-heading"]').bounding_box()
+                assert corpus["y"] - course["y"] - course["height"] >= gap > button_margin
         else:
             expect(page.locator("#team > h2")).to_have_text("Research team")
             assert page.locator("#team > h3").all_text_contents() == ["Coordinators", "Members"]
@@ -993,7 +994,10 @@ def test_course_main_uses_available_grid_width_with_bounded_prose(page, site, pa
     main = page.locator("main").bounding_box()
     assert main["width"] == pytest.approx(layout["width"] - sidebar["width"], abs=1)
     usable = page.locator("main").evaluate("node => node.clientWidth - parseFloat(getComputedStyle(node).paddingLeft) - parseFloat(getComputedStyle(node).paddingRight)")
-    assert page.locator("h1").bounding_box()["width"] == pytest.approx(usable, abs=1)
+    heading = page.locator("h1")
+    heading_measure = heading.evaluate("node => parseFloat(getComputedStyle(node).maxInlineSize)")
+    assert heading.bounding_box()["width"] == pytest.approx(heading_measure, abs=1)
+    assert heading_measure < usable
     text = page.locator(".lead, .instructions p:not(.eyebrow)").first
     measure = text.evaluate("node => parseFloat(getComputedStyle(node).maxInlineSize)")
     assert text.bounding_box()["width"] <= measure < usable
@@ -1081,7 +1085,7 @@ def test_footer_survives_enhanced_navigation_with_portable_urls(page, site):
     assert page.evaluate("window.footerProbe") is None
 
 
-@pytest.mark.parametrize("width", [2378, 1920, 1440, 1280, 1024, 768, 375, 320])
+@pytest.mark.parametrize("width", [2378, 1920, 1440, 1280, 1024, 768, 390, 375, 320])
 def test_public_pages_and_shared_header_at_required_widths(page, site, width):
     page.set_viewport_size({"width": width, "height": 900})
     for path in (
@@ -1096,7 +1100,11 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             "node => [...node.children].map(child => [child.tagName, child.className])"
         ) == [["A", "site-name"], ["NAV", "site-links"]]
         expect(page.locator(".site-header a")).to_have_count(3)
-        expect(page.locator(".site-name")).to_have_text("CorAgrarian Academic Writing")
+        home_link = page.get_by_role("link", name="CorAgrarian Academic Writing", exact=True)
+        mark = home_link.locator("img")
+        expect(mark).to_have_attribute("alt", "")
+        assert mark.evaluate("node => node.complete && node.naturalWidth > 0")
+        assert mark.bounding_box()["width"] == pytest.approx(32)
         about = page.locator(".about-link")
         expect(about).to_be_visible()
         assert about.bounding_box()["height"] >= 44
@@ -1105,6 +1113,8 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         course = page.locator(".course-link")
         expect(course).to_be_visible()
         assert course.bounding_box()["height"] >= 44
+        if width == 390:
+            assert home_link.bounding_box()["y"] == pytest.approx(course.bounding_box()["y"], abs=1)
         assert course.evaluate("node => node.href") == f"{site[0]}/index.html#course"
         links = page.locator(".site-header a").all()
         for index, link in enumerate(links):
@@ -1133,12 +1143,14 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
         expect(footer.locator(".footer-group")).to_have_count(2)
         expect(footer.locator(".footer-links a")).to_have_count(2)
         expect(footer.locator(".footer-heading")).to_have_text([
-            "Executing institutions", "Funding agencies", "Use and reuse",
+            "Executing institutions", "Funding agencies", "Related project", "Use and reuse",
         ])
         executing = footer.get_by_role("navigation", name="Executing institutions", exact=True)
         funding = footer.get_by_role("navigation", name="Funding agencies", exact=True)
+        related = footer.get_by_role("navigation", name="Related project", exact=True)
         assert executing.locator("img").evaluate_all("nodes => nodes.map(n => n.alt)") == ["UFMG (Faculdade de Letras)", "UFVJM", "UFRGS"]
         assert funding.locator("img").evaluate_all("nodes => nodes.map(n => n.alt)") == ["FAPEMIG", "CAPES"]
+        expect(related.get_by_role("img", name="Inpact", exact=True)).to_have_count(1)
         expect(footer.locator(".footer-bottom .footer-source")).to_have_text("github.com/coragrarian/academicwriting")
         expect(footer.get_by_role("link", name="About the course", exact=True)).to_have_count(0)
         expect(footer.get_by_role("link", name="Corpus and research", exact=True)).to_have_count(0)
@@ -1156,6 +1168,7 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             ("UFRGS", "https://www.ufrgs.br/"),
             ("FAPEMIG", "https://fapemig.br/"),
             ("CAPES", "https://www.gov.br/capes/pt-br/"),
+            ("Inpact", "https://www.inpact.net.br/"),
             ("Course materials CC BY-NC-SA 4.0", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt"),
             ("Software MIT", "https://github.com/coragrarian/academicwriting/blob/main/LICENSES/MIT.txt"),
             ("github.com/coragrarian/academicwriting", "https://github.com/coragrarian/academicwriting"),
@@ -1178,10 +1191,12 @@ def test_public_pages_and_shared_header_at_required_widths(page, site, width):
             ]
             expect(page.locator("#course button, #course .action-link")).to_have_count(0)
             expect(page.locator(".home-hero-copy .eyebrow")).to_have_text("Self-study course")
-            expect(page.locator(".home-facts dt")).to_have_count(5)
+            expect(page.locator(".home-facts li")).to_have_text([
+                "4 modules", "39 interactive exercises", "Free, self-paced study",
+            ])
             expect(page.get_by_role("heading", name="Course contents", exact=True)).to_have_count(1)
             expect(page.locator(".page-head .lead")).to_contain_text(
-                "Academic Writing for Agrarian Sciences is an interactive self-study resource"
+                "students and researchers in the Agrarian Sciences"
             )
             expect(page.get_by_role("link", name="About the corpus and research", exact=True)).to_have_attribute(
                 "href", "about/index.html"
@@ -1376,17 +1391,19 @@ def test_editorial_components_and_contents_at_required_widths(page, site, width)
             }""")
             assert styles == ["italic", "600", "0px", "rgba(0, 0, 0, 0)"]
         if path.endswith("the-introduction-section-of-research-papers/exercise-1/index.html"):
-            expect(page.locator(".exercise-head > .eyebrow")).to_have_count(0)
+            expect(page.locator(".exercise-position")).to_have_count(0)
         if path.endswith("methods-section/exercise-2/index.html"):
-            expect(page.locator(".exercise-head > .eyebrow")).to_have_text("2 of 4")
+            expect(page.locator(".exercise-position")).to_have_text("Exercise 2 of 4 in this subsection")
 
     summary = page.locator('.nav-module-group > summary').first
     assert summary.evaluate("node => getComputedStyle(node).listStyleType") == "none"
-    assert summary.evaluate("node => getComputedStyle(node, '::before').content") == "none"
+    closed_marker = summary.evaluate("node => getComputedStyle(node, '::before').transform")
+    assert closed_marker != "none"
     was_open = summary.locator("xpath=..").evaluate("node => node.open")
     summary.focus()
     page.keyboard.press("Space")
     assert summary.locator("xpath=..").evaluate("node => node.open") != was_open
+    assert summary.evaluate("node => getComputedStyle(node, '::before').transform") != closed_marker
     assert summary.evaluate("node => getComputedStyle(node).outlineStyle") == "solid"
     page.keyboard.press("Enter")
     assert summary.locator("xpath=..").evaluate("node => node.open") == was_open
