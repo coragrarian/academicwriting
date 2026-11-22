@@ -35,6 +35,7 @@ from .contracts import (
     HomeSiteData,
     QuestionPayload,
 )
+from .course import learning_sequence, ordered_documents
 from .manifest import exercise_fingerprint
 from .model import Block, Document, Exercise, Feedback, Question, Section
 from .paths import link_for, page_path
@@ -328,20 +329,13 @@ def _page_navigation(documents: list[Document], root: Path) -> dict[Path, dict[s
     """
     # Informational pages stay outside this sequence; its final link explicitly
     # terminates at Home / contents.
-    course_sequence = []
-    module_paths = set()
-    section_paths = set()
-    for document in documents:
-        module_path = page_path(document)
-        module_paths.add(module_path)
-        course_sequence.append(module_path)
-        for section in document.sections:
-            section_path = page_path(document, section)
-            section_paths.add(section_path)
-            course_sequence.append(section_path)
-            course_sequence.extend(
-                page_path(document, section, exercise) for exercise in section.exercises
-            )
+    course_sequence = learning_sequence(documents)
+    module_paths = {page_path(document) for document in documents}
+    section_paths = {
+        page_path(document, section)
+        for document in documents
+        for section in document.sections
+    }
 
     page_navigation = {}
     home_path = Path("index.html")
@@ -419,7 +413,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             raise ValueError(
                 f"{document.source_path}: module id 'about' conflicts with the public About page"
             )
-    documents = sorted(documents, key=lambda document: (document.order, document.slug))
+    documents = ordered_documents(documents)
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html"]))
     output = output.resolve()
     temp = output.with_name(output.name + ".building")

@@ -27,6 +27,7 @@ import yaml
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 
+from .course import ordered_documents
 from .model import (
     Block,
     Document,
@@ -1148,4 +1149,4 @@ def discover_documents(source: Path) -> list[Document]:
             )
         seen_ids[document.slug] = path
         documents.append(document)
-    return sorted(documents, key=lambda document: (document.order, document.slug))
+    return ordered_documents(documents)

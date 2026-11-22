@@ -16,6 +16,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal, TypedDict
 
+from .course import learning_sequence, ordered_documents
 from .model import Document, Exercise, Feedback, ResponseKind, Section
 from .paths import page_path
 from .text import plain_text
@@ -219,22 +220,18 @@ def course_manifest(documents: Sequence[Document]) -> CourseManifest:
         JSON-serialisable dictionary describing modules, subsections,
         exercises, response contracts, fingerprints and learning traversal.
     """
-    ordered = sorted(documents, key=lambda document: (document.order, document.slug))
+    ordered = ordered_documents(documents)
     sources = _relative_sources(ordered)
     modules: list[ModuleManifest] = []
-    sequence: list[str] = []
     for document in ordered:
         module_url = _directory_url(document)
-        sequence.append(module_url)
         sections: list[SectionManifest] = []
         for section in document.sections:
             section_url = _directory_url(document, section)
-            sequence.append(section_url)
-            exercises: list[ExerciseManifest] = []
-            for exercise in section.exercises:
-                exercise_entry = _exercise_manifest(document, section, exercise)
-                sequence.append(exercise_entry["path"])
-                exercises.append(exercise_entry)
+            exercises: list[ExerciseManifest] = [
+                _exercise_manifest(document, section, exercise)
+                for exercise in section.exercises
+            ]
             sections.append(
                 {
                     "id": section.slug,
@@ -253,6 +250,10 @@ def course_manifest(documents: Sequence[Document]) -> CourseManifest:
                 "sections": sections,
             }
         )
+    sequence = [
+        path.as_posix().removesuffix("index.html")
+        for path in learning_sequence(ordered)
+    ]
     return {
         "manifest_version": 1,
         "modules": modules,
