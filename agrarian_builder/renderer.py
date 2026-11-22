@@ -28,7 +28,9 @@ from xml.etree import ElementTree as ET
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .model import Block, Document, Exercise, Feedback, Question, Section
+from .paths import link_for, page_path
 from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
+from .text import plain_text
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
@@ -114,17 +116,6 @@ def _home_module_title(title: str) -> str:
     return match.group(1) if match else title
 
 
-def _plain(value: str) -> str:
-    """Extract label text from project-generated HTML fragments.
-
-    Semantic option and prompt text can contain inline HTML, whereas native
-    select options and accessible labels need plain text. Tag removal followed
-    by entity decoding is sufficient for those generated fragments; this is
-    not a general-purpose HTML parser or a sanitiser for arbitrary input.
-    """
-    return html.unescape(re.sub(r"<[^>]*>", "", value))
-
-
 def _select(question: Question) -> str:
     """Render an inline response control with its accessibility hooks.
 
@@ -133,7 +124,7 @@ def _select(question: Question) -> str:
     initially hidden feedback region linked by ``aria-describedby``.
     Correctness data is emitted separately by ``_answer_data``.
     """
-    label = question.label or _plain(question.prompt_html) or "Choose an answer"
+    label = question.label or plain_text(question.prompt_html) or "Choose an answer"
     attributes = (
         f'id="{question.id}" data-question="{question.id}" '
         f'aria-label="{html.escape(label)}" aria-describedby="{question.id}-feedback"'
@@ -150,7 +141,7 @@ def _select(question: Question) -> str:
     options = ['<option value="">Select an answer</option>']
     for index, option in enumerate(question.options):
         options.append(
-            f'<option value="{index}">{html.escape(_plain(option.text_html))}</option>'
+            f'<option value="{index}">{html.escape(plain_text(option.text_html))}</option>'
         )
     return (
         f'<select class="inline-select" {attributes}>' + "".join(options) + "</select>" + feedback
@@ -260,21 +251,6 @@ def _answer_data(exercise: Exercise) -> dict:
     }
 
 
-def _path_for(
-    document: Document, section: Section | None = None, exercise: Exercise | None = None
-) -> Path:
-    """Return ``module/section/exercise/index.html`` relative to the site root.
-
-    Omitting the exercise or both optional levels selects an overview page.
-    """
-    path = Path(document.slug)
-    if section is not None:
-        path /= section.slug
-    if exercise is not None:
-        path /= exercise.slug
-    return path / "index.html"
-
-
 def _display_blocks(exercise: Exercise) -> list[Block]:
     """Hide the orientation answer pattern through presentation order only.
 
@@ -301,7 +277,7 @@ def _display_blocks(exercise: Exercise) -> list[Block]:
     for block in exercise.blocks:
         if block.kind == "question":
             question = questions[block.question_id]
-            label = _plain(question.options[question.correct_indices[0]].text_html)
+            label = plain_text(question.options[question.correct_indices[0]].text_html)
             purpose_blocks[label] = block
     if set(purpose_blocks) != {"A", "B", "C", "D"}:
         return exercise.blocks
@@ -340,15 +316,15 @@ def _page_navigation(documents: list[Document], root: Path) -> dict[Path, dict[s
     module_paths = set()
     section_paths = set()
     for document in documents:
-        module_path = _path_for(document)
+        module_path = page_path(document)
         module_paths.add(module_path)
         course_sequence.append(module_path)
         for section in document.sections:
-            section_path = _path_for(document, section)
+            section_path = page_path(document, section)
             section_paths.add(section_path)
             course_sequence.append(section_path)
             course_sequence.extend(
-                _path_for(document, section, exercise) for exercise in section.exercises
+                page_path(document, section, exercise) for exercise in section.exercises
             )
 
     page_navigation = {}
@@ -451,7 +427,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     home_data = {
         "modules": module_ids,
         "exercise_urls": {
-            exercise.id: _path_for(document, section, exercise).as_posix()
+            exercise.id: page_path(document, section, exercise).as_posix()
             for document in documents
             for section in document.sections
             for exercise in section.exercises
@@ -538,18 +514,18 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             asset_touch_icon=link(Path("assets/apple-touch-icon.png")),
             institution_asset=lambda filename: link(Path("assets/institutions") / filename),
             person_asset=lambda filename: link(Path("assets") / filename),
-            module_url=link(_path_for(document)) if document else None,
-            module_link=lambda module: link(_path_for(module)),
-            course_section_url=lambda module, section: link(_path_for(module, section)),
+            module_url=link(page_path(document)) if document else None,
+            module_link=lambda module: link(page_path(module)),
+            course_section_url=lambda module, section: link(page_path(module, section)),
             course_exercise_url=lambda module, section, exercise: link(
-                _path_for(module, section, exercise)
+                page_path(module, section, exercise)
             ),
             home_url=link(Path("index.html")),
             course_url=link(Path("index.html")) + "#course",
             about_url=link(Path("about/index.html")),
             repository_url="https://github.com/coragrarian/academicwriting",
-            section_url=lambda section: link(_path_for(document, section)),
-            exercise_url=lambda section, exercise: link(_path_for(document, section, exercise)),
+            section_url=lambda section: link(page_path(document, section)),
+            exercise_url=lambda section, exercise: link(page_path(document, section, exercise)),
             **page_navigation.get(path, {}),
             **content,
         )
@@ -562,10 +538,10 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     write_page(Path("404.html"), "not_found.html", page_title="Page not found")
 
     for document in documents:
-        write_page(_path_for(document), "module.html", document, page_title=document.title)
+        write_page(page_path(document), "module.html", document, page_title=document.title)
         for section in document.sections:
             write_page(
-                _path_for(document, section),
+                page_path(document, section),
                 "section.html",
                 document,
                 section=section,
@@ -608,7 +584,7 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                     for item in exercise.examples
                 ]
                 write_page(
-                    _path_for(document, section, exercise),
+                    page_path(document, section, exercise),
                     "exercise.html",
                     document,
                     section=section,
@@ -635,8 +611,3 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     if output.exists():
         shutil.rmtree(output)
     temp.rename(output)
-
-
-def link_for(root: Path, current: Path, target: Path) -> str:
-    """Link between site-relative page paths using portable URL separators."""
-    return os.path.relpath(root / target, (root / current).parent).replace(os.sep, "/")
