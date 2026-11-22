@@ -91,6 +91,10 @@ INLINE_RE = re.compile(
 )
 INSTRUCTION_RE = re.compile(r"^\*\*Instructions:\*\*\s*", re.IGNORECASE)
 AGRARIAN_RE = re.compile(r"\s*<!--\s*agrarian\s*\n(.*?)-->\s*", re.DOTALL)
+COMMENT_RE = re.compile(r"<!--((?:(?!-->).)*)-->", re.DOTALL)
+PURE_COMMENT_RE = re.compile(r"\s*<!--(?:(?!-->).)*-->\s*", re.DOTALL)
+METADATA_PREFIX_RE = re.compile(r"\s*<!--\s*agrarian", re.IGNORECASE)
+METADATA_FIELD_RE = re.compile(r"^\s*(?:id|interaction|feedback)\s*:", re.MULTILINE)
 ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
@@ -140,6 +144,34 @@ def _yaml_mapping(source: str, context: str) -> dict[str, object]:
     return value
 
 
+def _is_metadata_like_comment(raw: str) -> bool:
+    """Report whether an HTML comment looks like an agrarian metadata block."""
+    if METADATA_PREFIX_RE.match(raw):
+        return True
+    stripped = raw.strip()
+    if not stripped.startswith("<!--"):
+        return False
+    body = stripped[4:].removesuffix("-->")
+    return METADATA_FIELD_RE.search(body) is not None
+
+
+def _validate_comment_syntax(raw: str, context: str) -> None:
+    """Reject metadata-like comments that do not match the exact agrarian form."""
+    if _is_metadata_like_comment(raw) and AGRARIAN_RE.fullmatch(raw) is None:
+        raise SourceError(
+            f"{context}: unrecognised metadata comment; write <!-- agrarian on its own line"
+        )
+
+
+def _check_exercise_html_comment_block(raw: str, context: str) -> None:
+    """Reject exercise HTML blocks that mix comments with other markup."""
+    if PURE_COMMENT_RE.fullmatch(raw) is None:
+        raise SourceError(
+            f"{context}: HTML block containing a comment is not supported; "
+            "remove the comment or the block"
+        )
+
+
 def _metadata(raw: str, context: str) -> Metadata:
     """Validate one ``agrarian`` comment without deciding where it applies.
 
@@ -152,7 +184,9 @@ def _metadata(raw: str, context: str) -> Metadata:
     """
     match = AGRARIAN_RE.fullmatch(raw)
     if match is None:
-        raise SourceError(f"{context}: malformed agrarian metadata comment")
+        raise SourceError(
+            f"{context}: unrecognised metadata comment; write <!-- agrarian on its own line"
+        )
     data = _yaml_mapping(match.group(1), f"{context}, agrarian metadata")
     unknown = set(data) - {"interaction", "feedback"}
     if unknown:
@@ -280,16 +314,29 @@ def _heading_identities(
             scope = {key: value for key, value in scope.items() if key < level}
             scope[level] = tokens[index + 1].content
             heading = token
-        if token.type != "html_block" or not re.match(
-            r"\s*<!--\s*agrarian\b", token.content
-        ):
             continue
         context = ", ".join([
             source_path, *(title for level, title in scope.items() if level >= 2)
         ])
+        if token.type == "inline":
+            for child in token.children or ():
+                if child.type == "html_inline" and "<!--" in child.content:
+                    _validate_comment_syntax(child.content, context)
+            continue
+        if token.type != "html_block" or "<!--" not in token.content:
+            continue
+        if PURE_COMMENT_RE.fullmatch(token.content) is None:
+            closed = list(COMMENT_RE.finditer(token.content))
+            if closed:
+                for comment in closed:
+                    _validate_comment_syntax(comment.group(0), context)
+            else:
+                _validate_comment_syntax(token.content, context)
+            continue
+        _validate_comment_syntax(token.content, context)
         match = AGRARIAN_RE.fullmatch(token.content)
         if match is None:
-            raise SourceError(f"{context}: malformed agrarian metadata comment")
+            continue
         data = _yaml_mapping(match.group(1), f"{context}, agrarian metadata")
         if "id" not in data:
             continue
@@ -793,7 +840,8 @@ class _ContentParser:
         matching_tables = 0
         for chunk in self.container.chunks:
             kind = chunk[0].type
-            if kind == "html_block" and chunk[0].content.lstrip().startswith("<!--"):
+            if kind == "html_block" and "<!--" in chunk[0].content:
+                _check_exercise_html_comment_block(chunk[0].content, self.context)
                 continue
             if kind == "bullet_list_open":
                 entries = _list_entries(chunk, self.context)
@@ -946,11 +994,13 @@ def _exercise(
             containers.append(current)
             after_declaration = False
         elif chunk[0].type == "html_block" and "<!--" in chunk[0].content:
-            if re.match(r"\s*<!--\s*agrarian\b", chunk[0].content):
+            item_context = f"{context}, {current.title or 'exercise'}"
+            _check_exercise_html_comment_block(chunk[0].content, item_context)
+            if AGRARIAN_RE.fullmatch(chunk[0].content):
                 comments.append(
                     (
                         current,
-                        _metadata(chunk[0].content, f"{context}, {current.title or 'exercise'}"),
+                        _metadata(chunk[0].content, item_context),
                         after_declaration,
                         index,
                     )

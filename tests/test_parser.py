@@ -757,3 +757,89 @@ def test_overview_prose_ignores_code_and_allows_ordinary_comments(scope):
         document.introduction_html if scope == "module" else document.sections[0].introduction_html
     )
     assert "<pre>" in rendered and "<code>" in rendered
+
+
+@pytest.mark.parametrize("scope", ["module", "subsection", "exercise", "item"])
+@pytest.mark.parametrize(
+    "comment",
+    [
+        "<!-- Agrarian\nfeedback:\n  correct: Well done.\n-->",
+        "<!-- AGRARIAN\nid: fixed\n-->",
+        "<!-- agrarian id: fixed -->",
+        "<!-- agrarian:\nfeedback:\n  correct: Well done.\n-->",
+        "<!--\nid: fixed\n-->",
+        "<!-- id: fixed -->",
+        "<!--\ninteraction: typed-gap\n-->",
+        "<!--\nfeedback:\n  correct: Well done.\n-->",
+        "Prose <!-- agrarian id: fixed -->",
+        "Prose <!-- Agrarian\nfeedback:\n  correct: Well done.\n-->",
+        "Prose <!-- id: fixed -->",
+        "Prose <!-- feedback: {correct: Well done.} -->",
+    ],
+)
+def test_misspelt_metadata_comments_are_rejected_in_every_scope(scope, comment):
+    if scope == "module":
+        source = f"# Module\n\n{comment}\n\n## Section\n\n### Exercise 1\n\n- [x] Yes\n"
+        expected_context = "meta.md"
+    elif scope == "subsection":
+        source = f"# Module\n\n## Section\n\n{comment}\n\n### Exercise 1\n\n- [x] Yes\n"
+        expected_context = "meta.md, Section"
+    elif scope == "exercise":
+        source = f"# Module\n\n## Section\n\n### Exercise 1\n\n{comment}\n\n- [x] Yes\n"
+        expected_context = "meta.md, Section, Exercise 1"
+    else:
+        source = (
+            f"# Module\n\n## Section\n\n### Exercise 1\n\n#### Item A\n\n{comment}\n\n- [x] Yes\n"
+        )
+        expected_context = "meta.md, Section, Exercise 1, Item A"
+    with pytest.raises(SourceError) as error:
+        parse_document(source, source_path="meta.md")
+    assert str(error.value) == (
+        f"{expected_context}: unrecognised metadata comment; write <!-- agrarian on its own line"
+    )
+
+
+def test_ordinary_comments_remain_allowed_and_dropped_in_exercises():
+    parsed = exercise(
+        "<!-- ordinary comment -->\n\n"
+        "Prompt with <!-- inline note --> prose.\n\n"
+        "- [x] Yes\n"
+        "- [ ] No\n"
+    )
+    rendered = "".join(block.html for block in parsed.context)
+    assert "ordinary comment" not in rendered
+    assert "Prompt with" in rendered
+
+
+@pytest.mark.parametrize(
+    ("body", "expected_context"),
+    [
+        (
+            "<div>\n<!-- note -->\n</div>\n\n- [x] Yes\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "<!-- note --> <p>Dropped text</p>\n\n- [x] Yes\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "<p>Dropped text</p>\n<!-- note -->\n\n- [x] Yes\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "<!-- agrarian\nfeedback:\n  correct: Hi\n--> <p>Extra</p>\n\n- [x] Yes\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "#### Item A\n\n<div>\n<!-- note -->\n</div>\n\n- [x] Yes\n",
+            "fixture.md, Section, Exercise 1, Item A",
+        ),
+    ],
+)
+def test_exercise_html_blocks_mixing_comments_and_markup_are_rejected(body, expected_context):
+    with pytest.raises(SourceError) as error:
+        exercise(body)
+    assert str(error.value) == (
+        f"{expected_context}: HTML block containing a comment is not supported; "
+        "remove the comment or the block"
+    )
