@@ -13,6 +13,18 @@ the dataclasses themselves do not enforce them.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
+
+ResponseKind = Literal[
+    "single-choice",
+    "multi-select",
+    "inline-choice",
+    "gap",
+    "matching",
+    "typed-gap",
+]
+BlockKind = Literal["html", "instruction", "question"]
+InteractionKind = Literal["typed-gap"]
 
 
 @dataclass(frozen=True)
@@ -55,7 +67,7 @@ class Metadata:
     an item can inherit that declaration from its exercise.
     """
 
-    interaction: str | None = None
+    interaction: InteractionKind | None = None
     feedback: Feedback = field(default_factory=Feedback)
 
 
@@ -93,7 +105,7 @@ class Question:
     """
 
     id: str
-    kind: str
+    kind: ResponseKind
     options: list[Option] = field(default_factory=list)
     prompt_html: str = ""
     label: str = ""
@@ -115,7 +127,7 @@ class Block:
     it does not duplicate the question's answer data.
     """
 
-    kind: str  # html, instruction or question
+    kind: BlockKind  # html, instruction or question
     html: str = ""
     question_id: str = ""
 

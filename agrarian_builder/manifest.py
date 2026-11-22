@@ -16,7 +16,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal, TypedDict
 
-from .model import Document, Exercise, Feedback, Section
+from .model import Document, Exercise, Feedback, ResponseKind, Section
 from .paths import page_path
 from .text import plain_text
 
@@ -25,7 +25,7 @@ class ResponseManifest(TypedDict):
     """Scored response contract recorded in the course manifest."""
 
     id: str
-    kind: str
+    kind: ResponseKind
     source_label: str | None
     option_count: int
     expected: list[int] | str

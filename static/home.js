@@ -1,5 +1,10 @@
 /* Rows determine module order; the generated catalogue determines exercise
    order and supplies each exercise's path relative to Home. */
+/**
+ * @typedef {Object} HomeSiteData
+ * @property {Object<string, string[]>} modules
+ * @property {Object<string, string>} exercise_urls
+ */
 (() => {
   "use strict";
 

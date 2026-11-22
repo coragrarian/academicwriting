@@ -3,6 +3,32 @@
    Saved state merges at exercise granularity: the mounted form is authoritative
    for its own exercise, persist() merges that exercise into fresh storage, and
    storage and persisted pageshow events refresh other exercises in place. */
+/**
+ * @typedef {"single-choice" | "multi-select" | "inline-choice" | "gap" | "matching" | "typed-gap"} ResponseKind
+ * @typedef {Object} FeedbackPayload
+ * @property {string | null} correct
+ * @property {string | null} incorrect
+ * @typedef {Object} QuestionPayload
+ * @property {ResponseKind} kind
+ * @property {number[] | string} expected
+ * @property {string} label
+ * @property {string | null} gap_feedback
+ * @property {Object<string, string>} option_feedback
+ * @typedef {Object} GroupPayload
+ * @property {string} id
+ * @property {string | null} title
+ * @property {string[]} questions
+ * @property {FeedbackPayload} feedback
+ * @typedef {Object} AnswerPayload
+ * @property {Object<string, QuestionPayload>} questions
+ * @property {GroupPayload[]} groups
+ * @property {FeedbackPayload} feedback
+ * @typedef {Object} CourseSiteData
+ * @property {string} module
+ * @property {Object<string, string[]>} sections
+ * @property {Object<string, string[]>} modules
+ * @property {Object<string, Object<string, string[]>>} course_sections
+ */
 (() => {
   "use strict";
 

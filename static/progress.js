@@ -2,6 +2,13 @@
    raw responses and checked flags) by exercise ID, which is the merge unit
    across tabs. Count only the current catalogue; exercise pages alone check
    answers and write attempts. */
+/**
+ * @typedef {"not-started" | "in-progress" | "completed"} ExerciseStatus
+ * @typedef {Object} SavedModuleState
+ * @property {Object<string, ExerciseStatus>} progress
+ * @property {Object<string, Object<string, (number[] | string)>>} responses
+ * @property {Object<string, boolean>} checked
+ */
 (() => {
   "use strict";
 
