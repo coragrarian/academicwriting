@@ -577,10 +577,10 @@ The learner sees checkboxes; the browser stores the array of selected zero-based
 
 Two alternatives separated by `|` inside prose, with exactly one side wrapped in `<mark class="correct-answer">...</mark>`, create an `inline-choice` question.
 
-**Boundary limit.** The unmarked side is restricted to **one word** (`[\w][\w'’/-]*`), or one of the five auxiliaries `was`, `were`, `has`, `have`, `had` followed by **one word**. Any longer phrase must be the marked side; an unmarked multi-word phrase has no explicit boundary and will fail parsing.
+**Boundary limit.** The unmarked side is restricted to **one word** (`[\w][\w'’/-]*`), or one of the five auxiliaries `was`, `were`, `has`, `have`, `had` followed by **one word**. Validation does not detect a longer unmarked phrase: the parser takes only the first word (or auxiliary plus word) as the alternative and leaves the remaining words in the sentence, so authors must always put the longer phrase on the marked side. For example, writing `Yield <mark class="correct-answer">declined</mark> | remained relatively stable.` parses without error into a dropdown offering `declined` and `remained`, leaving `relatively stable.` in the sentence after the control.
 
 ```markdown agrarian exercise valid
-> Soil samples <mark class="correct-answer">were collected from three plots</mark> | collected at harvest.
+> Soil moisture <mark class="correct-answer">was measured daily</mark> | declined.
 ```
 
 The learner sees an inline `<select>` offering the two alternatives in left-to-right order; the browser stores `[0]` (left) or `[1]` (right) under `context-q1`.
@@ -696,7 +696,7 @@ Exercise metadata uses HTML comment blocks starting with `<!-- agrarian` on its 
 
 **YAML restrictions.** The body of every metadata comment must parse as a YAML mapping using `SafeLoader` (custom YAML tags such as `!!python/object:...` are rejected), with no duplicate keys and no unsupported top-level or feedback keys. Separate comments within the same scope may supply different fields, but repeating an already populated field (`interaction` or any `feedback.*` field) in the same scope is rejected.
 
-**Misspelt metadata comments.** Any block or inline HTML comment that starts with `<!--` followed by `agrarian` in any case or spacing, or whose body contains a line matching `^\s*(id|interaction|feedback)\s*:`, is treated as metadata-like. If it does not match the exact `<!-- agrarian\n...\n-->` form, it is rejected in every scope. Ordinary HTML comments (without those prefixes or keys) remain allowed.
+**Misspelt metadata comments.** Any block or inline HTML comment that starts with `<!--` followed by `agrarian` in any case or spacing, or whose body contains a line matching `^\s*(id|interaction|feedback)\s*:`, is treated as metadata-like. If it does not match the exact `<!-- agrarian\n...\n-->` form, it is rejected in every scope. In particular, an ordinary author note whose body has a line starting `id:`, `interaction:` or `feedback:` (after optional leading whitespace) is treated as metadata-like and rejected. Ordinary HTML comments without that prefix or those leading line keys remain allowed.
 
 **Scoping rules (including the trailing-comment rule).** The parser assigns each metadata comment inside an exercise as follows:
 
@@ -791,8 +791,8 @@ Learner progress and responses are stored locally in the browser under `localSto
 
 **Which edits clear drafts through the fingerprint.** Each exercise embeds a 16-character structural fingerprint derived from its scored responses (`id`, `kind`, `source_label`, plain-text prompt and plain-text options). Consistent with [CONTRIBUTING.md](CONTRIBUTING.md):
 
-- **Clears saved attempts on next visit:** changing the text of any option, answer-bank entry, inline-choice alternative or matching purpose (typo fixes included), adding or removing options or questions, reordering options or responses, or changing a response's kind. When a learner revisits that exercise, the browser clears the old attempt, resets existing progress to `in-progress`, updates the stored fingerprint and notifies the learner; Home keeps any stale `completed` count until that exercise page is visited.
-- **Never clears drafts:** changing which option, alternative or mapping label is correct, editing typed-gap expected answers, or editing surrounding prose, `**Instructions:**`, authored feedback, headings, titles, module `order`, or worked `#### Model` sections. Existing checked attempts are re-scored against the updated answer key on load.
+- **Clears saved attempts on next visit:** changing the text of any option, answer-bank entry, inline-choice alternative or matching purpose (typo fixes included), renaming `#### Item X` (which changes its response IDs), adding or removing options, questions or Items, reordering options or responses, or changing a response's kind. When a learner revisits that exercise, the browser clears the old attempt, resets existing progress to `in-progress`, updates the stored fingerprint and notifies the learner; Home keeps any stale `completed` count until that exercise page is visited.
+- **Never clears drafts:** changing which option, alternative or mapping label is correct, editing typed-gap expected answers, or editing surrounding prose, `**Instructions:**`, authored feedback, `##` and `###` headings that keep their `id:` comments, module titles, module `order`, or worked `#### Model` sections. Existing checked attempts are re-scored against the updated answer key on load.
 
 **When to run `agrarian inspect --write`.** Run `uv run --frozen agrarian inspect --check` after editing `exercises/`. The committed manifest (`course.manifest.json`) records module IDs, titles, `order`, source paths, subsection and exercise IDs/titles/paths, scored response shapes, expected answers, response groups, feedback presence (which keys exist, not prose wording), worked-model counts, fingerprints and the learning sequence. Whenever `inspect --check` reports a diff, review every changed line carefully and regenerate the manifest only when every structural change is intended:
 
@@ -830,12 +830,14 @@ The compiler separates **grammar rules** (`agrarian_builder/parser.py`, always e
 ### Add a module
 
 1. Create a new file under `exercises/` (for example `exercises/abstract.md`) with front matter (`id`, `title`, `order`, optional `summary`), a matching `#` heading, at least one `##` subsection with an explicit `id:` comment, and exercises with explicit `id:` comments.
-2. Validate, review and regenerate the manifest, then build:
+2. Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
 uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
@@ -843,11 +845,14 @@ uv run --frozen agrarian build
 
 1. Append a `##` heading with an immediate `<!-- agrarian\nid: <unique-slug>\n-->` comment inside the target `exercises/<module>.md` file.
 2. Add optional overview prose and any `###` exercises (each with its own `id:` comment and sequential `Exercise N` title, or a free title).
-3. Run:
+3. Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
+uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
@@ -855,23 +860,29 @@ uv run --frozen agrarian build
 
 1. Add a `### Exercise N` heading (matching its one-based position in the subsection) or a free `###` title under the chosen `##` subsection, followed immediately by `<!-- agrarian\nid: <unique-slug>\n-->`.
 2. Add `**Instructions:**`, response syntax and any authored feedback using safe comment placement.
-3. Run:
+3. Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
+uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
 ### Add an Item
 
-1. Inside an existing `###` exercise, append `#### Item <label>` (using a label unique in that exercise) with at least one supported question. Appending preserves existing Item IDs; avoid inserting ahead of existing Items if they share numbered titles or reordered gaps.
+1. Inside an existing `###` exercise, add `#### Item <label>` (using a label unique in that exercise) with at least one supported question. Adding an Item changes the exercise's structural fingerprint and clears learners' saved attempts at that exercise on their next visit.
 2. If the exercise uses a shared bank or key, add matching labelled entries for any new gaps.
-3. Run:
+3. Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
+uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
@@ -880,48 +891,54 @@ uv run --frozen agrarian build
 - **Prose, instructions, feedback wording or worked models:** edit directly; fingerprints and `course.manifest.json` remain unchanged unless you add or remove a feedback key or a worked model.
 - **Correctness flags or typed-gap expected answers:** edit directly; learners' drafts stay intact and re-score on load, and you must update `course.manifest.json`.
 - **Option text, bank entries, inline alternatives or matching purposes:** remember that even a typo fix changes the exercise fingerprint and clears learners' saved attempts for that exercise on next visit.
-- Verify with:
+- Validate, review any manifest diff, update `course.manifest.json` when `inspect --check` reports an intended change, and build:
 
 ```sh
 uv run --frozen agrarian validate
 uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest (skip --write if up to date).
+uv run --frozen agrarian inspect --write
+git diff course.manifest.json
+uv run --frozen agrarian build
 ```
-
-If `inspect --check` reports an intended diff, run `uv run --frozen agrarian inspect --write`.
 
 ### Reorder content
 
 - **Modules:** adjust `order` in front matter while keeping `id` unchanged.
 - **Subsections:** move the whole `##` block (including its `id:` comment and child exercises) within the same module.
 - **Exercises within a subsection:** move each `###` block together with its original `<!-- agrarian\nid: ...\n-->` comment. If the exercises use `Exercise N` titles, renumber those headings to match their new 1-based positions while keeping their `id:` comments unchanged so saved learner state stays attached to each exercise.
-- Verify and update the manifest:
+- Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
 uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
 ### Remove content
 
-Delete the unwanted module file, subsection block, exercise block or Item. Orphaned saved state for removed exercise IDs stays harmlessly in learners' browsers and is ignored because progress counts only currently discovered exercise IDs. Review and regenerate the manifest:
+Delete the unwanted module file, subsection block, exercise block or Item. For removed modules, subsections and exercises, orphaned saved state stays harmlessly in learners' browsers and is ignored because progress counts only currently discovered exercise IDs. Removing an Item from an existing exercise changes that exercise's structural fingerprint and clears learners' saved attempts at that exercise on their next visit. Validate, review the manifest diff, update `course.manifest.json` and build:
 
 ```sh
 uv run --frozen agrarian validate
 uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
 uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
 ### Regenerate and review the manifest
 
 ```sh
-uv run --frozen agrarian inspect --check
-uv run --frozen agrarian inspect --write
-git diff course.manifest.json
 uv run --frozen agrarian validate
 uv run --frozen agrarian inspect --check
+# Review the diff above before writing the manifest.
+uv run --frozen agrarian inspect --write
+git diff course.manifest.json
 uv run --frozen agrarian build
 ```
 
@@ -977,7 +994,7 @@ Every `SourceError` message template raised by `agrarian_builder/parser.py` and 
 | `item without an exercise` | A `####` (or deeper) heading appears before any `###` exercise heading in the current subsection. | Place `#### Item X` or `#### Model` under a `###` exercise heading. |
 | `level-one title … must equal front matter title …` | Under publication rules, the `#` heading text does not match the front-matter `title`. | Make the `#` heading identical to the front-matter `title`. |
 | `malformed YAML: …` | Front matter or a metadata comment contains invalid YAML syntax, duplicate YAML keys, non-scalar keys or unsafe YAML tags. | Fix the YAML syntax, remove duplicate keys and use only plain scalar, list and mapping values. |
-| `malformed inline choice or stray answer marker` | `<mark class="correct-answer">` appears in prose without forming a valid two-alternative inline choice (for example both sides marked, missing `\|`, or a multi-word unmarked side). | Use one marked side and one unmarked side within the inline-choice boundary limit, or remove the stray `<mark>` tag. |
+| `malformed inline choice or stray answer marker` | `<mark class="correct-answer">` appears in prose without forming a valid two-alternative inline choice (for example both sides marked or missing `\|`). | Use one marked side and one unmarked word (or auxiliary plus word) separated by `\|`, or remove the stray `<mark>` tag. |
 | `malformed or empty answer-bank entry` | An answer-bank, key or matching bullet entry has empty text after its label or contains a second `correct-answer` marker. | Provide non-empty answer text with at most one leading `<mark class="correct-answer">` label. |
 | `mapped answer for nonexistent gap …` | An answer bank or key defines a labelled mapping for a gap that never appears in any scored container. | Add the missing labelled blank in the exercise or remove the unused mapping (or leave it unlabelled as a bank distractor). |
 | `matching entry has no mapping …` | A labelled row in the matching source table has no corresponding entry in `**Purposes:**` or `**Endings:**`. | Add a labelled mapping bullet for every source-table row. |
