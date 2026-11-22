@@ -4,15 +4,23 @@ title: Writing neutral labels
 order: 30
 ---
 
-# Writing
+# Writing neutral labels
 
 This module records labels.
 
 ## Writing labels
 
+<!-- agrarian
+id: writing-labels
+-->
+
 Write the requested label.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Complete each label.
 

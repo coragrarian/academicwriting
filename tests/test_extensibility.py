@@ -321,12 +321,7 @@ def test_editing_source_replaces_existing_pages_with_stable_identity(tmp_path, m
     source = tmp_path / "exercises"
     shutil.copytree(SYNTHETIC_COURSE, source)
     path = source / "30-first.md"
-    authored = path.read_text().replace(
-        "## Choosing a label\n", "## Choosing a label\n\n<!-- agrarian\nid: choosing-a-label\n-->\n", 1
-    ).replace(
-        "### Exercise 1\n", "### Exercise 1\n\n<!-- agrarian\nid: exercise-1\n-->\n", 1
-    )
-    path.write_text(authored)
+    authored = path.read_text()
     monkeypatch.chdir(tmp_path)
     assert main(["build"]) == 0
     output = tmp_path / "_site"

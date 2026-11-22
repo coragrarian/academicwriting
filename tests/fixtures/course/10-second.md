@@ -4,15 +4,23 @@ title: Completing neutral descriptions
 order: 20
 ---
 
-# Descriptions
+# Completing neutral descriptions
 
 This module completes descriptions.
 
 ## Shared labels
 
+<!-- agrarian
+id: shared-labels
+-->
+
 Two records share a label.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 **Instructions:** Complete both descriptions from the bank.
 

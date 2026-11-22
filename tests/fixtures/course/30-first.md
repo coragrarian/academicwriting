@@ -4,15 +4,23 @@ title: Choosing and comparing neutral labels
 order: 10
 ---
 
-# Labels
+# Choosing and comparing neutral labels
 
 This module introduces neutral labels.
 
 ## Choosing a label
 
+<!-- agrarian
+id: choosing-a-label
+-->
+
 Compare the labels.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 A label identifies a record.
 
@@ -35,15 +43,27 @@ feedback:
 
 ### Exercise 2
 
+<!-- agrarian
+id: exercise-2
+-->
+
 **Instructions:** Complete the description.
 
 > The record uses <mark class="correct-answer">a deliberately long descriptive label for the reference group</mark> | brief.
 
 ## Selecting labels
 
+<!-- agrarian
+id: selecting-labels
+-->
+
 Select the requested set.
 
 ### Exercise 1
+
+<!-- agrarian
+id: exercise-1
+-->
 
 The linked blank __________ [B] is answered in Item B.
 
