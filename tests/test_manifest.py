@@ -1,10 +1,17 @@
 """Structural fingerprint and course manifest contracts."""
 
+import json
 import re
 
 import pytest
+from conftest import ROOT
+from site_support import course_sequence
 
-from agrarian_builder.manifest import exercise_fingerprint
+from agrarian_builder.manifest import (
+    course_manifest,
+    exercise_fingerprint,
+    format_manifest,
+)
 from agrarian_builder.parser import parse_document
 
 CHOICE_SOURCE = """---
@@ -177,3 +184,99 @@ def test_fingerprint_changes_when_matching_mapping_order_changes():
     )
     assert exercise_fingerprint(first_exercise(reordered_mappings)) != baseline
     assert exercise_fingerprint(first_exercise(unchanged_structure_key_swap)) == baseline
+
+
+def test_course_manifest_derives_deterministic_structure_from_model(synthetic_documents):
+    manifest = course_manifest(list(reversed(synthetic_documents)))
+    assert manifest == course_manifest(synthetic_documents)
+    assert manifest["manifest_version"] == 1
+    assert [module["id"] for module in manifest["modules"]] == ["alpha", "beta", "gamma", "delta"]
+    assert [module["source"] for module in manifest["modules"]] == [
+        "30-first.md",
+        "10-second.md",
+        "20-third.md",
+        "00-last.md",
+    ]
+    assert manifest["sequence"] == [
+        path.as_posix().removesuffix("index.html")
+        for path in course_sequence(synthetic_documents)
+    ]
+    assert all(path.endswith("/") for path in manifest["sequence"])
+
+    alpha = manifest["modules"][0]
+    assert alpha["path"] == "alpha/"
+    first_ex = alpha["sections"][0]["exercises"][0]
+    assert first_ex["id"] == "alpha--choosing-a-label--exercise-1"
+    assert first_ex["path"] == "alpha/choosing-a-label/exercise-1/"
+    assert first_ex["models"] == 1
+    assert first_ex["groups"] == [{"id": "exercise", "responses": ["context-q1"]}]
+    assert first_ex["responses"] == [
+        {
+            "id": "context-q1",
+            "kind": "single-choice",
+            "source_label": None,
+            "option_count": 2,
+            "expected": [1],
+        }
+    ]
+    assert first_ex["feedback"] == {
+        "exercise": {
+            "correct": False,
+            "incorrect": False,
+            "options": ["a", "b"],
+            "gaps": [],
+        }
+    }
+
+    gamma_ex = manifest["modules"][2]["sections"][0]["exercises"][0]
+    assert gamma_ex["models"] == 1
+    assert gamma_ex["groups"] == [
+        {"id": "item-a", "responses": ["item-a-q1"]},
+        {"id": "item-b", "responses": ["item-b-q1"]},
+    ]
+    assert gamma_ex["responses"] == [
+        {
+            "id": "item-a-q1",
+            "kind": "typed-gap",
+            "source_label": "1",
+            "option_count": 0,
+            "expected": "North",
+        },
+        {
+            "id": "item-b-q1",
+            "kind": "typed-gap",
+            "source_label": "2",
+            "option_count": 0,
+            "expected": "South east",
+        },
+    ]
+    assert gamma_ex["feedback"] == {
+        "exercise": {
+            "correct": True,
+            "incorrect": True,
+            "options": [],
+            "gaps": ["1", "2"],
+        },
+        "item-a": {
+            "correct": True,
+            "incorrect": False,
+            "options": [],
+            "gaps": ["1"],
+        },
+        "item-b": {
+            "correct": False,
+            "incorrect": False,
+            "options": [],
+            "gaps": [],
+        },
+    }
+    serialised = format_manifest(manifest)
+    assert serialised.endswith("\n")
+    assert "This local explanation replaces" not in serialised
+    assert json.loads(serialised) == manifest
+
+
+@pytest.mark.canonical
+def test_committed_course_manifest_matches_canonical_sources(documents):
+    committed = (ROOT / "course.manifest.json").read_text(encoding="utf-8")
+    assert committed == format_manifest(course_manifest(documents))

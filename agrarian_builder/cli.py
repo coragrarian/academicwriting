@@ -1,20 +1,26 @@
-"""Validate authored Markdown or regenerate the complete canonical course."""
+"""Validate authored Markdown, inspect the course manifest or build the site."""
 
 import argparse
+import difflib
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
 from jinja2 import TemplateError
 
+from .manifest import course_manifest, format_manifest
 from .parser import SourceError, discover_documents
 from .renderer import build_site
+
+MANIFEST_PATH = Path("course.manifest.json")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the repository CLI, retaining source context in failure diagnostics.
 
-    Paths are relative to the working directory. Production builds always read
-    ``exercises/``; only validation accepts a source file or another directory.
+    Paths are relative to the working directory. Production builds and manifest
+    write/check operations always read ``exercises/``; only ``validate`` and a
+    read-only ``inspect`` accept a source file or another directory.
     """
     parser = argparse.ArgumentParser(prog="agrarian", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -37,10 +43,73 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=Path("_site"),
         help="Recognised build output directory (default: _site/).",
     )
+    inspect = commands.add_parser(
+        "inspect",
+        help="Print, write or check the structural course manifest.",
+    )
+    inspect.add_argument(
+        "source",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="Markdown file or directory for stdout inspection (default: exercises/).",
+    )
+    mode = inspect.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--write",
+        action="store_true",
+        help="Write course.manifest.json at the repository root from exercises/.",
+    )
+    mode.add_argument(
+        "--check",
+        action="store_true",
+        help="Check that course.manifest.json matches exercises/.",
+    )
     arguments = parser.parse_args(argv)
-    source = arguments.source if arguments.command == "validate" else Path("exercises")
+    if (
+        arguments.command == "inspect"
+        and (arguments.write or arguments.check)
+        and arguments.source is not None
+    ):
+        parser.error(f"unrecognized arguments: {arguments.source}")
+
+    source = (
+        arguments.source
+        if arguments.command == "validate"
+        else (arguments.source or Path("exercises"))
+        if arguments.command == "inspect"
+        else Path("exercises")
+    )
     try:
         documents = discover_documents(source)
+        if arguments.command == "inspect":
+            rendered = format_manifest(course_manifest(documents))
+            if arguments.write:
+                MANIFEST_PATH.write_text(rendered, encoding="utf-8")
+                print(f"Wrote: {MANIFEST_PATH}")
+                return 0
+            if arguments.check:
+                committed = MANIFEST_PATH.read_text(encoding="utf-8")
+                if committed != rendered:
+                    diff = "".join(
+                        difflib.unified_diff(
+                            committed.splitlines(keepends=True),
+                            rendered.splitlines(keepends=True),
+                            fromfile=str(MANIFEST_PATH),
+                            tofile="exercises/",
+                        )
+                    )
+                    if diff and not diff.endswith("\n"):
+                        diff += "\n"
+                    parser.exit(
+                        1,
+                        f"{diff}Course manifest is out of date: review the diff above, "
+                        "then run agrarian inspect --write.\n",
+                    )
+                print("Manifest: up to date")
+                return 0
+            sys.stdout.write(rendered)
+            return 0
         if arguments.command == "build":
             build_site(documents, arguments.output)
     except (OSError, SourceError, ValueError, TemplateError) as error:
