@@ -843,3 +843,48 @@ def test_exercise_html_blocks_mixing_comments_and_markup_are_rejected(body, expe
         f"{expected_context}: HTML block containing a comment is not supported; "
         "remove the comment or the block"
     )
+
+
+@pytest.mark.parametrize(
+    ("body", "expected_context"),
+    [
+        (
+            "1. [x] First\n2. [ ] Second\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "> - [x] Quoted correct\n> - [ ] Quoted wrong\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "- Outer\n  - [x] Nested correct\n  - [ ] Nested wrong\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "1. Outer\n   - [x] Nested in ordered\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "- Outer\n  1. [ ] Ordered inside bullet\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, exercise",
+        ),
+        (
+            "#### Item A\n\n> - [ ] Unchecked in quote\n\n- [x] Valid choice\n",
+            "fixture.md, Section, Exercise 1, Item A",
+        ),
+    ],
+)
+def test_task_list_answers_outside_top_level_bullets_are_rejected(body, expected_context):
+    with pytest.raises(SourceError) as error:
+        exercise(body)
+    assert str(error.value) == (
+        f"{expected_context}: task-list answers must be a top-level bullet list"
+    )
+
+
+def test_inline_code_brackets_in_ordered_or_quoted_lists_are_not_task_answers():
+    parsed = exercise(
+        "1. `[x] Example syntax`\n\n> - `[ ] Quoted code`\n\n- [x] Real choice\n- [ ] Distractor\n"
+    )
+    assert len(parsed.questions) == 1
+    assert parsed.questions[0].kind == "single-choice"

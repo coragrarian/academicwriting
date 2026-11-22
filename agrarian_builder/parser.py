@@ -459,6 +459,20 @@ def _item_first_inline(tokens: list[Token], start: int) -> Token | None:
     return None
 
 
+def _reject_nested_or_non_bullet_tasks(chunk: list[Token], context: str) -> None:
+    """Reject task-list items inside ordered lists, blockquotes or nested lists."""
+    stack: list[str] = []
+    for index, token in enumerate(chunk):
+        if token.type == "list_item_open" and stack != ["bullet_list_open"]:
+            first = _item_first_inline(chunk, index)
+            if first is not None and TASK_RE.fullmatch(_inline_text_without_code(first)):
+                raise SourceError(f"{context}: task-list answers must be a top-level bullet list")
+        if token.nesting == 1:
+            stack.append(token.type)
+        elif token.nesting == -1 and stack:
+            stack.pop()
+
+
 def _validate_overview(markdown: MarkdownIt, source: str, context: str) -> None:
     """Reject answer syntax, declarations and metadata outside exercises."""
     tokens = markdown.parse(source)
@@ -843,6 +857,7 @@ class _ContentParser:
             if kind == "html_block" and "<!--" in chunk[0].content:
                 _check_exercise_html_comment_block(chunk[0].content, self.context)
                 continue
+            _reject_nested_or_non_bullet_tasks(chunk, self.context)
             if kind == "bullet_list_open":
                 entries = _list_entries(chunk, self.context)
                 tasks = [
