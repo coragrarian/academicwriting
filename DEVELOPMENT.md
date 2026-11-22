@@ -222,20 +222,25 @@ and persisted only when the recomputed status differs from the stored progress.
 
 Each exercise answer payload includes a 16-character structural `fingerprint`
 computed from its scored responses (`id`, `kind`, `source_label`, plain-text
-prompt and plain-text options). Answer keys, option correctness flags, typed-gap
-answers, feedback, surrounding prose, worked models and titles are excluded by
-design: answer-key edits re-score existing responses on load, and prose or
-feedback edits never clear learners' drafts. When an exercise loads with saved
-responses or a checked flag and a stored fingerprint that differs from the
-current payload fingerprint, the revised policy deletes its `responses` and
-`checked` entries, sets any existing `progress` to `in-progress`, stores the new
-fingerprint, persists the change and informs the learner in `#exercise-feedback`
-that previous answers were cleared. Because Home reads stored `progress` without
-loading per-exercise answer payloads, a revised exercise keeps any stale
-`completed` count on Home until that exercise page is visited. When saved
-responses exist without a stored fingerprint, the legacy policy adopts and
-persists the current fingerprint without discarding the learner's attempt. Input
-and submit store the current fingerprint; Reset removes it.
+prompt and plain-text options). Option correctness flags, bank or matching
+label mappings, typed-gap expected answers, feedback, surrounding prose, worked
+models and titles are excluded by design: changing which option, alternative or
+mapping label is correct, or editing typed-gap answers, re-scores existing
+responses on load without clearing drafts, and prose or feedback edits never
+clear learners' drafts. Changing the text of any option, answer-bank entry,
+inline-choice alternative or matching purpose does change the fingerprint and
+clears saved attempts for that exercise on the next visit. When an exercise
+loads with saved responses or a checked flag and a stored fingerprint that
+differs from the current payload fingerprint, the revised policy deletes its
+`responses` and `checked` entries, sets any existing `progress` to
+`in-progress`, stores the new fingerprint, persists the change and informs the
+learner in `#exercise-feedback` that previous answers were cleared. Because
+Home reads stored `progress` without loading per-exercise answer payloads, a
+revised exercise keeps any stale `completed` count on Home until that exercise
+page is visited. When saved responses exist without a stored fingerprint, the
+legacy policy adopts and persists the current fingerprint without discarding
+the learner's attempt. Input and submit store the current fingerprint; Reset
+removes it.
 
 Changing a front-matter title or module `order` preserves identity when the
 explicit module ID is retained. Moving unchanged subsections/exercises within
