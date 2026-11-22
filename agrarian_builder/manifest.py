@@ -1,0 +1,220 @@
+"""Derive a review-oriented description of the published course from the model.
+
+The course manifest records module, subsection and exercise paths, response
+shapes, group membership, feedback presence, worked-model counts, structural
+fingerprints and the learning sequence so structural diffs appear in review.
+This module reads semantic ``Document`` trees and shared course, path and
+fingerprint helpers; it neither parses Markdown nor renders HTML.
+"""
+
+import json
+import os
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Literal, TypedDict
+
+from .course import learning_sequence, ordered_documents
+from .fingerprint import exercise_fingerprint
+from .model import Document, Exercise, Feedback, ResponseKind, Section
+from .paths import page_path
+
+
+class ResponseManifest(TypedDict):
+    """Scored response contract recorded in the course manifest."""
+
+    id: str
+    kind: ResponseKind
+    source_label: str | None
+    option_count: int
+    expected: list[int] | str
+
+
+class GroupManifest(TypedDict):
+    """Response group membership recorded in the course manifest."""
+
+    id: str
+    responses: list[str]
+
+
+class FeedbackPresence(TypedDict):
+    """Authored feedback keys present in one exercise or item scope."""
+
+    correct: bool
+    incorrect: bool
+    options: list[str]
+    gaps: list[str]
+
+
+class ExerciseManifest(TypedDict):
+    """Exercise structure, fingerprint and feedback presence in the manifest."""
+
+    id: str
+    title: str
+    path: str
+    fingerprint: str
+    responses: list[ResponseManifest]
+    groups: list[GroupManifest]
+    feedback: dict[str, FeedbackPresence]
+    models: int
+
+
+class SectionManifest(TypedDict):
+    """Subsection overview and exercises recorded in the course manifest."""
+
+    id: str
+    title: str
+    path: str
+    exercises: list[ExerciseManifest]
+
+
+class ModuleManifest(TypedDict):
+    """Module identity, order, source file and subsections in the manifest."""
+
+    id: str
+    title: str
+    order: int
+    source: str
+    path: str
+    sections: list[SectionManifest]
+
+
+class CourseManifest(TypedDict):
+    """Complete review-oriented structural manifest for the course."""
+
+    manifest_version: Literal[1]
+    modules: list[ModuleManifest]
+    sequence: list[str]
+
+
+def _directory_url(
+    document: Document, section: Section | None = None, exercise: Exercise | None = None
+) -> str:
+    """Convert an index page path into a site-relative directory URL."""
+    return page_path(document, section, exercise).as_posix().removesuffix("index.html")
+
+
+def _relative_sources(documents: Sequence[Document]) -> dict[str, str]:
+    """Derive POSIX source file names relative to the shared source directory."""
+    parents = [Path(document.source_path).parent.as_posix() for document in documents]
+    try:
+        root = Path(os.path.commonpath(parents)) if parents else Path(".")
+        return {
+            document.slug: Path(document.source_path).relative_to(root).as_posix()
+            for document in documents
+        }
+    except ValueError:
+        return {
+            document.slug: Path(document.source_path).name for document in documents
+        }
+
+
+def _feedback_presence(feedback: Feedback) -> FeedbackPresence:
+    """Record which feedback channels exist in a scope without storing prose."""
+    return {
+        "correct": feedback.correct is not None,
+        "incorrect": feedback.incorrect is not None,
+        "options": sorted(feedback.options),
+        "gaps": sorted(feedback.gaps),
+    }
+
+
+def _exercise_manifest(
+    document: Document, section: Section, exercise: Exercise
+) -> ExerciseManifest:
+    """Summarise one exercise's response contract and feedback presence."""
+    scopes = [("exercise", exercise.direct_questions)] + [
+        (item.id, item.questions) for item in exercise.items
+    ]
+    groups: list[GroupManifest] = [
+        {"id": group_id, "responses": [question.id for question in questions]}
+        for group_id, questions in scopes
+        if questions
+    ]
+    feedback: dict[str, FeedbackPresence] = {
+        "exercise": _feedback_presence(exercise.metadata.feedback),
+        **{
+            item.id: _feedback_presence(item.metadata.feedback)
+            for item in exercise.items
+        },
+    }
+    responses: list[ResponseManifest] = [
+        {
+            "id": question.id,
+            "kind": question.kind,
+            "source_label": question.source_label,
+            "option_count": len(question.options),
+            "expected": question.expected_answer(),
+        }
+        for question in exercise.questions
+    ]
+    return {
+        "id": exercise.id,
+        "title": exercise.title,
+        "path": _directory_url(document, section, exercise),
+        "fingerprint": exercise_fingerprint(exercise),
+        "responses": responses,
+        "groups": groups,
+        "feedback": feedback,
+        "models": len(exercise.examples),
+    }
+
+
+def course_manifest(documents: Sequence[Document]) -> CourseManifest:
+    """Build the deterministic structural manifest for a sequence of modules.
+
+    Parameters
+    ----------
+    documents
+        Parsed course modules. They are sorted by ``(order, slug)`` so the
+        manifest is independent of discovery order.
+
+    Returns
+    -------
+    CourseManifest
+        JSON-serialisable dictionary describing modules, subsections,
+        exercises, response contracts, fingerprints and learning traversal.
+    """
+    ordered = ordered_documents(documents)
+    sources = _relative_sources(ordered)
+    modules: list[ModuleManifest] = []
+    for document in ordered:
+        module_url = _directory_url(document)
+        sections: list[SectionManifest] = []
+        for section in document.sections:
+            section_url = _directory_url(document, section)
+            exercises: list[ExerciseManifest] = [
+                _exercise_manifest(document, section, exercise)
+                for exercise in section.exercises
+            ]
+            sections.append(
+                {
+                    "id": section.slug,
+                    "title": section.title,
+                    "path": section_url,
+                    "exercises": exercises,
+                }
+            )
+        modules.append(
+            {
+                "id": document.slug,
+                "title": document.title,
+                "order": document.order,
+                "source": sources[document.slug],
+                "path": module_url,
+                "sections": sections,
+            }
+        )
+    sequence = [
+        path.as_posix().removesuffix("index.html")
+        for path in learning_sequence(ordered)
+    ]
+    return {
+        "manifest_version": 1,
+        "modules": modules,
+        "sequence": sequence,
+    }
+
+
+def format_manifest(manifest: CourseManifest) -> str:
+    """Serialise a course manifest as deterministic JSON with a trailing newline."""
+    return json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n"

@@ -21,20 +21,24 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import NotRequired, TypedDict
 
 import yaml
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 
+from .course import ordered_documents
 from .model import (
     Block,
     Document,
     Exercise,
     ExerciseItem,
     Feedback,
+    InteractionKind,
     Metadata,
     Option,
     Question,
+    ResponseKind,
     Section,
 )
 
@@ -79,9 +83,9 @@ class _UniqueSafeLoader(yaml.SafeLoader):
     """Keep SafeLoader's restricted types and reject silently overwritten keys."""
 
 
-def _unique_mapping(loader: _UniqueSafeLoader, node: yaml.MappingNode) -> dict:
+def _unique_mapping(loader: _UniqueSafeLoader, node: yaml.MappingNode) -> dict[object, object]:
     """Reject duplicate YAML fields before a later value can hide an earlier one."""
-    result = {}
+    result: dict[object, object] = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node)
         try:
@@ -110,7 +114,7 @@ _UniqueSafeLoader.add_constructor(
 )
 
 
-def _yaml_mapping(source: str, context: str) -> dict:
+def _yaml_mapping(source: str, context: str) -> dict[str, object]:
     """Read restricted YAML mappings and report errors in the author's scope."""
     try:
         value = yaml.load(source, Loader=_UniqueSafeLoader)
@@ -138,13 +142,16 @@ def _metadata(raw: str, context: str) -> Metadata:
     unknown = set(data) - {"interaction", "feedback"}
     if unknown:
         raise SourceError(f"{context}: unsupported metadata keys {list(unknown)!r}")
-    interaction = data.get("interaction")
-    if interaction is not None and interaction != "typed-gap":
-        raise SourceError(f"{context}: unsupported interaction {interaction!r}")
+    raw_interaction = data.get("interaction")
+    interaction: InteractionKind | None = None
+    if raw_interaction is not None:
+        if raw_interaction != "typed-gap":
+            raise SourceError(f"{context}: unsupported interaction {raw_interaction!r}")
+        interaction = "typed-gap"
     feedback = data.get("feedback", {})
     if not isinstance(feedback, dict) or set(feedback) - {"correct", "incorrect", "options", "gaps"}:
         raise SourceError(f"{context}: feedback requires correct, incorrect, options or gaps")
-    messages = {}
+    messages: dict[str, str] = {}
     for key in ("correct", "incorrect"):
         if key in feedback:
             if not isinstance(feedback[key], str) or not feedback[key].strip():
@@ -168,7 +175,8 @@ def _metadata(raw: str, context: str) -> Metadata:
     return Metadata(
         interaction,
         Feedback(
-            **messages,
+            correct=messages.get("correct"),
+            incorrect=messages.get("incorrect"),
             options={key: value.strip() for key, value in options.items()},
             gaps={key: value.strip() for key, value in gaps.items()},
         ),
@@ -241,8 +249,8 @@ def _heading_identities(
     but intervening Markdown blocks are not. Consumed lines stay blank so token
     line ranges remain valid and identity metadata never enters rendered prose.
     """
-    identities = {}
-    scope = {}
+    identities: dict[int, str] = {}
+    scope: dict[int, str] = {}
     heading = None
     for index, token in enumerate(tokens):
         if token.type == "heading_open":
@@ -320,8 +328,8 @@ def _list_entries(tokens: list[Token], context: str) -> list[str]:
 
 
 def _table_rows(tokens: list[Token]) -> list[list[str]]:
-    rows = []
-    row = []
+    rows: list[list[str]] = []
+    row: list[str] = []
     for token in tokens:
         if token.type == "tr_open":
             row = []
@@ -462,7 +470,7 @@ class _ContentParser:
         context: str,
         container: _Container,
         bank: _Bank | None,
-        interaction: str | None,
+        interaction: InteractionKind | None,
         seen_gaps: set[str],
         item_labels: dict[str, str],
         source_lines: list[str],
@@ -480,7 +488,7 @@ class _ContentParser:
 
     def _add(
         self,
-        kind: str,
+        kind: ResponseKind,
         options: list[Option] | None = None,
         prompt_html: str = "",
         label: str = "",
@@ -860,9 +868,9 @@ def _exercise(
         _merge_metadata(target, metadata, context)
 
     item_labels = {
-        ITEM_RE.fullmatch(container.title).group(1): container.id
+        match.group(1): container.id
         for container in containers
-        if container.title and ITEM_RE.fullmatch(container.title)
+        if container.title and (match := ITEM_RE.fullmatch(container.title))
     }
     seen_gaps: set[str] = set()
     linked_gaps: set[str] = set()
@@ -887,7 +895,7 @@ def _exercise(
                 f"{context}, {container.title}: typed-gap metadata has no labelled gaps"
             )
         linked_gaps |= parser.linked_gaps
-        if container == root:
+        if container.title is None:
             exercise.blocks, exercise.direct_questions = blocks, parser.questions
         else:
             item = ExerciseItem(
@@ -932,7 +940,16 @@ def _exercise(
     return exercise
 
 
-def _front_matter(source: str, context: str) -> tuple[dict, str]:
+class _FrontMatter(TypedDict):
+    """Validated module front-matter fields."""
+
+    id: str
+    title: str
+    order: int
+    summary: NotRequired[str]
+
+
+def _front_matter(source: str, context: str) -> tuple[_FrontMatter | None, str]:
     """Remove and validate an optional leading YAML module declaration.
 
     Present front matter requires ``id`` and ``title``; ``order`` and ``summary``
@@ -943,7 +960,7 @@ def _front_matter(source: str, context: str) -> tuple[dict, str]:
     """
     lines = source.splitlines(keepends=True)
     if not lines or lines[0].strip() != "---":
-        return {}, source
+        return None, source
     end = next((index for index in range(1, len(lines)) if lines[index].strip() == "---"), None)
     if end is None:
         raise SourceError(f"{context}: unterminated front matter")
@@ -951,18 +968,28 @@ def _front_matter(source: str, context: str) -> tuple[dict, str]:
     unknown = set(data) - {"id", "title", "order", "summary"}
     if unknown:
         raise SourceError(f"{context}: unsupported front matter fields {list(unknown)!r}")
-    for key in ("id", "title"):
-        if key not in data or not isinstance(data[key], str) or not data[key].strip():
-            raise SourceError(f"{context}: front matter requires nonempty {key}")
-    if not ID_RE.fullmatch(data["id"]):
+    module_id = data.get("id")
+    if not isinstance(module_id, str) or not module_id.strip():
+        raise SourceError(f"{context}: front matter requires nonempty id")
+    module_title = data.get("title")
+    if not isinstance(module_title, str) or not module_title.strip():
+        raise SourceError(f"{context}: front matter requires nonempty title")
+    if not ID_RE.fullmatch(module_id):
         raise SourceError(f"{context}: module id must be a lowercase URL-safe slug")
-    if type(data.get("order", 0)) is not int:
+    order = data.get("order", 0)
+    if type(order) is not int:
         raise SourceError(f"{context}: front matter order must be an integer")
+    front_matter: _FrontMatter = {
+        "id": module_id,
+        "title": module_title,
+        "order": order,
+    }
     if "summary" in data:
-        if not isinstance(data["summary"], str) or not data["summary"].strip():
+        summary = data["summary"]
+        if not isinstance(summary, str) or not summary.strip():
             raise SourceError(f"{context}: front matter summary must be a nonempty string")
-        data["summary"] = data["summary"].strip()
-    return data, "".join(lines[end + 1 :])
+        front_matter["summary"] = summary.strip()
+    return front_matter, "".join(lines[end + 1 :])
 
 
 def parse_document(
@@ -1012,8 +1039,8 @@ def parse_document(
         raise SourceError(f"{source_path}: expected a level-one title")
     if sum(heading.level == 1 for heading in headings) != 1:
         raise SourceError(f"{source_path}: expected exactly one level-one title")
-    title = data.get("title", headings[0].title)
-    slug = data.get("id", slugify(document_slug or title))
+    title = data["title"] if data else headings[0].title
+    slug = data["id"] if data else slugify(document_slug or title)
     first_section = next(
         (heading.start for heading in headings if heading.level == 2), len(lines)
     )
@@ -1021,9 +1048,9 @@ def parse_document(
         title,
         slug,
         markdown.render("".join(lines[headings[0].end : first_section])),
-        order=data.get("order", 0),
+        order=data["order"] if data else 0,
         source_path=source_path,
-        summary=data.get("summary"),
+        summary=data.get("summary") if data else None,
     )
     current_section = None
     exercise_started = False
@@ -1106,8 +1133,8 @@ def discover_documents(source: Path) -> list[Document]:
     paths = sorted(source.rglob("*.md")) if source.is_dir() else [source]
     if not paths:
         raise SourceError(f"{source}: no Markdown modules found")
-    documents = []
-    seen_ids = {}
+    documents: list[Document] = []
+    seen_ids: dict[str, Path] = {}
     for path in paths:
         document = parse_document(
             path.read_text(encoding="utf-8"), path.stem, source_path=str(path)
@@ -1120,4 +1147,4 @@ def discover_documents(source: Path) -> list[Document]:
             )
         seen_ids[document.slug] = path
         documents.append(document)
-    return sorted(documents, key=lambda document: (document.order, document.slug))
+    return ordered_documents(documents)

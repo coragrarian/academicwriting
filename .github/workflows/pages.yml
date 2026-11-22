@@ -35,8 +35,12 @@ jobs:
         run: uv sync --locked
       - name: Validate canonical sources
         run: uv run --frozen agrarian validate
+      - name: Check course manifest
+        run: uv run --frozen agrarian inspect --check
       - name: Check Python
         run: uv run --frozen ruff check . --no-cache
+      - name: Type-check Python
+        run: uv run --frozen mypy
       - name: Check JavaScript syntax
         run: |
           node --check static/exercises.js

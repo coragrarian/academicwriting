@@ -1,20 +1,34 @@
-/* Shared browser-local progress contract: each module stores progress, raw
-   responses and checked flags by exercise ID. Count only the current catalogue;
-   exercise pages alone check answers and write attempts. */
+/* Shared browser-local progress contract: each module stores RECORDS (progress,
+   raw responses, checked flags and structural fingerprints) by exercise ID,
+   which is the merge unit across tabs. readStoredState returns null when
+   storage throws so exercise pages can retain unsaved attempts in memory across
+   refreshes and flush them on the next successful write. Count only the current
+   catalogue; exercise pages alone check answers and write attempts. */
+/**
+ * @typedef {"not-started" | "in-progress" | "completed"} ExerciseStatus
+ * @typedef {Object} SavedModuleState
+ * @property {Object<string, ExerciseStatus>} progress
+ * @property {Object<string, Object<string, (number[] | string)>>} responses
+ * @property {Object<string, boolean>} checked
+ * @property {Object<string, string>} fingerprints
+ */
 (() => {
   "use strict";
 
+  const RECORDS = ["progress", "responses", "checked", "fingerprints"];
   const storageKey = (module) => `agrarian-writing-v2:${module}`;
   const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const emptyRecords = () => Object.fromEntries(RECORDS.map((key) => [key, {}]));
 
   function migrateIntroduction(saved) {
     let changed = false;
-    // Retain the existing subsection-rename repair across all three records,
-    // preserving a current record when both old and current IDs are stored.
+    // Retain the existing subsection-rename repair across every record in
+    // RECORDS, preserving a current entry when both old and current IDs exist.
     for (let number = 1; number <= 3; number++) {
       const previous = `introduction--further-practice--exercise-${number}`;
       const current = `introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-${number}`;
-      for (const record of [saved.progress, saved.responses, saved.checked]) {
+      for (const key of RECORDS) {
+        const record = saved[key];
         if (!Object.hasOwn(record, previous)) continue;
         if (!Object.hasOwn(record, current)) record[current] = record[previous];
         delete record[previous];
@@ -38,24 +52,37 @@
     return changed;
   }
 
-  /** Read the existing format, optionally persisting its compatibility repair.
-   * Home uses the default read-only mode; course pages retain their repair write.
+  /** Read and normalise stored state, returning null only when storage throws.
+   * Malformed or non-object JSON yields empty records so a later write repairs
+   * it. Home uses the default read-only mode; course pages retain their repair write.
    */
-  function readState(module, { persistRepair = false } = {}) {
+  function readStoredState(module, { persistRepair = false } = {}) {
+    let raw;
     try {
-      const parsed = object(JSON.parse(localStorage.getItem(storageKey(module)) || "{}"));
-      const saved = { progress: object(parsed.progress), responses: object(parsed.responses), checked: object(parsed.checked) };
-      if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
-        try {
-          localStorage.setItem(storageKey(module), JSON.stringify(saved));
-        } catch {
-          // The repaired state remains usable if storage is read-only.
-        }
-      }
-      return saved;
+      raw = localStorage.getItem(storageKey(module));
     } catch {
-      return { progress: {}, responses: {}, checked: {} };
+      return null;
     }
+    let parsed = {};
+    try {
+      parsed = object(JSON.parse(raw || "{}"));
+    } catch {
+      // Malformed JSON normalises to empty records so a later write repairs it.
+    }
+    const saved = Object.fromEntries(RECORDS.map((key) => [key, object(parsed[key])]));
+    if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
+      try {
+        localStorage.setItem(storageKey(module), JSON.stringify(saved));
+      } catch {
+        // The repaired state remains usable if storage is read-only.
+      }
+    }
+    return saved;
+  }
+
+  /** Return stored state, or empty records when storage is unavailable. */
+  function readState(module, options) {
+    return readStoredState(module, options) ?? emptyRecords();
   }
 
   /** Count the exact stored completion value for current exercise IDs only. */
@@ -63,5 +90,5 @@
     return exerciseIds.filter((id) => state.progress[id] === "completed").length;
   }
 
-  window.AgrarianProgress = { storageKey, readState, countCompleted };
+  window.AgrarianProgress = { RECORDS, storageKey, readStoredState, readState, countCompleted };
 })();

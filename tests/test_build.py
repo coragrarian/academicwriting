@@ -24,6 +24,14 @@ from site_support import (
 )
 
 from agrarian_builder import renderer
+from agrarian_builder.contracts import (
+    AnswerPayload,
+    CourseSiteData,
+    FeedbackPayload,
+    GroupPayload,
+    HomeSiteData,
+    QuestionPayload,
+)
 from agrarian_builder.parser import parse_document
 from agrarian_builder.renderer import build_site
 
@@ -1101,3 +1109,39 @@ feedback:
         "0"
     ].startswith("</script>")
     assert "<script>alert(1)</script>" not in path.read_text()
+
+
+def test_generated_payload_keys_match_typed_builder_contracts(tmp_path, course_documents):
+    output = tmp_path / "site"
+    build_site(course_documents, output)
+    home = Page((output / "index.html").read_text())
+    assert set(json.loads(home.scripts["site-data"])) == HomeSiteData.__required_keys__
+    for document in course_documents:
+        module_page = Page((output / document.slug / "index.html").read_text())
+        assert set(json.loads(module_page.scripts["site-data"])) == CourseSiteData.__required_keys__
+        for section in document.sections:
+            section_page = Page((output / document.slug / section.slug / "index.html").read_text())
+            assert (
+                set(json.loads(section_page.scripts["site-data"]))
+                == CourseSiteData.__required_keys__
+            )
+            for exercise in section.exercises:
+                page = Page(
+                    (
+                        output / document.slug / section.slug / exercise.slug / "index.html"
+                    ).read_text()
+                )
+                assert (
+                    set(json.loads(page.scripts["site-data"])) == CourseSiteData.__required_keys__
+                )
+                for payload in (
+                    renderer._answer_data(exercise),
+                    json.loads(page.scripts["answer-key"]),
+                ):
+                    assert set(payload) == AnswerPayload.__required_keys__
+                    assert set(payload["feedback"]) == FeedbackPayload.__required_keys__
+                    for group in payload["groups"]:
+                        assert set(group) == GroupPayload.__required_keys__
+                        assert set(group["feedback"]) == FeedbackPayload.__required_keys__
+                    for question in payload["questions"].values():
+                        assert set(question) == QuestionPayload.__required_keys__

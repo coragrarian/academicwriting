@@ -1,9 +1,15 @@
 /* Rows determine module order; the generated catalogue determines exercise
    order and supplies each exercise's path relative to Home. */
+/**
+ * @typedef {Object} HomeSiteData
+ * @property {Object<string, string[]>} modules
+ * @property {Object<string, string>} exercise_urls
+ */
 (() => {
   "use strict";
 
   const { readState, countCompleted } = window.AgrarianProgress;
+  /** @type {HomeSiteData} */
   const { modules, exercise_urls: exerciseUrls } = JSON.parse(document.getElementById("site-data").textContent);
   const progress = [...document.querySelectorAll("[data-home-module]")].map((row) => {
     const module = row.dataset.homeModule;

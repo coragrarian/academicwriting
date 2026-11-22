@@ -1,5 +1,6 @@
 """Exercise the installed console script and whole-course production boundary."""
 
+import json
 import shutil
 import subprocess
 import sys
@@ -12,6 +13,7 @@ from test_extensibility import assert_shape, file_bytes, structure
 
 from agrarian_builder import renderer
 from agrarian_builder.cli import main
+from agrarian_builder.manifest import course_manifest, format_manifest
 from agrarian_builder.parser import discover_documents
 
 ENTRY_POINT = Path(sysconfig.get_path("scripts")) / "agrarian"
@@ -33,7 +35,10 @@ def run_cli(directory, *arguments):
     )
 
 
-@pytest.mark.parametrize("arguments", [("--help",), ("validate", "--help"), ("build", "--help")])
+@pytest.mark.parametrize(
+    "arguments",
+    [("--help",), ("validate", "--help"), ("build", "--help"), ("inspect", "--help")],
+)
 def test_installed_entry_point_help(tmp_path, arguments):
     result = run_cli(tmp_path, *arguments)
     assert result.returncode == 0, result.stderr
@@ -166,3 +171,90 @@ def test_cli_refuses_unrecognised_custom_output(course):
     assert result.returncode == 1
     assert "unrecognised" in result.stderr
     assert (existing / "keep.txt").read_text() == "user data"
+
+
+@pytest.mark.parametrize("target", [None, "exercises", "exercises/30-first.md"])
+def test_inspect_prints_pure_manifest_json_without_writing_files(course, target):
+    before = file_bytes(course)
+    result = run_cli(course, "inspect", *([target] if target else []))
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+    source = course / (target or "exercises")
+    expected = format_manifest(course_manifest(discover_documents(source)))
+    assert result.stdout == expected
+    assert json.loads(result.stdout)["manifest_version"] == 1
+    assert file_bytes(course) == before
+    assert not (course / "course.manifest.json").exists()
+
+
+def test_inspect_write_and_check_round_trip(course):
+    missing = run_cli(course, "inspect", "--check")
+    assert missing.returncode == 1
+    assert missing.stderr.startswith("Inspect failed:")
+
+    first = run_cli(course, "inspect", "--write")
+    assert first.returncode == 0, first.stderr
+    manifest_path = course / "course.manifest.json"
+    assert manifest_path.is_file()
+    written = manifest_path.read_text(encoding="utf-8")
+
+    second = run_cli(course, "inspect", "--write")
+    assert second.returncode == 0, second.stderr
+    assert manifest_path.read_text(encoding="utf-8") == written
+
+    checked = run_cli(course, "inspect", "--check")
+    assert checked.returncode == 0, checked.stderr
+    assert checked.stdout == "Manifest: up to date\n"
+    assert checked.stderr == ""
+
+
+def test_inspect_check_reports_unified_diff_when_manifest_is_out_of_date(course):
+    assert run_cli(course, "inspect", "--write").returncode == 0
+    path = course / "exercises/30-first.md"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "- [x] b) South",
+            "- [x] b) South\n- [ ] c) West",
+        ),
+        encoding="utf-8",
+    )
+    result = run_cli(course, "inspect", "--check")
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "--- course.manifest.json" in result.stderr
+    assert "+++ exercises/" in result.stderr
+    assert (
+        "Course manifest is out of date: review the diff above, "
+        "then run agrarian inspect --write."
+    ) in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected_message"),
+    [
+        (("--write", "--check"), "not allowed with argument"),
+        (
+            ("--write", "exercises"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--check", "exercises"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--write", "exercises/30-first.md"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--check", "exercises/30-first.md"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+    ],
+)
+def test_inspect_rejects_conflicting_flags_and_positional_sources(
+    course, arguments, expected_message
+):
+    result = run_cli(course, "inspect", *arguments)
+    assert result.returncode == 2
+    assert expected_message in result.stderr
+    assert not (course / "course.manifest.json").exists()

@@ -9,10 +9,23 @@ Prose and option text are already rendered HTML fragments. Inline questions
 remain ``@@question-id@@`` placeholders until the renderer supplies controls or
 worked answers. These classes do not choose page layout, construct navigation
 or check learner responses. The parser validates authored relationships;
-the dataclasses themselves do not enforce them.
+the dataclasses themselves do not enforce them on construction, though
+``Question.expected_answer`` rejects a typed gap without an answer.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
+
+ResponseKind = Literal[
+    "single-choice",
+    "multi-select",
+    "inline-choice",
+    "gap",
+    "matching",
+    "typed-gap",
+]
+BlockKind = Literal["html", "instruction", "question"]
+InteractionKind = Literal["typed-gap"]
 
 
 @dataclass(frozen=True)
@@ -55,7 +68,7 @@ class Metadata:
     an item can inherit that declaration from its exercise.
     """
 
-    interaction: str | None = None
+    interaction: InteractionKind | None = None
     feedback: Feedback = field(default_factory=Feedback)
 
 
@@ -93,7 +106,7 @@ class Question:
     """
 
     id: str
-    kind: str
+    kind: ResponseKind
     options: list[Option] = field(default_factory=list)
     prompt_html: str = ""
     label: str = ""
@@ -103,6 +116,14 @@ class Question:
     @property
     def correct_indices(self) -> list[int]:
         return [index for index, option in enumerate(self.options) if option.correct]
+
+    def expected_answer(self) -> list[int] | str:
+        """Return canonical answer text for a typed gap or correct option indices."""
+        if self.kind == "typed-gap":
+            if self.answer is None:
+                raise ValueError(f"Typed-gap question {self.id!r} has no answer")
+            return self.answer
+        return self.correct_indices
 
 
 @dataclass
@@ -115,7 +136,7 @@ class Block:
     it does not duplicate the question's answer data.
     """
 
-    kind: str  # html, instruction or question
+    kind: BlockKind
     html: str = ""
     question_id: str = ""
 

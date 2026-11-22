@@ -25,17 +25,28 @@ accept a new result.
 The canonical teaching content is `exercises/introduction.md`,
 `exercises/methods.md`, `exercises/results.md` and `exercises/discussion.md`.
 When editing content, preserve response identities and answer mappings unless
-the change deliberately requires otherwise. Check the Introduction matching
-display order separately from its stored question identities. Verify quotations
-and scholarly attribution against their sources, and respect the content scope in
-`NOTICE.md`.
+the change deliberately requires otherwise. Changing the text of any option,
+answer-bank entry, inline-choice alternative or matching purpose (typo fixes
+included) changes that exercise's structural fingerprint and clears every
+learner's saved attempt at it on their next visit, because that text is part of
+the fingerprint. Changing which option, alternative or mapping label is
+correct, or editing typed-gap expected answers, prose, instructions or
+feedback, never clears drafts. Titles and module `order` are recorded in the
+manifest alongside course structure, responses, answer keys and feedback
+presence, so editing any of them requires regenerating and committing
+`course.manifest.json` with `uv run --frozen agrarian inspect --write`; the
+manifest diff is part of review. Check the Introduction matching display order
+separately from its stored question identities. Verify quotations and scholarly
+attribution against their sources, and respect the content scope in `NOTICE.md`.
 
 Build and verify the source before submitting it:
 
 ```sh
 uv run python build.py
+uv run --frozen agrarian inspect --check
 uv run pytest -q
 uv run ruff check . --no-cache
+uv run --frozen mypy
 uv run --frozen playwright install --with-deps chromium
 uv run --frozen pytest -m browser -q
 node --check static/exercises.js

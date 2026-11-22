@@ -1,0 +1,3672 @@
+{
+  "manifest_version": 1,
+  "modules": [
+    {
+      "id": "introduction",
+      "order": 1,
+      "path": "introduction/",
+      "sections": [
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "499be85f12cacba1",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "introduction--the-introduction-section-of-research-papers--exercise-1",
+              "models": 0,
+              "path": "introduction/the-introduction-section-of-research-papers/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q1",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q2",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q3",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q4",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            }
+          ],
+          "id": "the-introduction-section-of-research-papers",
+          "path": "introduction/the-introduction-section-of-research-papers/",
+          "title": "The Introduction section of research papers"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "fc79c8fd73820731",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "introduction--giving-a-context-background--exercise-1",
+              "models": 0,
+              "path": "introduction/giving-a-context-background/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "A"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "B"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "C"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "D"
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "920495f9c7e00b41",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5"
+                  ]
+                }
+              ],
+              "id": "introduction--giving-a-context-background--exercise-2",
+              "models": 0,
+              "path": "introduction/giving-a-context-background/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 5,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 5,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 5,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 5,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 5,
+                  "source_label": "5"
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "1"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "604bc3179391b279",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "introduction--giving-a-context-background--exercise-3",
+              "models": 0,
+              "path": "introduction/giving-a-context-background/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "4"
+                }
+              ],
+              "title": "Exercise 3"
+            }
+          ],
+          "id": "giving-a-context-background",
+          "path": "introduction/giving-a-context-background/",
+          "title": "Giving a context/background"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "16ab07697a8a8356",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--reviewing-previous-research--exercise-1",
+              "models": 0,
+              "path": "introduction/reviewing-previous-research/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-e": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "115439886970fd41",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                },
+                {
+                  "id": "item-e",
+                  "responses": [
+                    "item-e-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--reviewing-previous-research--exercise-2",
+              "models": 0,
+              "path": "introduction/reviewing-previous-research/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-d-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-e-q1",
+                  "kind": "single-choice",
+                  "option_count": 2,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            }
+          ],
+          "id": "reviewing-previous-research",
+          "path": "introduction/reviewing-previous-research/",
+          "title": "Reviewing previous research"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "1",
+                    "2",
+                    "3"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "f108b1ea51798764",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3"
+                  ]
+                }
+              ],
+              "id": "introduction--indicating-a-research-gap--exercise-1",
+              "models": 0,
+              "path": "introduction/indicating-a-research-gap/exercise-1/",
+              "responses": [
+                {
+                  "expected": "has concentrated",
+                  "id": "context-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "1"
+                },
+                {
+                  "expected": "have been found",
+                  "id": "context-q2",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "2"
+                },
+                {
+                  "expected": "have examined",
+                  "id": "context-q3",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "3"
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c"
+                  ]
+                }
+              },
+              "fingerprint": "a620a187efa88769",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--indicating-a-research-gap--exercise-2",
+              "models": 0,
+              "path": "introduction/indicating-a-research-gap/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-e": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "0a6da207dc6c358f",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                },
+                {
+                  "id": "item-e",
+                  "responses": [
+                    "item-e-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--indicating-a-research-gap--exercise-3",
+              "models": 1,
+              "path": "introduction/indicating-a-research-gap/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-d-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-e-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 3"
+            }
+          ],
+          "id": "indicating-a-research-gap",
+          "path": "introduction/indicating-a-research-gap/",
+          "title": "Indicating a research gap"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c"
+                  ]
+                }
+              },
+              "fingerprint": "7f5fc93f5300fd79",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--stating-the-objectives--exercise-1",
+              "models": 0,
+              "path": "introduction/stating-the-objectives/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-e": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "49cca1e5cb5a1f26",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                },
+                {
+                  "id": "item-e",
+                  "responses": [
+                    "item-e-q1"
+                  ]
+                }
+              ],
+              "id": "introduction--stating-the-objectives--exercise-2",
+              "models": 1,
+              "path": "introduction/stating-the-objectives/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-d-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-e-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            }
+          ],
+          "id": "stating-the-objectives",
+          "path": "introduction/stating-the-objectives/",
+          "title": "Stating the objectives"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "a38854f47c8c6900",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7"
+                  ]
+                }
+              ],
+              "id": "introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-1",
+              "models": 0,
+              "path": "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    6
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    5
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "5"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q6",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "6"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q7",
+                  "kind": "gap",
+                  "option_count": 7,
+                  "source_label": "7"
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "3a5daa218057a02a",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6"
+                  ]
+                }
+              ],
+              "id": "introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-2",
+              "models": 0,
+              "path": "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "5"
+                },
+                {
+                  "expected": [
+                    5
+                  ],
+                  "id": "context-q6",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "6"
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "2",
+                    "3"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "3adc925b38e41740",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7"
+                  ]
+                }
+              ],
+              "id": "introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-3",
+              "models": 0,
+              "path": "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    5
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "5"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q6",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "6"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q7",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "7"
+                }
+              ],
+              "title": "Exercise 3"
+            }
+          ],
+          "id": "grammar-and-vocabulary-in-the-introduction-section",
+          "path": "introduction/grammar-and-vocabulary-in-the-introduction-section/",
+          "title": "Grammar and vocabulary in the Introduction section"
+        }
+      ],
+      "source": "introduction.md",
+      "title": "The Introduction section"
+    },
+    {
+      "id": "methods",
+      "order": 2,
+      "path": "methods/",
+      "sections": [
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c",
+                    "d"
+                  ]
+                }
+              },
+              "fingerprint": "293ef7d6ee1dc92f",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1"
+                  ]
+                }
+              ],
+              "id": "methods--purpose-of-the-methods-section--exercise-1",
+              "models": 0,
+              "path": "methods/purpose-of-the-methods-section/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "a8b9ac512a203e2f",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "methods--purpose-of-the-methods-section--exercise-2",
+              "models": 0,
+              "path": "methods/purpose-of-the-methods-section/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "4"
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "1c9d1cb1faa43e37",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "methods--purpose-of-the-methods-section--exercise-3",
+              "models": 0,
+              "path": "methods/purpose-of-the-methods-section/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q1",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q3",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q4",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 3"
+            }
+          ],
+          "id": "purpose-of-the-methods-section",
+          "path": "methods/purpose-of-the-methods-section/",
+          "title": "Purpose of the Methods section"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "19e73425cd739551",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7",
+                    "context-q8",
+                    "context-q9",
+                    "context-q10"
+                  ]
+                }
+              ],
+              "id": "methods--grammar-and-vocabulary-in-the-methods-section--exercise-1",
+              "models": 0,
+              "path": "methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q1",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q2",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q3",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q4",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q5",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q6",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q7",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q8",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q9",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q10",
+                  "kind": "inline-choice",
+                  "option_count": 2,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c"
+                  ]
+                },
+                "item-b": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c"
+                  ]
+                },
+                "item-c": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c"
+                  ]
+                }
+              },
+              "fingerprint": "5ffb07e0831d15e8",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                }
+              ],
+              "id": "methods--grammar-and-vocabulary-in-the-methods-section--exercise-2",
+              "models": 0,
+              "path": "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "87a67aeae9413b70",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                }
+              ],
+              "id": "methods--grammar-and-vocabulary-in-the-methods-section--exercise-3",
+              "models": 0,
+              "path": "methods/grammar-and-vocabulary-in-the-methods-section/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    0,
+                    1
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "multi-select",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0,
+                    2
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "multi-select",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 3"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "e5e99c9086205fa1",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                }
+              ],
+              "id": "methods--grammar-and-vocabulary-in-the-methods-section--exercise-4",
+              "models": 0,
+              "path": "methods/grammar-and-vocabulary-in-the-methods-section/exercise-4/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 4"
+            }
+          ],
+          "id": "grammar-and-vocabulary-in-the-methods-section",
+          "path": "methods/grammar-and-vocabulary-in-the-methods-section/",
+          "title": "Grammar and vocabulary in the Methods section"
+        }
+      ],
+      "source": "methods.md",
+      "title": "The Methods section"
+    },
+    {
+      "id": "results",
+      "order": 3,
+      "path": "results/",
+      "sections": [
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "e8d2be48a79c470b",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "results--purpose-and-organisation-of-the-results-section--exercise-1",
+              "models": 0,
+              "path": "results/purpose-and-organisation-of-the-results-section/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q2",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q3",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q4",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": [
+                    "a",
+                    "b",
+                    "c",
+                    "d"
+                  ]
+                }
+              },
+              "fingerprint": "db4a52e5196c5e16",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1"
+                  ]
+                }
+              ],
+              "id": "results--purpose-and-organisation-of-the-results-section--exercise-2",
+              "models": 0,
+              "path": "results/purpose-and-organisation-of-the-results-section/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            }
+          ],
+          "id": "purpose-and-organisation-of-the-results-section",
+          "path": "results/purpose-and-organisation-of-the-results-section/",
+          "title": "Purpose and organisation of the Results section"
+        },
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "6dc75c988b850e64",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7",
+                    "context-q8"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-1",
+              "models": 0,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "5"
+                },
+                {
+                  "expected": [
+                    5
+                  ],
+                  "id": "context-q6",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "6"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q7",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "7"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q8",
+                  "kind": "gap",
+                  "option_count": 6,
+                  "source_label": "8"
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-e": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-f": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-g": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-h": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-i": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-j": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "7c8a989f9385c2bb",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                },
+                {
+                  "id": "item-e",
+                  "responses": [
+                    "item-e-q1"
+                  ]
+                },
+                {
+                  "id": "item-f",
+                  "responses": [
+                    "item-f-q1"
+                  ]
+                },
+                {
+                  "id": "item-g",
+                  "responses": [
+                    "item-g-q1"
+                  ]
+                },
+                {
+                  "id": "item-h",
+                  "responses": [
+                    "item-h-q1"
+                  ]
+                },
+                {
+                  "id": "item-i",
+                  "responses": [
+                    "item-i-q1"
+                  ]
+                },
+                {
+                  "id": "item-j",
+                  "responses": [
+                    "item-j-q1"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-2",
+              "models": 0,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-d-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-e-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-f-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-g-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-h-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "item-i-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-j-q1",
+                  "kind": "single-choice",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "f095ad1b15fab2a2",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-3",
+              "models": 1,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-3/",
+              "responses": [
+                {
+                  "expected": "significantly",
+                  "id": "item-a-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "1"
+                },
+                {
+                  "expected": "adversely",
+                  "id": "item-b-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "2"
+                },
+                {
+                  "expected": "clearly",
+                  "id": "item-c-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "3"
+                },
+                {
+                  "expected": "substantially",
+                  "id": "item-d-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "4"
+                }
+              ],
+              "title": "Exercise 3"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                  ],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "37fa11973b0bf879",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-4",
+              "models": 0,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-4/",
+              "responses": [
+                {
+                  "expected": "found",
+                  "id": "context-q1",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "1"
+                },
+                {
+                  "expected": "studied",
+                  "id": "context-q2",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "2"
+                },
+                {
+                  "expected": "was",
+                  "id": "context-q3",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "3"
+                },
+                {
+                  "expected": "compared",
+                  "id": "context-q4",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "4"
+                },
+                {
+                  "expected": "showed",
+                  "id": "context-q5",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "5"
+                },
+                {
+                  "expected": "were",
+                  "id": "context-q6",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "6"
+                },
+                {
+                  "expected": "differed",
+                  "id": "context-q7",
+                  "kind": "typed-gap",
+                  "option_count": 0,
+                  "source_label": "7"
+                }
+              ],
+              "title": "Exercise 4"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "9fb6257ccf54d5e2",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4",
+                    "context-q5",
+                    "context-q6",
+                    "context-q7"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-5",
+              "models": 0,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-5/",
+              "responses": [
+                {
+                  "expected": [
+                    4
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    5
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "4"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q5",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "5"
+                },
+                {
+                  "expected": [
+                    7
+                  ],
+                  "id": "context-q6",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "6"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q7",
+                  "kind": "gap",
+                  "option_count": 8,
+                  "source_label": "7"
+                }
+              ],
+              "title": "Exercise 5"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-a": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-b": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-c": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-d": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                },
+                "item-e": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "3b3aa1caa53c44af",
+              "groups": [
+                {
+                  "id": "item-a",
+                  "responses": [
+                    "item-a-q1"
+                  ]
+                },
+                {
+                  "id": "item-b",
+                  "responses": [
+                    "item-b-q1"
+                  ]
+                },
+                {
+                  "id": "item-c",
+                  "responses": [
+                    "item-c-q1"
+                  ]
+                },
+                {
+                  "id": "item-d",
+                  "responses": [
+                    "item-d-q1"
+                  ]
+                },
+                {
+                  "id": "item-e",
+                  "responses": [
+                    "item-e-q1"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-6",
+              "models": 1,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-6/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-a-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-b-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-c-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-d-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-e-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 6"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": true,
+                  "gaps": [],
+                  "incorrect": true,
+                  "options": []
+                }
+              },
+              "fingerprint": "3608497ae32e1cf0",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "results--grammar-and-vocabulary-in-the-results-section--exercise-7",
+              "models": 0,
+              "path": "results/grammar-and-vocabulary-in-the-results-section/exercise-7/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q1",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "1"
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q2",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "2"
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q3",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "3"
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q4",
+                  "kind": "gap",
+                  "option_count": 4,
+                  "source_label": "4"
+                }
+              ],
+              "title": "Exercise 7"
+            }
+          ],
+          "id": "grammar-and-vocabulary-in-the-results-section",
+          "path": "results/grammar-and-vocabulary-in-the-results-section/",
+          "title": "Grammar and vocabulary in the Results section"
+        }
+      ],
+      "source": "results.md",
+      "title": "The Results section"
+    },
+    {
+      "id": "discussion",
+      "order": 4,
+      "path": "discussion/",
+      "sections": [
+        {
+          "exercises": [
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "a1c7a58e0a5a2ea2",
+              "groups": [
+                {
+                  "id": "exercise",
+                  "responses": [
+                    "context-q1",
+                    "context-q2",
+                    "context-q3",
+                    "context-q4"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-1",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-1/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "context-q1",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    3
+                  ],
+                  "id": "context-q2",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "context-q3",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "context-q4",
+                  "kind": "matching",
+                  "option_count": 4,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 1"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "5a6aece9e036c398",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-2",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-2/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 2"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "257915768174a96d",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-3",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-3/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 3"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-5": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-6": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "b0fa458173bb964b",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                },
+                {
+                  "id": "item-5",
+                  "responses": [
+                    "item-5-q1"
+                  ]
+                },
+                {
+                  "id": "item-6",
+                  "responses": [
+                    "item-6-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-4",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-4/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-5-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-6-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 4"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-5": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-6": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "d11f8f120d22c02b",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                },
+                {
+                  "id": "item-5",
+                  "responses": [
+                    "item-5-q1"
+                  ]
+                },
+                {
+                  "id": "item-6",
+                  "responses": [
+                    "item-6-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-5",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-5/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-5-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-6-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 5"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "ad6b3b498253e04e",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-6",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-6/",
+              "responses": [
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 6"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-5": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "15cf76fce4b80447",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                },
+                {
+                  "id": "item-5",
+                  "responses": [
+                    "item-5-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-7",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-7/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-5-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 7"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "ddb0446179875229",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-8",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-8/",
+              "responses": [
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 8"
+            },
+            {
+              "feedback": {
+                "exercise": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-1": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-2": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-3": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                },
+                "item-4": {
+                  "correct": false,
+                  "gaps": [],
+                  "incorrect": false,
+                  "options": []
+                }
+              },
+              "fingerprint": "bfa1a526ec32837d",
+              "groups": [
+                {
+                  "id": "item-1",
+                  "responses": [
+                    "item-1-q1"
+                  ]
+                },
+                {
+                  "id": "item-2",
+                  "responses": [
+                    "item-2-q1"
+                  ]
+                },
+                {
+                  "id": "item-3",
+                  "responses": [
+                    "item-3-q1"
+                  ]
+                },
+                {
+                  "id": "item-4",
+                  "responses": [
+                    "item-4-q1"
+                  ]
+                }
+              ],
+              "id": "discussion--the-discussion-section-of-research-papers--exercise-9",
+              "models": 0,
+              "path": "discussion/the-discussion-section-of-research-papers/exercise-9/",
+              "responses": [
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-1-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    2
+                  ],
+                  "id": "item-2-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    1
+                  ],
+                  "id": "item-3-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                },
+                {
+                  "expected": [
+                    0
+                  ],
+                  "id": "item-4-q1",
+                  "kind": "single-choice",
+                  "option_count": 3,
+                  "source_label": null
+                }
+              ],
+              "title": "Exercise 9"
+            }
+          ],
+          "id": "the-discussion-section-of-research-papers",
+          "path": "discussion/the-discussion-section-of-research-papers/",
+          "title": "The Discussion section of research papers"
+        }
+      ],
+      "source": "discussion.md",
+      "title": "The Discussion section"
+    }
+  ],
+  "sequence": [
+    "introduction/",
+    "introduction/the-introduction-section-of-research-papers/",
+    "introduction/the-introduction-section-of-research-papers/exercise-1/",
+    "introduction/giving-a-context-background/",
+    "introduction/giving-a-context-background/exercise-1/",
+    "introduction/giving-a-context-background/exercise-2/",
+    "introduction/giving-a-context-background/exercise-3/",
+    "introduction/reviewing-previous-research/",
+    "introduction/reviewing-previous-research/exercise-1/",
+    "introduction/reviewing-previous-research/exercise-2/",
+    "introduction/indicating-a-research-gap/",
+    "introduction/indicating-a-research-gap/exercise-1/",
+    "introduction/indicating-a-research-gap/exercise-2/",
+    "introduction/indicating-a-research-gap/exercise-3/",
+    "introduction/stating-the-objectives/",
+    "introduction/stating-the-objectives/exercise-1/",
+    "introduction/stating-the-objectives/exercise-2/",
+    "introduction/grammar-and-vocabulary-in-the-introduction-section/",
+    "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-1/",
+    "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-2/",
+    "introduction/grammar-and-vocabulary-in-the-introduction-section/exercise-3/",
+    "methods/",
+    "methods/purpose-of-the-methods-section/",
+    "methods/purpose-of-the-methods-section/exercise-1/",
+    "methods/purpose-of-the-methods-section/exercise-2/",
+    "methods/purpose-of-the-methods-section/exercise-3/",
+    "methods/grammar-and-vocabulary-in-the-methods-section/",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-1/",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-2/",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-3/",
+    "methods/grammar-and-vocabulary-in-the-methods-section/exercise-4/",
+    "results/",
+    "results/purpose-and-organisation-of-the-results-section/",
+    "results/purpose-and-organisation-of-the-results-section/exercise-1/",
+    "results/purpose-and-organisation-of-the-results-section/exercise-2/",
+    "results/grammar-and-vocabulary-in-the-results-section/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-1/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-2/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-3/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-4/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-5/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-6/",
+    "results/grammar-and-vocabulary-in-the-results-section/exercise-7/",
+    "discussion/",
+    "discussion/the-discussion-section-of-research-papers/",
+    "discussion/the-discussion-section-of-research-papers/exercise-1/",
+    "discussion/the-discussion-section-of-research-papers/exercise-2/",
+    "discussion/the-discussion-section-of-research-papers/exercise-3/",
+    "discussion/the-discussion-section-of-research-papers/exercise-4/",
+    "discussion/the-discussion-section-of-research-papers/exercise-5/",
+    "discussion/the-discussion-section-of-research-papers/exercise-6/",
+    "discussion/the-discussion-section-of-research-papers/exercise-7/",
+    "discussion/the-discussion-section-of-research-papers/exercise-8/",
+    "discussion/the-discussion-section-of-research-papers/exercise-9/"
+  ]
+}
