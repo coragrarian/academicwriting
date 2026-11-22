@@ -182,3 +182,25 @@ def test_id_examples_inside_fenced_code_are_not_metadata():
     section = parse_document(source).sections[0]
     assert section.slug == "fixed-section"
     assert "example-only" in section.introduction_html
+
+
+def test_identity_provenance_records_front_matter_heading_title_and_explicit_ids():
+    explicit = parse_document(
+        "---\nid: custom\ntitle: Front matter title\n---\n\n"
+        + module("fixed-section", "fixed-exercise")
+    )
+    assert explicit.front_matter is True
+    assert explicit.title == "Front matter title"
+    assert explicit.heading_title == "Module"
+    assert explicit.sections[0].explicit_id is True
+    assert explicit.sections[0].exercises[0].explicit_id is True
+
+    implicit = parse_document(
+        module()
+        .replace(annotation("fixed-section"), "")
+        .replace(annotation("fixed-exercise"), "")
+    )
+    assert implicit.front_matter is False
+    assert implicit.heading_title == "Module"
+    assert implicit.sections[0].explicit_id is False
+    assert implicit.sections[0].exercises[0].explicit_id is False

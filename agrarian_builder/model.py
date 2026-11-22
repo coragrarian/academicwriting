@@ -7,10 +7,14 @@ questions preserve response identity and canonical answers.
 
 Prose and option text are already rendered HTML fragments. Inline questions
 remain ``@@question-id@@`` placeholders until the renderer supplies controls or
-worked answers. These classes do not choose page layout, construct navigation
-or check learner responses. The parser validates authored relationships;
-the dataclasses themselves do not enforce them on construction, though
-``Question.expected_answer`` rejects a typed gap without an answer.
+worked answers. Identity provenance fields (``front_matter``, ``heading_title``
+and ``explicit_id``) record whether module, subsection and exercise identities
+came from explicit declarations or title fallbacks so downstream publication
+checks can inspect them without re-parsing Markdown. These classes do not choose
+page layout, construct navigation or check learner responses. The parser
+validates authored relationships; the dataclasses themselves do not enforce them
+on construction, though ``Question.expected_answer`` rejects a typed gap without
+an answer.
 """
 
 from dataclasses import dataclass, field
@@ -179,6 +183,9 @@ class Exercise:
     metadata
         Shared interaction and feedback declarations; item metadata can supply
         local interaction declarations and feedback.
+    explicit_id
+        True when ``slug`` came from a dedicated ``agrarian`` ID comment rather
+        than being derived from ``title``.
     """
 
     title: str
@@ -189,6 +196,7 @@ class Exercise:
     items: list[ExerciseItem] = field(default_factory=list)
     examples: list[ExerciseItem] = field(default_factory=list)
     metadata: Metadata = field(default_factory=Metadata)
+    explicit_id: bool = False
 
     @property
     def instructions(self) -> list[Block]:
@@ -212,13 +220,15 @@ class Section:
 
     ``introduction_html`` is prose before the subsection's first exercise.
     ``slug`` supplies its module-relative path component, using an authored ID
-    when present and otherwise deriving it from the title.
+    when present and otherwise deriving it from the title. ``explicit_id``
+    records whether ``slug`` came from a dedicated ``agrarian`` ID comment.
     """
 
     title: str
     slug: str
     introduction_html: str
     exercises: list[Exercise] = field(default_factory=list)
+    explicit_id: bool = False
 
 
 @dataclass
@@ -229,7 +239,9 @@ class Document:
     supply it independently of the title. ``order`` controls module sequencing,
     with the slug breaking ties. ``source_path`` is diagnostic context for
     authored-source errors, not a generated page path. Optional ``summary``
-    is plain text describing the module's coverage.
+    is plain text describing the module's coverage. ``front_matter`` records
+    whether leading YAML front matter was present, and ``heading_title``
+    records the level-one Markdown heading text.
     """
 
     title: str
@@ -239,3 +251,5 @@ class Document:
     order: int = 0
     source_path: str = "document"
     summary: str | None = None
+    front_matter: bool = False
+    heading_title: str = ""

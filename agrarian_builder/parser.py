@@ -949,7 +949,14 @@ def _validate_gap_feedback(metadata: Metadata, questions: list[Question], contex
 
 
 def _exercise(
-    markdown: MarkdownIt, source: str, title: str, slug: str, identifier: str, context: str
+    markdown: MarkdownIt,
+    source: str,
+    title: str,
+    slug: str,
+    identifier: str,
+    context: str,
+    *,
+    explicit_id: bool = False,
 ) -> Exercise:
     """Resolve shared declarations and scoped content into one scored exercise.
 
@@ -975,7 +982,7 @@ def _exercise(
         Boundaries, metadata scope, mappings or response structures cannot be
         interpreted according to the supported exercise conventions.
     """
-    exercise = Exercise(title, slug, identifier)
+    exercise = Exercise(title, slug, identifier, explicit_id=explicit_id)
     root = _Container(None, "context")
     containers = [root]
     current = root
@@ -1231,6 +1238,8 @@ def parse_document(
         order=data["order"] if data else 0,
         source_path=source_path,
         summary=data.get("summary") if data else None,
+        front_matter=data is not None,
+        heading_title=headings[0].title,
     )
     current_section = None
     exercise_started = False
@@ -1250,7 +1259,10 @@ def parse_document(
                 (later.start for later in headings[index + 1 :] if later.level <= 3), len(lines)
             )
             current_section = Section(
-                heading.title, section_slug, markdown.render("".join(lines[heading.end : end]))
+                heading.title,
+                section_slug,
+                markdown.render("".join(lines[heading.end : end])),
+                explicit_id=heading.start in identities,
             )
             document.sections.append(current_section)
             exercise_started = False
@@ -1283,6 +1295,7 @@ def parse_document(
                     exercise_slug,
                     identifier,
                     context,
+                    explicit_id=heading.start in identities,
                 )
             )
             exercise_started = True
