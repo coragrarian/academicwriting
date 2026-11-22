@@ -25,7 +25,10 @@ accept a new result.
 The canonical teaching content is `exercises/introduction.md`,
 `exercises/methods.md`, `exercises/results.md` and `exercises/discussion.md`.
 When editing content, preserve response identities and answer mappings unless
-the change deliberately requires otherwise. Check the Introduction matching
+the change deliberately requires otherwise. Content changes that affect course
+structure, responses, answer keys or feedback presence must regenerate and
+commit `course.manifest.json` with `uv run --frozen agrarian inspect --write`;
+the manifest diff is part of review. Check the Introduction matching
 display order separately from its stored question identities. Verify quotations
 and scholarly attribution against their sources, and respect the content scope in
 `NOTICE.md`.
@@ -34,6 +37,7 @@ Build and verify the source before submitting it:
 
 ```sh
 uv run python build.py
+uv run --frozen agrarian inspect --check
 uv run pytest -q
 uv run ruff check . --no-cache
 uv run --frozen playwright install --with-deps chromium
