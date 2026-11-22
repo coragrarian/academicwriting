@@ -1,22 +1,77 @@
 /* The renderer supplies #site-data, #answer-key and data-* hooks; this file
    collects learner responses, checks them and displays authored feedback.
-   Module state stays in this closure during partial navigation. initialise()
-   binds each new form; an ordinary page load restores state from localStorage. */
+   Saved state merges at exercise granularity: the mounted form is authoritative
+   for its own exercise, persist() merges that exercise into fresh storage, and
+   storage and persisted pageshow events refresh other exercises in place. */
 (() => {
   "use strict";
 
   const siteData = JSON.parse(document.getElementById("site-data").textContent);
-  const { storageKey, readState, countCompleted } = window.AgrarianProgress;
-  const states = Object.fromEntries(Object.keys(siteData.modules).map((module) => [module, readState(module, { persistRepair: true })]));
+  const { RECORDS, storageKey, readState, countCompleted } = window.AgrarianProgress;
+  const moduleNames = Object.keys(siteData.modules);
+  const moduleByKey = Object.fromEntries(moduleNames.map((module) => [storageKey(module), module]));
+  const states = Object.fromEntries(moduleNames.map((module) => [module, readState(module, { persistRepair: true })]));
   const state = states[siteData.module];
+  let mountedExerciseId = null;
 
-  function saveState() {
+  function persist(exerciseId) {
+    // Merge only the mounted exercise so progress saved later in other tabs
+    // is preserved while Reset deletions remain durable for this exercise.
+    const fresh = readState(siteData.module);
+    for (const key of RECORDS) {
+      if (Object.hasOwn(state[key], exerciseId)) {
+        fresh[key][exerciseId] = state[key][exerciseId];
+      } else {
+        delete fresh[key][exerciseId];
+      }
+    }
     try {
-      localStorage.setItem(storageKey(siteData.module), JSON.stringify(state));
+      localStorage.setItem(storageKey(siteData.module), JSON.stringify(fresh));
     } catch {
       // Checking still works when browser storage is unavailable.
     }
+    for (const key of RECORDS) {
+      state[key] = fresh[key];
+    }
   }
+
+  function refreshModules(modules) {
+    // Keep the mounted form authoritative for its own exercise while adopting
+    // state written in other tabs or before a back/forward-cache restore.
+    for (const module of modules) {
+      const fresh = readState(module);
+      if (module === siteData.module && mountedExerciseId !== null) {
+        for (const key of RECORDS) {
+          if (Object.hasOwn(state[key], mountedExerciseId)) {
+            fresh[key][mountedExerciseId] = state[key][mountedExerciseId];
+          } else {
+            delete fresh[key][mountedExerciseId];
+          }
+        }
+      }
+      for (const key of RECORDS) {
+        states[module][key] = fresh[key];
+      }
+    }
+    updateProgress();
+  }
+
+  window.addEventListener("storage", (event) => {
+    try {
+      if (event.storageArea !== localStorage) return;
+    } catch {
+      return;
+    }
+    if (event.key === null) {
+      refreshModules(moduleNames);
+    } else if (Object.hasOwn(moduleByKey, event.key)) {
+      refreshModules([moduleByKey[event.key]]);
+    }
+  });
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) refreshModules(moduleNames);
+  });
 
   function updateProgress() {
     // Count the renderer's current exercise IDs, rather than every saved key:
@@ -62,14 +117,15 @@
   }
 
   function initialise() {
-    updateProgress();
     const form = document.getElementById("exercise-form");
+    mountedExerciseId = form ? form.dataset.exerciseId : null;
+    updateProgress();
     // Partial navigation replaces forms but retains this script. Guard the
     // actual DOM node so reinitialising a page cannot duplicate its handlers.
     if (!form || form.dataset.exerciseInitialised === "true") return;
     form.dataset.exerciseInitialised = "true";
 
-    const exerciseId = form.dataset.exerciseId;
+    const exerciseId = mountedExerciseId;
     const key = JSON.parse(document.getElementById("answer-key").textContent);
     const feedback = document.getElementById("exercise-feedback");
     const sharedFeedback = document.getElementById("shared-feedback");
@@ -260,7 +316,7 @@
       state.progress[exerciseId] = "in-progress";
       delete state.checked[exerciseId];
       clearFeedback();
-      saveState();
+      persist(exerciseId);
       updateStatus();
     });
 
@@ -271,7 +327,7 @@
       state.responses[exerciseId] = given;
       state.progress[exerciseId] = correct ? "completed" : "in-progress";
       state.checked[exerciseId] = true;
-      saveState();
+      persist(exerciseId);
       updateStatus();
     });
 
@@ -282,7 +338,7 @@
       delete state.progress[exerciseId];
       delete state.checked[exerciseId];
       clearFeedback();
-      saveState();
+      persist(exerciseId);
       updateStatus();
       feedback.textContent = "Exercise reset.";
     });

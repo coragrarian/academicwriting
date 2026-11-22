@@ -5,7 +5,7 @@ import re
 from itertools import pairwise
 
 import pytest
-from browser_support import respond, serve_not_found_candidate
+from browser_support import open_exercise, respond, serve_not_found_candidate
 from playwright.sync_api import expect
 from site_support import PRODUCTION_URL, course_sequence
 
@@ -717,3 +717,132 @@ def test_synthetic_reflow_controls_navigation_and_accessibility(page, synthetic_
             expect(control).to_be_focused()
         for row in page.locator(".matching-question").all():
             assert row.locator("label").bounding_box()["width"] >= row.bounding_box()["width"] / 2
+
+
+def test_saves_from_another_tab_do_not_erase_completed_exercises(page, synthetic_site):
+    other = page.context.new_page()
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    second_key = open_exercise(other, synthetic_site, "alpha", "choosing-a-label", 2)
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(other.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    expect(
+        other.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+    ).to_have_attribute("data-status", "completed")
+
+    respond(other, second_key)
+    expect(other.locator("[data-current-status]")).to_have_text("In progress")
+    expect(other.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    expect(
+        other.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+    ).to_have_attribute("data-status", "completed")
+    saved = other.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--choosing-a-label--exercise-1": "completed",
+        "alpha--choosing-a-label--exercise-2": "in-progress",
+    }
+    assert saved["checked"] == {"alpha--choosing-a-label--exercise-1": True}
+    assert set(saved["responses"]) == {
+        "alpha--choosing-a-label--exercise-1",
+        "alpha--choosing-a-label--exercise-2",
+    }
+
+
+def test_reset_in_one_tab_is_not_undone_by_another_tab(page, synthetic_site):
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+
+    other = page.context.new_page()
+    second_key = open_exercise(other, synthetic_site, "alpha", "choosing-a-label", 2)
+    expect(other.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+    page.locator("#reset-exercise").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
+    expect(other.locator('[data-progress-module="alpha"]')).to_have_text("0/3")
+
+    respond(other, second_key)
+    other.locator("button[type=submit]").click()
+    expect(other.locator("[data-current-status]")).to_have_text("Completed")
+    expect(other.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    saved = other.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    for record in ("progress", "responses", "checked"):
+        assert "alpha--choosing-a-label--exercise-1" not in saved[record]
+    assert saved["progress"] == {"alpha--choosing-a-label--exercise-2": "completed"}
+
+
+def test_same_exercise_in_two_tabs_resolves_by_last_write(page, synthetic_site):
+    third_key = open_exercise(page, synthetic_site, "alpha", "selecting-labels", 1)
+    respond(page, third_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+
+    other = page.context.new_page()
+    key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    open_exercise(other, synthetic_site, "alpha", "choosing-a-label", 1)
+
+    respond(page, key, wrong_id="context-q1")
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    expect(other.locator("input:checked")).to_have_count(0)
+    expect(other.locator("#exercise-feedback")).to_be_empty()
+
+    respond(other, key)
+    other.locator("button[type=submit]").click()
+    expect(other.locator("[data-current-status]")).to_have_text("Completed")
+    saved = other.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--selecting-labels--exercise-1": "completed",
+        "alpha--choosing-a-label--exercise-1": "completed",
+    }
+    assert saved["responses"]["alpha--choosing-a-label--exercise-1"] == {"context-q1": [1]}
+    assert saved["checked"] == {
+        "alpha--selecting-labels--exercise-1": True,
+        "alpha--choosing-a-label--exercise-1": True,
+    }
+
+    page.locator('input[value="1"]').check()
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--selecting-labels--exercise-1": "completed",
+        "alpha--choosing-a-label--exercise-1": "in-progress",
+    }
+    assert saved["responses"]["alpha--choosing-a-label--exercise-1"] == {"context-q1": [1]}
+    assert saved["checked"] == {"alpha--selecting-labels--exercise-1": True}
+
+
+def test_back_forward_restore_refreshes_saved_progress(page, synthetic_site):
+    """Dispatch a persisted pageshow event after suppressing live storage delivery.
+
+    Playwright does not expose a deterministic cross-page back/forward-cache
+    restore in headless Chromium. Neutralising StorageEvent.storageArea on the
+    first page while a second tab writes simulates the frozen bfcache state so
+    the subsequent persisted PageTransitionEvent is what refreshes the display.
+    """
+    second_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 2)
+    respond(page, second_key)
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    page.evaluate(
+        "Object.defineProperty(StorageEvent.prototype, 'storageArea', { get: () => null })"
+    )
+
+    other = page.context.new_page()
+    first_key = open_exercise(other, synthetic_site, "alpha", "choosing-a-label", 1)
+    respond(other, first_key)
+    other.locator("button[type=submit]").click()
+    expect(other.locator("[data-current-status]")).to_have_text("Completed")
+
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("0/3")
+    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: false }))")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("0/3")
+
+    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    expect(
+        page.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+    ).to_have_attribute("data-status", "completed")
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    expect(page.locator("#context-q1")).to_have_value("0")

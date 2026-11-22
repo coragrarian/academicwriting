@@ -1,9 +1,11 @@
-/* Shared browser-local progress contract: each module stores progress, raw
-   responses and checked flags by exercise ID. Count only the current catalogue;
-   exercise pages alone check answers and write attempts. */
+/* Shared browser-local progress contract: each module stores RECORDS (progress,
+   raw responses and checked flags) by exercise ID, which is the merge unit
+   across tabs. Count only the current catalogue; exercise pages alone check
+   answers and write attempts. */
 (() => {
   "use strict";
 
+  const RECORDS = ["progress", "responses", "checked"];
   const storageKey = (module) => `agrarian-writing-v2:${module}`;
   const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
 
@@ -44,7 +46,7 @@
   function readState(module, { persistRepair = false } = {}) {
     try {
       const parsed = object(JSON.parse(localStorage.getItem(storageKey(module)) || "{}"));
-      const saved = { progress: object(parsed.progress), responses: object(parsed.responses), checked: object(parsed.checked) };
+      const saved = Object.fromEntries(RECORDS.map((key) => [key, object(parsed[key])]));
       if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
         try {
           localStorage.setItem(storageKey(module), JSON.stringify(saved));
@@ -54,7 +56,7 @@
       }
       return saved;
     } catch {
-      return { progress: {}, responses: {}, checked: {} };
+      return Object.fromEntries(RECORDS.map((key) => [key, {}]));
     }
   }
 
@@ -63,5 +65,5 @@
     return exerciseIds.filter((id) => state.progress[id] === "completed").length;
   }
 
-  window.AgrarianProgress = { storageKey, readState, countCompleted };
+  window.AgrarianProgress = { RECORDS, storageKey, readState, countCompleted };
 })();
