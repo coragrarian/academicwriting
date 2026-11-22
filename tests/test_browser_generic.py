@@ -846,3 +846,43 @@ def test_back_forward_restore_refreshes_saved_progress(page, synthetic_site):
     ).to_have_attribute("data-status", "completed")
     expect(page.locator("[data-current-status]")).to_have_text("In progress")
     expect(page.locator("#context-q1")).to_have_value("0")
+
+
+def test_recomputed_status_is_persisted_for_home(page, synthetic_site):
+    page.goto(f"{synthetic_site[0]}/index.html")
+    page.evaluate("""() => {
+      localStorage.setItem('agrarian-writing-v2:alpha', JSON.stringify({
+        progress: {
+          'alpha--choosing-a-label--exercise-1': 'completed',
+          'alpha--choosing-a-label--exercise-2': 'completed',
+          'alpha--selecting-labels--exercise-1': 'completed'
+        },
+        responses: {
+          'alpha--choosing-a-label--exercise-1': {'context-q1': [0]}
+        },
+        checked: {
+          'alpha--choosing-a-label--exercise-1': true
+        }
+      }));
+    }""")
+    page.reload()
+    row = page.locator('[data-home-module="alpha"] .contents-progress')
+    expect(row).to_have_attribute("data-status", "completed")
+    expect(row.locator(".contents-progress-status")).to_have_text("Completed")
+
+    open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("2/3")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--choosing-a-label--exercise-1": "in-progress",
+        "alpha--choosing-a-label--exercise-2": "completed",
+        "alpha--selecting-labels--exercise-1": "completed",
+    }
+
+    page.locator(".nav-home").click()
+    expect(row).to_have_attribute("data-status", "in-progress")
+    expect(row.locator(".contents-progress-status")).to_have_text("2 of 3 exercises completed")
+    expect(page.locator("[data-home-entry]")).to_have_attribute(
+        "href", "alpha/choosing-a-label/exercise-1/index.html"
+    )

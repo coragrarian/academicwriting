@@ -305,7 +305,11 @@
     restoreAnswers(state.responses[exerciseId] || {});
     if (state.checked[exerciseId]) {
       const correct = showResult(selectedAnswers());
-      state.progress[exerciseId] = correct ? "completed" : "in-progress";
+      const recomputed = correct ? "completed" : "in-progress";
+      if (state.progress[exerciseId] !== recomputed) {
+        state.progress[exerciseId] = recomputed;
+        persist(exerciseId);
+      }
     }
     updateStatus();
 
