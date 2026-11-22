@@ -207,16 +207,18 @@ option indices; typed gaps store raw text. Progress counts only currently
 discovered exercise IDs, so obsolete records do not inflate totals.
 
 Saved module state is merged at exercise granularity across `progress`,
-`responses`, `checked` and `fingerprints`. Each write reads the latest stored
-module state, updates or deletes only the mounted exercise's entries, writes the
-merged object and replaces the in-memory records in place only after a
-successful write. When `localStorage` cannot be read or written, in-memory
-records act as the session's only store and retain progress across partial
-navigation. The mounted form remains authoritative for its own exercise while
-`storage` events and persisted `pageshow` restores refresh other exercises and
-progress counts without touching the mounted controls or feedback. Checked
-attempts are re-scored against the current answer key on load and persisted
-only when the recomputed status differs from the stored progress.
+`responses`, `checked` and `fingerprints`. Each write records the exercise ID
+as unsaved, reads the latest stored module state, overlays every unsaved
+exercise's entries or deletions, writes the merged object and clears the
+unsaved set before replacing the in-memory records in place. When
+`localStorage` cannot be read or written, in-memory records act as the
+session's store: unsaved attempts survive `storage` and persisted `pageshow`
+refreshes alongside the mounted exercise and flush together on the next
+successful write. The mounted form remains authoritative for its own exercise
+while `storage` events and persisted `pageshow` restores refresh other saved
+exercises and progress counts without touching the mounted controls or
+feedback. Checked attempts are re-scored against the current answer key on load
+and persisted only when the recomputed status differs from the stored progress.
 
 Each exercise answer payload includes a 16-character structural `fingerprint`
 computed from its scored responses (`id`, `kind`, `source_label`, plain-text

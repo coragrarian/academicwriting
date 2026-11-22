@@ -1,5 +1,6 @@
 """Keep JSDoc object typedefs in static/*.js aligned with Python contracts."""
 
+import json
 import re
 from typing import is_typeddict
 
@@ -61,9 +62,9 @@ def test_jsdoc_typedefs_match_python_typed_contracts():
     assert set(js_typedefs) - BROWSER_ONLY_TYPEDEFS == set(py_contracts)
     for name, expected_keys in py_contracts.items():
         assert js_typedefs[name] == expected_keys, name
-    assert js_typedefs["SavedModuleState"] == {
-        "progress",
-        "responses",
-        "checked",
-        "fingerprints",
-    }
+    records_match = re.search(
+        r"const\s+RECORDS\s*=\s*(\[[^\]]+\]);",
+        (ROOT / "static/progress.js").read_text(encoding="utf-8"),
+    )
+    assert records_match is not None
+    assert js_typedefs["SavedModuleState"] == set(json.loads(records_match.group(1)))

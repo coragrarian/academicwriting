@@ -1,10 +1,10 @@
 /* The renderer supplies #site-data, #answer-key and data-* hooks; this file
    collects learner responses, checks them and displays authored feedback.
    Saved state merges at exercise granularity: the mounted form is authoritative
-   for its own exercise, persist() merges that exercise into fresh storage and
-   adopts the merged records only after a successful write, and storage and
-   persisted pageshow events refresh other exercises in place. When storage
-   cannot be read or written, in-memory records carry the session. */
+   for its own exercise, persist() tracks unsaved exercise IDs and flushes all
+   of them into fresh storage before adopting the merged records, and storage
+   and persisted pageshow events refresh other exercises while preserving the
+   mounted exercise and any unsaved attempts. */
 /**
  * @typedef {"single-choice" | "multi-select" | "inline-choice" | "gap" | "matching" | "typed-gap"} ResponseKind
  * @typedef {Object} FeedbackPayload
@@ -42,19 +42,22 @@
   const moduleByKey = Object.fromEntries(moduleNames.map((module) => [storageKey(module), module]));
   const states = Object.fromEntries(moduleNames.map((module) => [module, readState(module, { persistRepair: true })]));
   const state = states[siteData.module];
+  const unsaved = new Set();
   let mountedExerciseId = null;
 
   function persist(exerciseId) {
-    // Merge only the mounted exercise so progress saved later in other tabs
-    // is preserved while Reset deletions remain durable for this exercise.
-    // When storage cannot be read or written, keep in-memory session state.
+    // Track every touched exercise until a write succeeds so failed writes
+    // survive refreshes and flush together once storage recovers.
+    unsaved.add(exerciseId);
     const fresh = readStoredState(siteData.module);
     if (fresh === null) return;
-    for (const key of RECORDS) {
-      if (Object.hasOwn(state[key], exerciseId)) {
-        fresh[key][exerciseId] = state[key][exerciseId];
-      } else {
-        delete fresh[key][exerciseId];
+    for (const id of unsaved) {
+      for (const key of RECORDS) {
+        if (Object.hasOwn(state[key], id)) {
+          fresh[key][id] = state[key][id];
+        } else {
+          delete fresh[key][id];
+        }
       }
     }
     try {
@@ -62,23 +65,28 @@
     } catch {
       return;
     }
+    unsaved.clear();
     for (const key of RECORDS) {
       state[key] = fresh[key];
     }
   }
 
   function refreshModules(modules) {
-    // Keep the mounted form authoritative for its own exercise while adopting
-    // state written in other tabs or before a back/forward-cache restore.
+    // Keep the mounted form and any unsaved attempts authoritative in this tab
+    // while adopting state written in other tabs or before a bfcache restore.
     for (const module of modules) {
       const fresh = readStoredState(module);
       if (fresh === null) continue;
-      if (module === siteData.module && mountedExerciseId !== null) {
-        for (const key of RECORDS) {
-          if (Object.hasOwn(state[key], mountedExerciseId)) {
-            fresh[key][mountedExerciseId] = state[key][mountedExerciseId];
-          } else {
-            delete fresh[key][mountedExerciseId];
+      if (module === siteData.module) {
+        const preserved = new Set(unsaved);
+        if (mountedExerciseId !== null) preserved.add(mountedExerciseId);
+        for (const id of preserved) {
+          for (const key of RECORDS) {
+            if (Object.hasOwn(state[key], id)) {
+              fresh[key][id] = state[key][id];
+            } else {
+              delete fresh[key][id];
+            }
           }
         }
       }

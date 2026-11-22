@@ -1087,3 +1087,69 @@ def test_stale_tab_write_merges_storage_without_storage_events(page, synthetic_s
         "alpha--choosing-a-label--exercise-1": first_key["fingerprint"],
         "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
     }
+
+
+def test_failed_writes_survive_persisted_pageshow_refresh(browser, synthetic_site):
+    context = browser.new_context(reduced_motion="reduce")
+    context.add_init_script("""Storage.prototype.setItem = () => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    };""")
+    try:
+        page = context.new_page()
+        first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+        respond(page, first_key)
+        page.locator("button[type=submit]").click()
+        expect(page.locator("[data-current-status]")).to_have_text("Completed")
+        expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+        page.locator('.page-navigation a[rel="next"]').click()
+        expect(page.locator("h1")).to_have_text("Exercise 2")
+        second_key = json.loads(page.locator("#answer-key").text_content())
+        respond(page, second_key)
+        expect(page.locator("[data-current-status]")).to_have_text("In progress")
+
+        page.evaluate(
+            "window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))"
+        )
+        expect(
+            page.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+        ).to_have_attribute("data-status", "completed")
+        expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    finally:
+        context.close()
+
+
+def test_unsaved_attempts_flush_when_writes_recover(page, synthetic_site):
+    page.add_init_script("""(() => {
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function(key, value) {
+        if (window.__failWrites) {
+          throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+        }
+        return originalSetItem.call(this, key, value);
+      };
+    })();""")
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    page.evaluate("window.__failWrites = true")
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    assert page.evaluate("localStorage.getItem('agrarian-writing-v2:alpha')") is None
+
+    page.locator('.page-navigation a[rel="next"]').click()
+    expect(page.locator("h1")).to_have_text("Exercise 2")
+    second_key = json.loads(page.locator("#answer-key").text_content())
+    page.evaluate("window.__failWrites = false")
+    respond(page, second_key)
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--choosing-a-label--exercise-1": "completed",
+        "alpha--choosing-a-label--exercise-2": "in-progress",
+    }
+    assert saved["checked"] == {"alpha--choosing-a-label--exercise-1": True}
+    assert saved["fingerprints"] == {
+        "alpha--choosing-a-label--exercise-1": first_key["fingerprint"],
+        "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
+    }

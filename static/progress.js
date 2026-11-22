@@ -1,9 +1,9 @@
 /* Shared browser-local progress contract: each module stores RECORDS (progress,
    raw responses, checked flags and structural fingerprints) by exercise ID,
    which is the merge unit across tabs. readStoredState returns null when
-   storage throws so exercise pages can fall back to in-memory session state.
-   Count only the current catalogue; exercise pages alone check answers and
-   write attempts. */
+   storage throws so exercise pages can retain unsaved attempts in memory across
+   refreshes and flush them on the next successful write. Count only the current
+   catalogue; exercise pages alone check answers and write attempts. */
 /**
  * @typedef {"not-started" | "in-progress" | "completed"} ExerciseStatus
  * @typedef {Object} SavedModuleState
@@ -67,7 +67,7 @@
     try {
       parsed = object(JSON.parse(raw || "{}"));
     } catch {
-      parsed = {};
+      // Malformed JSON normalises to empty records so a later write repairs it.
     }
     const saved = Object.fromEntries(RECORDS.map((key) => [key, object(parsed[key])]));
     if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
