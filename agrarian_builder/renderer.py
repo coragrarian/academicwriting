@@ -546,8 +546,14 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             course_url=link(Path("index.html")) + "#course",
             about_url=link(Path("about/index.html")),
             repository_url="https://github.com/coragrarian/academicwriting",
-            section_url=lambda section: link(page_path(document, section)),
-            exercise_url=lambda section, exercise: link(page_path(document, section, exercise)),
+            section_url=(
+                (lambda section: link(page_path(document, section))) if document else None
+            ),
+            exercise_url=(
+                (lambda section, exercise: link(page_path(document, section, exercise)))
+                if document
+                else None
+            ),
             **page_navigation.get(path, {}),
             **content,
         )

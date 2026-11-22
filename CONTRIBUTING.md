@@ -40,6 +40,7 @@ uv run python build.py
 uv run --frozen agrarian inspect --check
 uv run pytest -q
 uv run ruff check . --no-cache
+uv run --frozen mypy
 uv run --frozen playwright install --with-deps chromium
 uv run --frozen pytest -m browser -q
 node --check static/exercises.js
