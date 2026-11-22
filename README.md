@@ -38,8 +38,9 @@ We acknowledge support from **FAPEMIG** and **CAPES**.
 ## Development
 
 For build instructions, architecture and maintenance guidance, see
-[DEVELOPMENT.md](DEVELOPMENT.md). Read [CONTRIBUTING.md](CONTRIBUTING.md)
-before proposing changes.
+[DEVELOPMENT.md](DEVELOPMENT.md). For the normative Markdown authoring
+contract, see [AUTHORING.md](AUTHORING.md). Read
+[CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes.
 
 ## Licensing
 

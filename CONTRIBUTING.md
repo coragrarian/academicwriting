@@ -22,6 +22,9 @@ the behaviour you intend to change. Include regression coverage when changing
 behaviour, and keep existing checks meaningful rather than weakening them to
 accept a new result.
 
+Read `AUTHORING.md` for the normative Markdown authoring syntax, publication
+rules, recipes and error catalogue before editing teaching material.
+
 The canonical teaching content is `exercises/introduction.md`,
 `exercises/methods.md`, `exercises/results.md` and `exercises/discussion.md`.
 When editing content, preserve response identities and answer mappings unless

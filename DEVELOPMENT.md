@@ -11,13 +11,16 @@ parser.py
     ↓
 model.py
     ↓
+policy.py (publication rules on exercises/)
+    ↓
 renderer.py + templates/
     ↓
 _site/
 ```
 
 The Markdown files contain the teaching material. The parser decides what that
-Markdown means, the model carries that meaning between stages, and the renderer
+Markdown means, the model carries that meaning between stages, `policy.py`
+enforces course publication rules over the parsed model, and the renderer
 turns it into the pages that are published.
 
 On learning pages, JavaScript adds the interactive behaviour: answer checking,
@@ -35,16 +38,18 @@ There is no backend or database.
 
 | Location | Responsibility |
 | --- | --- |
+| `AUTHORING.md` | Normative Markdown authoring reference, executable examples and error catalogue |
 | `exercises/` | Canonical teaching content, answers and authored feedback |
 | `course.manifest.json` | Committed structural manifest of modules, subsections, exercises, responses, fingerprints and sequence |
 | `agrarian_builder/cli.py` | Command-line interface for `validate`, `inspect` and `build` |
-| `agrarian_builder/parser.py` | Interprets and validates the Markdown conventions |
-| `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions and feedback |
+| `agrarian_builder/parser.py` | Interprets and validates the Markdown grammar |
+| `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions, feedback and identity provenance |
+| `agrarian_builder/policy.py` | Course publication rules (front matter, title alignment, explicit IDs, numbering and reserved module IDs) |
 | `agrarian_builder/course.py` | Course module ordering and linear learning-page traversal |
 | `agrarian_builder/contracts.py` | Typed JSON contracts shared between the renderer and browser scripts |
 | `agrarian_builder/fingerprint.py` | Structural fingerprints for scored exercise responses |
 | `agrarian_builder/manifest.py` | Review-oriented course manifest derivation and formatting |
-| `agrarian_builder/paths.py` | Site-relative page paths and portable relative links |
+| `agrarian_builder/paths.py` | Site-relative page paths, portable relative links and reserved module IDs |
 | `agrarian_builder/text.py` | Plain-text extraction from generated inline HTML fragments |
 | `agrarian_builder/people.py` | Public directory entries, roles and optional portrait/profile metadata |
 | `agrarian_builder/renderer.py` | Generates pages, navigation and browser checking data |
@@ -56,6 +61,7 @@ There is no backend or database.
 | `static/home.js` | Homepage progress and Begin/Continue/Review entry |
 | `static/fonts/` | Locally served font assets |
 | `tests/` | Generic authoring/compiler proofs and explicitly marked canonical regressions |
+| `tests/test_authoring.py` | Executes `AUTHORING.md` examples and checks error-catalogue completeness |
 | `tests/fixtures/course/` | Small four-module authoring examples; never production input |
 | `_site/` | Generated website; do not edit it directly |
 
@@ -64,97 +70,19 @@ are relative to `static/`; unverified fields remain absent.
 
 ## Content and authoring
 
-Each Markdown file in `exercises/` represents one course module.
+The normative Markdown authoring contract — module front matter, heading
+hierarchy, explicit identity comments, response kinds, metadata scoping,
+publication rules, recipes and the complete error catalogue — lives in
+[AUTHORING.md](AUTHORING.md). Its fenced `markdown agrarian` examples and
+error-catalogue rows are executed by `tests/test_authoring.py` so the reference
+cannot drift from `parser.py` and `policy.py`.
 
-A module uses front matter for its identity and course order:
-
-```yaml
----
-id: methods
-title: The Methods section
-order: 2
-summary: >-
-  Study design and reporting: participants or materials, procedures,
-  measurements, data collection and analysis.
----
-```
-
-Add a module by creating another `exercises/*.md` file with a unique `id`, title
-and integer `order`. Discovery is recursive and ordering is `(order, id)`;
-filenames do not determine course order. `about` is reserved for the public page.
-Front matter is optional for legacy sources: the filename supplies the ID and
-the level-one heading supplies the title. Present front matter requires both
-`id` and `title`; duplicate YAML keys and unsupported fields are rejected.
-Optional `summary` describes module coverage in plain text and appears in the
-homepage module row. When present, it must be a non-empty string after trimming.
-
-The main heading structure is:
-
-```text
-# Module
-## Subsection
-### Exercise N
-#### Item A
-```
-
-There must be exactly one level-one heading. Add a subsection with a unique
-`##` title; it may contain only overview prose. Add an exercise under it with
-`### Exercise N` and a supported response. Subsection slugs and exercise titles
-must be unique in their respective scopes. Exercise numbers may repeat across
-subsections. Neither addition needs Python or template registration.
-
-`#### Model` is used for worked examples. Models are displayed to learners but
-are not scored and do not contribute to progress.
-
-A paragraph beginning with:
-
-```md
-**Instructions:**
-```
-
-is rendered as an instruction block.
-
-Correct answers, answer banks, typed gaps, matching tasks and feedback are also
-declared in the Markdown. Some interactions use small YAML metadata blocks in
-HTML comments, for example:
-
-```text
-<!-- agrarian
-interaction: typed-gap
-feedback:
-  correct: The forms agree with their subjects.
-  incorrect: Review subject–verb agreement.
--->
-```
-
-The parser validates these conventions rather than trying to guess ambiguous
-answers. If the source is incomplete or contradictory, the build should fail
-with context instead of silently inventing an interpretation.
-
-| Response | Authoring boundary |
-| --- | --- |
-| Single choice / multi-select | A task list with one / several `[x]` entries; option letters such as `a)` must be unique within a question |
-| Inline choice | Exactly two alternatives separated by `\|`, with one `correct-answer` mark; the unmarked alternative is one word, or `was/were/has/have/had` plus one word |
-| Bank gap | Three or more underscores beside `[label]`, and an **Answer bank:** list mapping marked labels to answer text |
-| Typed gap | The same labelled blank, `interaction: typed-gap`, and an **Answer key:** with every entry labelled |
-| Matching | A two-column labelled table and a **Purposes:** or **Endings:** mapping list; escape literal pipes in cells |
-
-Gap labels are unique across scored containers; every bank/key mapping must be
-used. Banks may include unlabelled distractors and repeated answer text, which
-becomes one selectable option. A shared gap may instead link to a named Item
-containing one single-choice response. Models use a separate, unscored scope.
-
-Feedback can supply `correct`, `incorrect`, `options` and `gaps`. Option feedback
-requires one labelled choice in its scope; gap feedback refers to scored source
-labels (quote numeric YAML labels). Local Item feedback overrides shared fields.
-Comments before Items or immediately after a bank/key are exercise-level.
-Otherwise comments belong to the current Item, except that a lone final Item
-comment supplies shared exercise feedback. Put local feedback before its final
-content block to avoid that trailing-comment convention.
-
-The small [synthetic course](tests/fixtures/course/) demonstrates these boundaries
-without production prose. `tests/test_parser.py` supplies rejection examples and
-checks source-path and structural context in diagnostics.
+The parser validates grammar on every parse rather than guessing ambiguous
+answers, while `policy.py` enforces publication rules whenever the CLI targets
+`exercises/`. The small [synthetic course](tests/fixtures/course/) exercises
+the authoring boundaries without production prose, `tests/test_parser.py` and
+`tests/test_policy.py` test rejection diagnostics with source context, and
+`tests/test_authoring.py` verifies `AUTHORING.md` itself.
 
 ## How the site is generated
 
@@ -211,10 +139,11 @@ Saved module state is merged at exercise granularity across `progress`,
 as unsaved, reads the latest stored module state, overlays every unsaved
 exercise's entries or deletions, writes the merged object and clears the
 unsaved set before replacing the in-memory records in place. When
-`localStorage` cannot be read or written, in-memory records act as the
-session's store: unsaved attempts survive `storage` and persisted `pageshow`
-refreshes alongside the mounted exercise and flush together on the next
-successful write. The mounted form remains authoritative for its own exercise
+`localStorage` cannot be read or written, unsaved attempts persist in memory
+for the life of the page, including partial navigation within the module and
+back/forward-cache restores, and flush together on the next successful write;
+a full page load or a move to another module discards them. The mounted form
+remains authoritative for its own exercise
 while `storage` events and persisted `pageshow` restores refresh other saved
 exercises and progress counts without touching the mounted controls or
 feedback. Checked attempts are re-scored against the current answer key on load
@@ -323,13 +252,15 @@ not change their destinations.
 | Change | Start here |
 | --- | --- |
 | Exercise wording, answers or authored feedback | `exercises/*.md` |
-| Markdown interpretation or validation | `agrarian_builder/parser.py` |
-| Semantic entities and relationships | `agrarian_builder/model.py` |
+| Normative authoring grammar, recipes and error catalogue | `AUTHORING.md` |
+| Markdown interpretation or grammar validation | `agrarian_builder/parser.py` |
+| Semantic entities, relationships and identity provenance | `agrarian_builder/model.py` |
+| Course publication rules (front matter, IDs, numbering, reserved IDs) | `agrarian_builder/policy.py` |
 | Module ordering or linear learning-page traversal | `agrarian_builder/course.py` |
 | Browser JSON payload contracts (`#site-data`, `#answer-key`) | `agrarian_builder/contracts.py` |
 | Structural fingerprints for scored exercise responses | `agrarian_builder/fingerprint.py` |
 | Review-oriented course manifest | `agrarian_builder/manifest.py`, `course.manifest.json` |
-| Site-relative page paths or portable relative links | `agrarian_builder/paths.py` |
+| Site-relative page paths, portable relative links or reserved module IDs | `agrarian_builder/paths.py` |
 | Plain-text extraction from generated inline HTML | `agrarian_builder/text.py` |
 | Rendered pages, matching display order or Previous/Next labels | `agrarian_builder/renderer.py` |
 | Page structure | `templates/` |
@@ -338,6 +269,8 @@ not change their destinations.
 | Checking, typed gaps, retry, persistence or progress | `static/exercises.js`, `static/progress.js` |
 | Partial navigation or browser history | `static/navigation.js` |
 | Parser behaviour | `tests/test_parser.py` |
+| Publication policy checks | `tests/test_policy.py` |
+| Executable authoring reference and error-catalogue completeness | `tests/test_authoring.py` |
 | Fingerprints or course manifest | `tests/test_manifest.py` |
 | JSDoc and Python payload contract alignment | `tests/test_contracts.py` |
 | Generated structure or course navigation | `tests/test_build.py` |
