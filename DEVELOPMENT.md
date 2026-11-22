@@ -36,10 +36,16 @@ There is no backend or database.
 | Location | Responsibility |
 | --- | --- |
 | `exercises/` | Canonical teaching content, answers and authored feedback |
+| `course.manifest.json` | Committed structural manifest of modules, subsections, exercises, responses, fingerprints and sequence |
+| `agrarian_builder/cli.py` | Command-line interface for `validate`, `inspect` and `build` |
 | `agrarian_builder/parser.py` | Interprets and validates the Markdown conventions |
 | `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions and feedback |
+| `agrarian_builder/contracts.py` | Typed JSON contracts shared between the renderer and browser scripts |
+| `agrarian_builder/manifest.py` | Structural fingerprints and review-oriented course manifest derivation |
+| `agrarian_builder/paths.py` | Site-relative page paths and portable relative links |
+| `agrarian_builder/text.py` | Plain-text extraction from generated inline HTML fragments |
 | `agrarian_builder/people.py` | Public directory entries, roles and optional portrait/profile metadata |
-| `agrarian_builder/renderer.py` | Generates paths, pages, navigation and browser checking data |
+| `agrarian_builder/renderer.py` | Generates pages, navigation and browser checking data |
 | `templates/` | HTML structure |
 | `static/styles.css` | Visual presentation |
 | `static/exercises.js` | Answer checking, feedback, persistence and progress |
@@ -199,14 +205,29 @@ option indices; typed gaps store raw text. Progress counts only currently
 discovered exercise IDs, so obsolete records do not inflate totals.
 
 Saved module state is merged at exercise granularity across `progress`,
-`responses` and `checked`. Each write reads the latest stored module state,
-updates or deletes only the mounted exercise's entries, writes the merged
-object and replaces the in-memory records in place. The mounted form remains
-authoritative for its own exercise while `storage` events and persisted
+`responses`, `checked` and `fingerprints`. Each write reads the latest stored
+module state, updates or deletes only the mounted exercise's entries, writes the
+merged object and replaces the in-memory records in place. The mounted form
+remains authoritative for its own exercise while `storage` events and persisted
 `pageshow` restores refresh other exercises and progress counts without touching
 the mounted controls or feedback. Checked attempts are re-scored against the
 current answer key on load and persisted only when the recomputed status differs
 from the stored progress.
+
+Each exercise answer payload includes a 16-character structural `fingerprint`
+computed from its scored responses (`id`, `kind`, `source_label`, plain-text
+prompt and plain-text options). Answer keys, option correctness flags, typed-gap
+answers, feedback, surrounding prose, worked models and titles are excluded by
+design: answer-key edits re-score existing responses on load, and prose or
+feedback edits never clear learners' drafts. When an exercise loads with saved
+responses or a checked flag and a stored fingerprint that differs from the
+current payload fingerprint, the revised policy deletes its `responses` and
+`checked` entries, sets any existing `progress` to `in-progress`, stores the new
+fingerprint, persists the change and informs the learner in `#exercise-feedback`
+that previous answers were cleared. When saved responses exist without a stored
+fingerprint, the legacy policy adopts and persists the current fingerprint
+without discarding the learner's attempt. Input and submit store the current
+fingerprint; Reset removes it.
 
 Changing a front-matter title or module `order` preserves identity when the
 explicit module ID is retained. Moving unchanged subsections/exercises within
@@ -291,13 +312,18 @@ not change their destinations.
 | Exercise wording, answers or authored feedback | `exercises/*.md` |
 | Markdown interpretation or validation | `agrarian_builder/parser.py` |
 | Semantic entities and relationships | `agrarian_builder/model.py` |
-| Generated paths, course order or Previous/Next targets | `agrarian_builder/renderer.py` |
+| Browser JSON payload contracts (`#site-data`, `#answer-key`) | `agrarian_builder/contracts.py` |
+| Structural fingerprints or the course manifest | `agrarian_builder/manifest.py`, `course.manifest.json` |
+| Site-relative page paths or portable relative links | `agrarian_builder/paths.py` |
+| Plain-text extraction from generated inline HTML | `agrarian_builder/text.py` |
+| Course order, rendered pages or Previous/Next targets | `agrarian_builder/renderer.py` |
 | Page structure | `templates/` |
 | Public people, roles and optional portraits | `agrarian_builder/people.py` |
 | Typography, spacing or visual appearance | `static/styles.css` |
-| Checking, typed gaps, retry, persistence or progress | `static/exercises.js` |
+| Checking, typed gaps, retry, persistence or progress | `static/exercises.js`, `static/progress.js` |
 | Partial navigation or browser history | `static/navigation.js` |
 | Parser behaviour | `tests/test_parser.py` |
+| Fingerprints or course manifest | `tests/test_manifest.py` |
 | Generated structure or course navigation | `tests/test_build.py` |
 | Generic compiler, additive authoring or build safety | `tests/test_extensibility.py` |
 | Browser interaction and persistence | `tests/test_browser.py` |
@@ -374,7 +400,10 @@ verifying the installed Node works; this changes only the test environment.
 Other useful checks are:
 
 ```sh
+uv run --frozen agrarian validate
+uv run --frozen agrarian inspect --check
 uv run --frozen ruff check . --no-cache
+uv run --frozen mypy
 node --check static/exercises.js
 node --check static/navigation.js
 node --check static/progress.js
@@ -382,12 +411,6 @@ node --check static/home.js
 git diff --check
 ```
 
-Before trusting a structural change, check that it has not unintentionally
-altered:
-
-- generated page paths;
-- Previous/Next targets;
-- response IDs;
-- answer keys or response groups;
-- matching display order;
-- saved-state identities.
+Before trusting a structural change, run `agrarian inspect --check`, review the
+manifest diff, and regenerate `course.manifest.json` with `--write` only when
+every difference is intended.
