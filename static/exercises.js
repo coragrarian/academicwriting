@@ -1,8 +1,10 @@
 /* The renderer supplies #site-data, #answer-key and data-* hooks; this file
    collects learner responses, checks them and displays authored feedback.
    Saved state merges at exercise granularity: the mounted form is authoritative
-   for its own exercise, persist() merges that exercise into fresh storage, and
-   storage and persisted pageshow events refresh other exercises in place. */
+   for its own exercise, persist() merges that exercise into fresh storage and
+   adopts the merged records only after a successful write, and storage and
+   persisted pageshow events refresh other exercises in place. When storage
+   cannot be read or written, in-memory records carry the session. */
 /**
  * @typedef {"single-choice" | "multi-select" | "inline-choice" | "gap" | "matching" | "typed-gap"} ResponseKind
  * @typedef {Object} FeedbackPayload
@@ -34,7 +36,7 @@
   "use strict";
 
   const siteData = JSON.parse(document.getElementById("site-data").textContent);
-  const { RECORDS, storageKey, readState, countCompleted } = window.AgrarianProgress;
+  const { RECORDS, storageKey, readStoredState, readState, countCompleted } = window.AgrarianProgress;
   const moduleNames = Object.keys(siteData.modules);
   const moduleByKey = Object.fromEntries(moduleNames.map((module) => [storageKey(module), module]));
   const states = Object.fromEntries(moduleNames.map((module) => [module, readState(module, { persistRepair: true })]));
@@ -44,7 +46,9 @@
   function persist(exerciseId) {
     // Merge only the mounted exercise so progress saved later in other tabs
     // is preserved while Reset deletions remain durable for this exercise.
-    const fresh = readState(siteData.module);
+    // When storage cannot be read or written, keep in-memory session state.
+    const fresh = readStoredState(siteData.module);
+    if (fresh === null) return;
     for (const key of RECORDS) {
       if (Object.hasOwn(state[key], exerciseId)) {
         fresh[key][exerciseId] = state[key][exerciseId];
@@ -55,7 +59,7 @@
     try {
       localStorage.setItem(storageKey(siteData.module), JSON.stringify(fresh));
     } catch {
-      // Checking still works when browser storage is unavailable.
+      return;
     }
     for (const key of RECORDS) {
       state[key] = fresh[key];
@@ -66,7 +70,8 @@
     // Keep the mounted form authoritative for its own exercise while adopting
     // state written in other tabs or before a back/forward-cache restore.
     for (const module of modules) {
-      const fresh = readState(module);
+      const fresh = readStoredState(module);
+      if (fresh === null) continue;
       if (module === siteData.module && mountedExerciseId !== null) {
         for (const key of RECORDS) {
           if (Object.hasOwn(state[key], mountedExerciseId)) {

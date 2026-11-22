@@ -984,3 +984,78 @@ def test_cross_tab_merge_preserves_and_removes_fingerprints(page, synthetic_site
     assert saved["fingerprints"] == {
         "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
     }
+
+
+def _assert_in_memory_session_across_partial_navigation(page, synthetic_site):
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+    page.locator('.page-navigation a[rel="next"]').click()
+    expect(page.locator("h1")).to_have_text("Exercise 2")
+    second_key = json.loads(page.locator("#answer-key").text_content())
+    respond(page, second_key)
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    expect(
+        page.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+    ).to_have_attribute("data-status", "completed")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+    page.locator('.page-navigation a[rel="prev"]').click()
+    expect(page.locator("h1")).to_have_text("Exercise 1")
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(page.locator('input[value="1"]')).to_be_checked()
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+
+def test_unavailable_storage_keeps_session_progress_across_partial_navigation(
+    browser, synthetic_site
+):
+    context = browser.new_context(reduced_motion="reduce")
+    context.add_init_script("""Object.defineProperty(window, 'localStorage', {
+      get() { throw new Error('storage unavailable'); }
+    });""")
+    try:
+        page = context.new_page()
+        _assert_in_memory_session_across_partial_navigation(page, synthetic_site)
+    finally:
+        context.close()
+
+
+def test_failed_writes_keep_unsaved_progress_in_memory(browser, synthetic_site):
+    context = browser.new_context(reduced_motion="reduce")
+    context.add_init_script("""Storage.prototype.setItem = () => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    };""")
+    try:
+        page = context.new_page()
+        _assert_in_memory_session_across_partial_navigation(page, synthetic_site)
+    finally:
+        context.close()
+
+
+def test_persisted_pageshow_without_storage_keeps_memory(browser, synthetic_site):
+    context = browser.new_context(reduced_motion="reduce")
+    context.add_init_script("""Object.defineProperty(window, 'localStorage', {
+      get() { throw new Error('storage unavailable'); }
+    });""")
+    try:
+        page = context.new_page()
+        first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+        respond(page, first_key)
+        page.locator("button[type=submit]").click()
+        expect(page.locator("[data-current-status]")).to_have_text("Completed")
+        expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+
+        page.evaluate(
+            "window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))"
+        )
+        expect(page.locator("[data-current-status]")).to_have_text("Completed")
+        expect(page.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+        expect(
+            page.locator('[data-exercise-link="alpha--choosing-a-label--exercise-1"]')
+        ).to_have_attribute("data-status", "completed")
+    finally:
+        context.close()

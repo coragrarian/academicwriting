@@ -1,7 +1,9 @@
 /* Shared browser-local progress contract: each module stores RECORDS (progress,
    raw responses, checked flags and structural fingerprints) by exercise ID,
-   which is the merge unit across tabs. Count only the current catalogue;
-   exercise pages alone check answers and write attempts. */
+   which is the merge unit across tabs. readStoredState returns null when
+   storage throws so exercise pages can fall back to in-memory session state.
+   Count only the current catalogue; exercise pages alone check answers and
+   write attempts. */
 /**
  * @typedef {"not-started" | "in-progress" | "completed"} ExerciseStatus
  * @typedef {Object} SavedModuleState
@@ -16,6 +18,7 @@
   const RECORDS = ["progress", "responses", "checked", "fingerprints"];
   const storageKey = (module) => `agrarian-writing-v2:${module}`;
   const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const emptyRecords = () => Object.fromEntries(RECORDS.map((key) => [key, {}]));
 
   function migrateIntroduction(saved) {
     let changed = false;
@@ -48,24 +51,37 @@
     return changed;
   }
 
-  /** Read the existing format, optionally persisting its compatibility repair.
-   * Home uses the default read-only mode; course pages retain their repair write.
+  /** Read and normalise stored state, returning null only when storage throws.
+   * Malformed or non-object JSON yields empty records so a later write repairs
+   * it. Home uses the default read-only mode; course pages retain their repair write.
    */
-  function readState(module, { persistRepair = false } = {}) {
+  function readStoredState(module, { persistRepair = false } = {}) {
+    let raw;
     try {
-      const parsed = object(JSON.parse(localStorage.getItem(storageKey(module)) || "{}"));
-      const saved = Object.fromEntries(RECORDS.map((key) => [key, object(parsed[key])]));
-      if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
-        try {
-          localStorage.setItem(storageKey(module), JSON.stringify(saved));
-        } catch {
-          // The repaired state remains usable if storage is read-only.
-        }
-      }
-      return saved;
+      raw = localStorage.getItem(storageKey(module));
     } catch {
-      return Object.fromEntries(RECORDS.map((key) => [key, {}]));
+      return null;
     }
+    let parsed = {};
+    try {
+      parsed = object(JSON.parse(raw || "{}"));
+    } catch {
+      parsed = {};
+    }
+    const saved = Object.fromEntries(RECORDS.map((key) => [key, object(parsed[key])]));
+    if (module === "introduction" && migrateIntroduction(saved) && persistRepair) {
+      try {
+        localStorage.setItem(storageKey(module), JSON.stringify(saved));
+      } catch {
+        // The repaired state remains usable if storage is read-only.
+      }
+    }
+    return saved;
+  }
+
+  /** Return stored state, or empty records when storage is unavailable. */
+  function readState(module, options) {
+    return readStoredState(module, options) ?? emptyRecords();
   }
 
   /** Count the exact stored completion value for current exercise IDs only. */
@@ -73,5 +89,5 @@
     return exerciseIds.filter((id) => state.progress[id] === "completed").length;
   }
 
-  window.AgrarianProgress = { RECORDS, storageKey, readState, countCompleted };
+  window.AgrarianProgress = { RECORDS, storageKey, readStoredState, readState, countCompleted };
 })();
