@@ -9,7 +9,6 @@ from conftest import SYNTHETIC_COURSE
 from test_cli import run_cli
 
 from agrarian_builder.parser import SourceError, parse_document
-from agrarian_builder.paths import RESERVED_MODULE_IDS
 from agrarian_builder.policy import check_publication
 from agrarian_builder.renderer import build_site
 
@@ -109,21 +108,6 @@ def test_publication_requires_exercise_number_to_match_its_position():
     assert str(error.value) == (
         "exercises/sample.md, Sample subsection, Exercise 3: "
         "exercise number must equal its position 2"
-    )
-
-
-@pytest.mark.parametrize("slug", sorted(RESERVED_MODULE_IDS))
-def test_publication_rejects_reserved_module_ids(slug):
-    document = parse_document(
-        publishable_source(
-            front_matter=f"---\nid: {slug}\ntitle: Sample module\norder: 1\n---\n\n"
-        ),
-        source_path="exercises/reserved.md",
-    )
-    with pytest.raises(SourceError) as error:
-        check_publication([document])
-    assert str(error.value) == (
-        f"exercises/reserved.md: module id {slug!r} is reserved for the generated site"
     )
 
 

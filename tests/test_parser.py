@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from agrarian_builder.parser import SourceError, discover_documents, parse_document
+from agrarian_builder.paths import RESERVED_MODULE_IDS
 
 MARK = '<mark class="correct-answer">{}</mark>'
 
@@ -184,6 +185,19 @@ def test_discovery_orders_by_metadata_and_rejects_duplicate_ids(tmp_path):
 def test_empty_discovery_fails(tmp_path):
     with pytest.raises(SourceError, match="no Markdown modules"):
         discover_documents(tmp_path)
+
+
+@pytest.mark.parametrize("slug", sorted(RESERVED_MODULE_IDS))
+def test_discovery_rejects_reserved_module_ids_with_source_path(tmp_path, slug):
+    path = tmp_path / "reserved.md"
+    path.write_text(
+        f"---\nid: {slug}\ntitle: Reserved\n---\n"
+        "# Reserved\n\n## Section\n\n### Exercise 1\n\n- [x] Yes\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SourceError) as error:
+        discover_documents(path)
+    assert str(error.value) == f"{path}: module id {slug!r} is reserved for the generated site"
 
 
 def test_context_instructions_and_real_item_boundaries():

@@ -10,7 +10,7 @@ import pytest
 from conftest import ROOT
 from markdown_it import MarkdownIt
 
-from agrarian_builder.parser import SourceError, parse_document
+from agrarian_builder.parser import SourceError, discover_documents, parse_document
 from agrarian_builder.policy import check_publication
 
 AUTHORING_DOC = ROOT / "AUTHORING.md"
@@ -220,20 +220,24 @@ EXAMPLES = extract_examples(AUTHORING_DOC.read_text(encoding="utf-8"))
         for item in EXAMPLES
     ],
 )
-def test_authoring_examples_execute_against_parser_and_policy(example: ExampleBlock):
+def test_authoring_examples_execute_against_parser_and_policy(
+    example: ExampleBlock, tmp_path: Path
+):
     source = (
         example.body
         if example.scope == "module"
         else EXERCISE_WRAPPER.format(body=example.body)
     )
+    example_path = tmp_path / f"example-line-{example.line}.md"
+    example_path.write_text(source, encoding="utf-8")
     if example.expectation == "valid":
-        document = parse_document(source, source_path=f"AUTHORING.md:{example.line}")
-        check_publication([document])
+        documents = discover_documents(example_path)
+        check_publication(documents)
     else:
         assert example.expected_message is not None
         with pytest.raises(SourceError) as error:
-            document = parse_document(source, source_path=f"AUTHORING.md:{example.line}")
-            check_publication([document])
+            documents = discover_documents(example_path)
+            check_publication(documents)
         assert example.expected_message in str(error.value)
 
 

@@ -41,6 +41,7 @@ from .model import (
     ResponseKind,
     Section,
 )
+from .paths import RESERVED_MODULE_IDS
 
 
 class SourceError(ValueError):
@@ -1323,8 +1324,9 @@ def discover_documents(source: Path) -> list[Document]:
     Raises
     ------
     SourceError
-        A directory contains no Markdown modules, two files share a module ID,
-        or a module violates the source contract.
+        A directory contains no Markdown modules, a module uses a reserved
+        site ID, two files share a module ID, or a module violates the source
+        contract.
     """
     paths = sorted(source.rglob("*.md")) if source.is_dir() else [source]
     if not paths:
@@ -1335,8 +1337,10 @@ def discover_documents(source: Path) -> list[Document]:
         document = parse_document(
             path.read_text(encoding="utf-8"), path.stem, source_path=str(path)
         )
-        if document.slug == "about":
-            raise SourceError(f"{path}: module id 'about' conflicts with the public About page")
+        if document.slug in RESERVED_MODULE_IDS:
+            raise SourceError(
+                f"{path}: module id {document.slug!r} is reserved for the generated site"
+            )
         if document.slug in seen_ids:
             raise SourceError(
                 f"{path}: duplicate module id {document.slug!r}; also in {seen_ids[document.slug]}"

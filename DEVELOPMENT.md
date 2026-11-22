@@ -44,7 +44,7 @@ There is no backend or database.
 | `agrarian_builder/cli.py` | Command-line interface for `validate`, `inspect` and `build` |
 | `agrarian_builder/parser.py` | Interprets and validates the Markdown grammar |
 | `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions, feedback and identity provenance |
-| `agrarian_builder/policy.py` | Course publication rules (front matter, title alignment, explicit IDs, numbering and reserved module IDs) |
+| `agrarian_builder/policy.py` | Course publication rules (front matter, title alignment, explicit IDs and numbering) |
 | `agrarian_builder/course.py` | Course module ordering and linear learning-page traversal |
 | `agrarian_builder/contracts.py` | Typed JSON contracts shared between the renderer and browser scripts |
 | `agrarian_builder/fingerprint.py` | Structural fingerprints for scored exercise responses |
@@ -255,7 +255,7 @@ not change their destinations.
 | Normative authoring grammar, recipes and error catalogue | `AUTHORING.md` |
 | Markdown interpretation or grammar validation | `agrarian_builder/parser.py` |
 | Semantic entities, relationships and identity provenance | `agrarian_builder/model.py` |
-| Course publication rules (front matter, IDs, numbering, reserved IDs) | `agrarian_builder/policy.py` |
+| Course publication rules (front matter, IDs, numbering) | `agrarian_builder/policy.py` |
 | Module ordering or linear learning-page traversal | `agrarian_builder/course.py` |
 | Browser JSON payload contracts (`#site-data`, `#answer-key`) | `agrarian_builder/contracts.py` |
 | Structural fingerprints for scored exercise responses | `agrarian_builder/fingerprint.py` |

@@ -2,12 +2,13 @@
 
 This layer validates naming and identity conventions required when publishing
 or inspecting the canonical course in ``exercises/``: module front matter,
-aligned level-one titles, explicit subsection and exercise IDs, sequential
-``Exercise N`` numbering and reserved site module IDs.
+aligned level-one titles, explicit subsection and exercise IDs and sequential
+``Exercise N`` numbering.
 
-It deliberately does not parse Markdown, check response grammar, sort modules,
-derive page paths or render HTML; grammar validation belongs to ``parser.py``
-and site layout constants belong to ``paths.py``.
+It deliberately does not parse Markdown, check response grammar or reserved
+module IDs, sort modules, derive page paths or render HTML; grammar validation
+and discovery checks belong to ``parser.py`` and site layout constants belong
+to ``paths.py``.
 """
 
 import re
@@ -15,7 +16,6 @@ from collections.abc import Sequence
 
 from .model import Document
 from .parser import SourceError
-from .paths import RESERVED_MODULE_IDS
 
 EXERCISE_NUMBER_RE = re.compile(r"Exercise\s+(\d+)")
 
@@ -32,10 +32,10 @@ def check_publication(documents: Sequence[Document]) -> None:
     Raises
     ------
     SourceError
-        A module omits front matter, uses a reserved module ID, diverges
-        between its level-one heading and front-matter title, omits an explicit
-        subsection or exercise ID, or has an ``Exercise N`` title whose number
-        does not match its one-based position within its subsection.
+        A module omits front matter, diverges between its level-one heading
+        and front-matter title, omits an explicit subsection or exercise ID,
+        or has an ``Exercise N`` title whose number does not match its
+        one-based position within its subsection.
 
     Notes
     -----
@@ -46,10 +46,6 @@ def check_publication(documents: Sequence[Document]) -> None:
         source = document.source_path
         if not document.front_matter:
             raise SourceError(f"{source}: publication requires front matter with id and title")
-        if document.slug in RESERVED_MODULE_IDS:
-            raise SourceError(
-                f"{source}: module id {document.slug!r} is reserved for the generated site"
-            )
         if document.heading_title != document.title:
             raise SourceError(
                 f"{source}: level-one title {document.heading_title!r} must equal "

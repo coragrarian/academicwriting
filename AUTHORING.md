@@ -808,8 +808,8 @@ Prose-only and feedback-wording edits do not change `course.manifest.json`.
 
 The compiler separates **grammar rules** (`agrarian_builder/parser.py`, always enforced on every parse) from **publication rules** (`agrarian_builder/policy.py`, enforced whenever the resolved source is the canonical `exercises/` directory).
 
-- **Grammar rules** check what Markdown means: valid YAML syntax, heading hierarchy, overview restrictions, comment syntax, answer declarations, response syntax, uniqueness within a module or discovery directory, and conflict with the public `about` page during discovery.
-- **Publication rules** enforce course-wide identity stability and site layout policy: front matter with `id` and `title`, `#` heading equal to front-matter `title`, explicit `id:` comments on every `##` and `###`, sequential `Exercise N` numbering (exempting free titles), and reserved module IDs (`about`, `assets`).
+- **Grammar rules** check what Markdown means: valid YAML syntax, heading hierarchy, overview restrictions, comment syntax, answer declarations, response syntax, uniqueness within a module or discovery directory, and reserved module IDs (`about`, `assets`) during discovery.
+- **Publication rules** enforce course-wide identity stability and naming policy: front matter with `id` and `title`, `#` heading equal to front-matter `title`, explicit `id:` comments on every `##` and `###`, and sequential `Exercise N` numbering (exempting free titles).
 
 | Command | Grammar rules | Publication rules | Output |
 | --- | --- | --- | --- |
@@ -1004,9 +1004,8 @@ Every `SourceError` message template raised by `agrarian_builder/parser.py` and 
 | `matching requires a labelled two-column source table` | The source table for a matching exercise has fewer than two columns or no body rows. | Use a two-column Markdown table with a header row, separator row and at least one labelled body row. |
 | `matching row requires exactly two cells: …` | A body row in a matching source table has fewer or more than two unescaped `\|`-delimited cells. | Ensure every row has exactly two cells and escape literal pipes inside cell text as `\|`. |
 | `mixed task and ordinary list entries` | A top-level bullet list in an exercise mixes `[x]`/`[ ]` task entries with plain bullet entries. | Make every entry in the list a task item, or split ordinary prose bullets into a separate list. |
-| `module id 'about' conflicts with the public About page` | A discovered module has slug `about`, which collides with `/about/`. | Choose a different module `id` in front matter (or filename when front matter is absent). |
 | `module id must be a lowercase URL-safe slug` | Front matter `id` contains uppercase letters, spaces, underscores, accents or invalid punctuation. | Change `id` to lowercase ASCII letters and digits separated by single hyphens. |
-| `module id … is reserved for the generated site` | Under publication rules, a module uses a reserved site ID (`about` or `assets`). | Rename the module's front-matter `id` so it does not collide with generated routes or `assets/`. |
+| `module id … is reserved for the generated site` | A discovered module uses a reserved site ID (`about` or `assets`). | Rename the module's front-matter `id` (or filename when front matter is absent) so it does not collide with generated routes or `assets/`. |
 | `multiple answer banks/keys/mapping lists` | An exercise declares more than one `**Answer bank:**`, `**Answer key:**`, `**Purposes:**`, `**Endings:**` or `#### Answer bank`. | Combine all mappings for the exercise into one declaration list, or split into separate exercises. |
 | `multiple matching source tables are ambiguous` | A single container has two or more source tables paired with one matching mapping list. | Keep one matching source table per exercise, or split into separate exercises. |
 | `no Markdown modules found` | Directory discovery found no `*.md` files under the given source directory. | Pass a directory containing module `.md` files or add a module under `exercises/`. |

@@ -91,7 +91,8 @@ def test_validate_rejects_reserved_public_page_identity(course):
     )
     result = run_cli(course, "validate")
     assert result.returncode == 1
-    assert "30-first.md" in result.stderr and "public About page" in result.stderr
+    assert "30-first.md" in result.stderr
+    assert "module id 'about' is reserved for the generated site" in result.stderr
 
 
 @pytest.mark.parametrize("output", [None, "nested/output"])
