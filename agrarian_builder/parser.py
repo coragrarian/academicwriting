@@ -21,7 +21,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 import yaml
 from markdown_it import MarkdownIt
@@ -895,10 +895,9 @@ def _exercise(
                 f"{context}, {container.title}: typed-gap metadata has no labelled gaps"
             )
         linked_gaps |= parser.linked_gaps
-        if container == root:
+        if container.title is None:
             exercise.blocks, exercise.direct_questions = blocks, parser.questions
         else:
-            assert container.title is not None
             item = ExerciseItem(
                 container.title, container.id, blocks, parser.questions, container.metadata
             )
@@ -941,16 +940,16 @@ def _exercise(
     return exercise
 
 
-class _FrontMatter(TypedDict, total=False):
+class _FrontMatter(TypedDict):
     """Validated module front-matter fields."""
 
     id: str
     title: str
     order: int
-    summary: str
+    summary: NotRequired[str]
 
 
-def _front_matter(source: str, context: str) -> tuple[_FrontMatter, str]:
+def _front_matter(source: str, context: str) -> tuple[_FrontMatter | None, str]:
     """Remove and validate an optional leading YAML module declaration.
 
     Present front matter requires ``id`` and ``title``; ``order`` and ``summary``
@@ -961,7 +960,7 @@ def _front_matter(source: str, context: str) -> tuple[_FrontMatter, str]:
     """
     lines = source.splitlines(keepends=True)
     if not lines or lines[0].strip() != "---":
-        return {}, source
+        return None, source
     end = next((index for index in range(1, len(lines)) if lines[index].strip() == "---"), None)
     if end is None:
         raise SourceError(f"{context}: unterminated front matter")
@@ -969,13 +968,12 @@ def _front_matter(source: str, context: str) -> tuple[_FrontMatter, str]:
     unknown = set(data) - {"id", "title", "order", "summary"}
     if unknown:
         raise SourceError(f"{context}: unsupported front matter fields {list(unknown)!r}")
-    for key in ("id", "title"):
-        value = data.get(key)
-        if not isinstance(value, str) or not value.strip():
-            raise SourceError(f"{context}: front matter requires nonempty {key}")
-    module_id = data["id"]
-    module_title = data["title"]
-    assert isinstance(module_id, str) and isinstance(module_title, str)
+    module_id = data.get("id")
+    if not isinstance(module_id, str) or not module_id.strip():
+        raise SourceError(f"{context}: front matter requires nonempty id")
+    module_title = data.get("title")
+    if not isinstance(module_title, str) or not module_title.strip():
+        raise SourceError(f"{context}: front matter requires nonempty title")
     if not ID_RE.fullmatch(module_id):
         raise SourceError(f"{context}: module id must be a lowercase URL-safe slug")
     order = data.get("order", 0)
@@ -1041,8 +1039,8 @@ def parse_document(
         raise SourceError(f"{source_path}: expected a level-one title")
     if sum(heading.level == 1 for heading in headings) != 1:
         raise SourceError(f"{source_path}: expected exactly one level-one title")
-    title = data.get("title", headings[0].title)
-    slug = data.get("id", slugify(document_slug or title))
+    title = data["title"] if data else headings[0].title
+    slug = data["id"] if data else slugify(document_slug or title)
     first_section = next(
         (heading.start for heading in headings if heading.level == 2), len(lines)
     )
@@ -1050,9 +1048,9 @@ def parse_document(
         title,
         slug,
         markdown.render("".join(lines[headings[0].end : first_section])),
-        order=data.get("order", 0),
+        order=data["order"] if data else 0,
         source_path=source_path,
-        summary=data.get("summary"),
+        summary=data.get("summary") if data else None,
     )
     current_section = None
     exercise_started = False

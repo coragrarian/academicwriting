@@ -136,7 +136,7 @@ class Block:
     it does not duplicate the question's answer data.
     """
 
-    kind: BlockKind  # html, instruction or question
+    kind: BlockKind
     html: str = ""
     question_id: str = ""
 
