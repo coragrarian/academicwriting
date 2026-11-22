@@ -198,6 +198,16 @@ ordinals such as `context-q1` or `item-a-q1`. Choices store zero-based authored
 option indices; typed gaps store raw text. Progress counts only currently
 discovered exercise IDs, so obsolete records do not inflate totals.
 
+Saved module state is merged at exercise granularity across `progress`,
+`responses` and `checked`. Each write reads the latest stored module state,
+updates or deletes only the mounted exercise's entries, writes the merged
+object and replaces the in-memory records in place. The mounted form remains
+authoritative for its own exercise while `storage` events and persisted
+`pageshow` restores refresh other exercises and progress counts without touching
+the mounted controls or feedback. Checked attempts are re-scored against the
+current answer key on load and persisted only when the recomputed status differs
+from the stored progress.
+
 Changing a front-matter title or module `order` preserves identity when the
 explicit module ID is retained. Moving unchanged subsections/exercises within
 their existing scopes also preserves IDs. Renaming a module ID, subsection or
