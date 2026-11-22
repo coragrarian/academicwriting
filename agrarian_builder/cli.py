@@ -24,37 +24,37 @@ def main(argv: Sequence[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(prog="agrarian", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    validate = commands.add_parser(
+    validate_command = commands.add_parser(
         "validate", help="Validate Markdown without generating site output."
     )
-    validate.add_argument(
+    validate_command.add_argument(
         "source",
         type=Path,
         nargs="?",
         default=Path("exercises"),
         help="Markdown file or directory (default: exercises/).",
     )
-    build = commands.add_parser(
+    build_command = commands.add_parser(
         "build", help="Validate and rebuild the complete course from exercises/."
     )
-    build.add_argument(
+    build_command.add_argument(
         "--output",
         type=Path,
         default=Path("_site"),
         help="Recognised build output directory (default: _site/).",
     )
-    inspect = commands.add_parser(
+    inspect_command = commands.add_parser(
         "inspect",
         help="Print, write or check the structural course manifest.",
     )
-    inspect.add_argument(
+    inspect_command.add_argument(
         "source",
         type=Path,
         nargs="?",
         default=None,
         help="Markdown file or directory for stdout inspection (default: exercises/).",
     )
-    mode = inspect.add_mutually_exclusive_group()
+    mode = inspect_command.add_mutually_exclusive_group()
     mode.add_argument(
         "--write",
         action="store_true",
@@ -71,15 +71,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         and (arguments.write or arguments.check)
         and arguments.source is not None
     ):
-        parser.error(f"unrecognized arguments: {arguments.source}")
+        parser.error("--write and --check always read exercises/; omit the source argument")
 
-    source = (
-        arguments.source
-        if arguments.command == "validate"
-        else (arguments.source or Path("exercises"))
-        if arguments.command == "inspect"
-        else Path("exercises")
-    )
+    if arguments.command == "validate":
+        source = arguments.source
+    elif arguments.command == "inspect":
+        source = arguments.source or Path("exercises")
+    else:
+        source = Path("exercises")
     try:
         documents = discover_documents(source)
         if arguments.command == "inspect":

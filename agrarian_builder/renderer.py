@@ -479,8 +479,9 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
             path, page_title=page_title, document=document,
             section=section, exercise=exercise,
         )
-        course_site_data: CourseSiteData | None = (
-            {
+        site_data: CourseSiteData | HomeSiteData | None = None
+        if document is not None:
+            site_data = {
                 "module": document.slug,
                 "sections": {
                     section.slug: [exercise.id for exercise in section.exercises]
@@ -495,14 +496,8 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
                     for module in documents
                 },
             }
-            if document
-            else None
-        )
-        site_data: CourseSiteData | HomeSiteData | None = (
-            course_site_data
-            if course_site_data is not None
-            else home_data if path == Path("index.html") else None
-        )
+        elif path == Path("index.html"):
+            site_data = home_data
         rendered = env.get_template(template).render(
             document=document,
             documents=documents,

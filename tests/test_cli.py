@@ -230,17 +230,31 @@ def test_inspect_check_reports_unified_diff_when_manifest_is_out_of_date(course)
 
 
 @pytest.mark.parametrize(
-    "arguments",
+    ("arguments", "expected_message"),
     [
-        ("--write", "--check"),
-        ("--write", "exercises"),
-        ("--check", "exercises"),
-        ("--write", "exercises/30-first.md"),
-        ("--check", "exercises/30-first.md"),
+        (("--write", "--check"), "not allowed with argument"),
+        (
+            ("--write", "exercises"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--check", "exercises"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--write", "exercises/30-first.md"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
+        (
+            ("--check", "exercises/30-first.md"),
+            "--write and --check always read exercises/; omit the source argument",
+        ),
     ],
 )
-def test_inspect_rejects_conflicting_flags_and_positional_sources(course, arguments):
+def test_inspect_rejects_conflicting_flags_and_positional_sources(
+    course, arguments, expected_message
+):
     result = run_cli(course, "inspect", *arguments)
     assert result.returncode == 2
-    assert "usage:" in result.stderr
+    assert expected_message in result.stderr
     assert not (course / "course.manifest.json").exists()
