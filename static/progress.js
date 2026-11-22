@@ -22,12 +22,13 @@
 
   function migrateIntroduction(saved) {
     let changed = false;
-    // Retain the existing subsection-rename repair across all three records,
-    // preserving a current record when both old and current IDs are stored.
+    // Retain the existing subsection-rename repair across every record in
+    // RECORDS, preserving a current entry when both old and current IDs exist.
     for (let number = 1; number <= 3; number++) {
       const previous = `introduction--further-practice--exercise-${number}`;
       const current = `introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-${number}`;
-      for (const record of [saved.progress, saved.responses, saved.checked]) {
+      for (const key of RECORDS) {
+        const record = saved[key];
         if (!Object.hasOwn(record, previous)) continue;
         if (!Object.hasOwn(record, current)) record[current] = record[previous];
         delete record[previous];

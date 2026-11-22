@@ -1282,6 +1282,38 @@ def test_authorised_content_changes_preserve_existing_progress(page, site):
     expect(page.locator('[data-progress-module="introduction"]')).to_have_text("0/14")
 
 
+def test_introduction_rename_migration_moves_every_saved_record(page, site):
+    key = open_exercise(
+        page, site, "introduction", "grammar-and-vocabulary-in-the-introduction-section", 1
+    )
+    previous = "introduction--further-practice--exercise-1"
+    current = "introduction--grammar-and-vocabulary-in-the-introduction-section--exercise-1"
+    responses = {
+        identifier: question["expected"] for identifier, question in key["questions"].items()
+    }
+    fingerprint = key["fingerprint"]
+    page.evaluate(
+        """({previous, responses, fingerprint}) => {
+          localStorage.setItem('agrarian-writing-v2:introduction', JSON.stringify({
+            progress: {[previous]: 'completed'},
+            responses: {[previous]: responses},
+            checked: {[previous]: true},
+            fingerprints: {[previous]: fingerprint}
+          }));
+        }""",
+        {"previous": previous, "responses": responses, "fingerprint": fingerprint},
+    )
+    page.reload()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:introduction'))")
+    for record in ("progress", "responses", "checked", "fingerprints"):
+        assert previous not in saved[record]
+    assert saved["progress"][current] == "completed"
+    assert saved["responses"][current] == responses
+    assert saved["checked"][current] is True
+    assert saved["fingerprints"][current] == fingerprint
+
+
 def test_every_sequential_course_page_forward_and_backward(page, site, documents):
     sequence = []
     for document in documents:
