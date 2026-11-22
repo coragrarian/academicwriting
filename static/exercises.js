@@ -45,21 +45,25 @@
   const unsaved = new Set();
   let mountedExerciseId = null;
 
+  function overlay(target, ids) {
+    for (const id of ids) {
+      for (const key of RECORDS) {
+        if (Object.hasOwn(state[key], id)) {
+          target[key][id] = state[key][id];
+        } else {
+          delete target[key][id];
+        }
+      }
+    }
+  }
+
   function persist(exerciseId) {
     // Track every touched exercise until a write succeeds so failed writes
     // survive refreshes and flush together once storage recovers.
     unsaved.add(exerciseId);
     const fresh = readStoredState(siteData.module);
     if (fresh === null) return;
-    for (const id of unsaved) {
-      for (const key of RECORDS) {
-        if (Object.hasOwn(state[key], id)) {
-          fresh[key][id] = state[key][id];
-        } else {
-          delete fresh[key][id];
-        }
-      }
-    }
+    overlay(fresh, unsaved);
     try {
       localStorage.setItem(storageKey(siteData.module), JSON.stringify(fresh));
     } catch {
@@ -80,15 +84,7 @@
       if (module === siteData.module) {
         const preserved = new Set(unsaved);
         if (mountedExerciseId !== null) preserved.add(mountedExerciseId);
-        for (const id of preserved) {
-          for (const key of RECORDS) {
-            if (Object.hasOwn(state[key], id)) {
-              fresh[key][id] = state[key][id];
-            } else {
-              delete fresh[key][id];
-            }
-          }
-        }
+        overlay(fresh, preserved);
       }
       for (const key of RECORDS) {
         states[module][key] = fresh[key];
