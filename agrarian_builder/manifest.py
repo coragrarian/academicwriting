@@ -143,11 +143,7 @@ def _exercise_manifest(
             "kind": question.kind,
             "source_label": question.source_label,
             "option_count": len(question.options),
-            "expected": (
-                question.answer or ""
-                if question.kind == "typed-gap"
-                else question.correct_indices
-            ),
+            "expected": question.expected_answer(),
         }
         for question in exercise.questions
     ]

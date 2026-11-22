@@ -12,6 +12,7 @@ from agrarian_builder.manifest import (
     course_manifest,
     format_manifest,
 )
+from agrarian_builder.model import Option, Question
 from agrarian_builder.parser import parse_document
 
 CHOICE_SOURCE = """---
@@ -280,3 +281,17 @@ def test_course_manifest_derives_deterministic_structure_from_model(synthetic_do
 def test_committed_course_manifest_matches_canonical_sources(documents):
     committed = (ROOT / "course.manifest.json").read_text(encoding="utf-8")
     assert committed == format_manifest(course_manifest(documents))
+
+
+def test_typed_gap_question_without_answer_raises_value_error():
+    choice = Question(
+        "context-q1",
+        "single-choice",
+        options=[Option("First", False), Option("Second", True)],
+    )
+    assert choice.expected_answer() == [1]
+    typed = Question("context-q2", "typed-gap", answer="expected")
+    assert typed.expected_answer() == "expected"
+    missing = Question("context-q3", "typed-gap")
+    with pytest.raises(ValueError, match="context-q3"):
+        missing.expected_answer()

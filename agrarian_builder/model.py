@@ -9,7 +9,8 @@ Prose and option text are already rendered HTML fragments. Inline questions
 remain ``@@question-id@@`` placeholders until the renderer supplies controls or
 worked answers. These classes do not choose page layout, construct navigation
 or check learner responses. The parser validates authored relationships;
-the dataclasses themselves do not enforce them.
+the dataclasses themselves do not enforce them on construction, though
+``Question.expected_answer`` rejects a typed gap without an answer.
 """
 
 from dataclasses import dataclass, field
@@ -115,6 +116,14 @@ class Question:
     @property
     def correct_indices(self) -> list[int]:
         return [index for index, option in enumerate(self.options) if option.correct]
+
+    def expected_answer(self) -> list[int] | str:
+        """Return canonical answer text for a typed gap or correct option indices."""
+        if self.kind == "typed-gap":
+            if self.answer is None:
+                raise ValueError(f"Typed-gap question {self.id!r} has no answer")
+            return self.answer
+        return self.correct_indices
 
 
 @dataclass

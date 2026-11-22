@@ -243,11 +243,7 @@ def _answer_data(exercise: Exercise) -> AnswerPayload:
         for question in responses:
             questions[question.id] = {
                 "kind": question.kind,
-                "expected": (
-                    question.answer or ""
-                    if question.kind == "typed-gap"
-                    else question.correct_indices
-                ),
+                "expected": question.expected_answer(),
                 "label": question.label,
                 "gap_feedback": (
                     gap_feedback.get(question.source_label)
