@@ -271,7 +271,7 @@ title: Concluding a synthetic course
 order: 50
 ---
 
-# Conclusion
+# Concluding a synthetic course
 
 This fifth module is discovered from Markdown alone.
 

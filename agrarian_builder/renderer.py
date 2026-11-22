@@ -38,7 +38,7 @@ from .contracts import (
 from .course import learning_sequence, ordered_documents
 from .fingerprint import exercise_fingerprint
 from .model import Block, Document, Exercise, Feedback, Question, Section
-from .paths import link_for, page_path
+from .paths import RESERVED_MODULE_IDS, link_for, page_path
 from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
 from .text import plain_text
 
@@ -405,9 +405,15 @@ def build_site(documents: list[Document] | Document, output: Path) -> None:
     if not documents or len({document.slug for document in documents}) != len(documents):
         raise ValueError("Expected at least one module with unique module IDs")
     for document in documents:
-        if document.slug == "about":
+        if document.slug in RESERVED_MODULE_IDS:
+            if document.slug == "about":
+                raise ValueError(
+                    f"{document.source_path}: module id 'about' conflicts with the "
+                    "public About page"
+                )
             raise ValueError(
-                f"{document.source_path}: module id 'about' conflicts with the public About page"
+                f"{document.source_path}: module id {document.slug!r} is reserved for the "
+                "generated site"
             )
     documents = ordered_documents(documents)
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html"]))

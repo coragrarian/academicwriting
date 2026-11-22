@@ -10,8 +10,10 @@ from jinja2 import TemplateError
 
 from .manifest import course_manifest, format_manifest
 from .parser import SourceError, discover_documents
+from .policy import check_publication
 from .renderer import build_site
 
+COURSE_SOURCE = Path("exercises")
 MANIFEST_PATH = Path("course.manifest.json")
 
 
@@ -20,19 +22,30 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     Paths are relative to the working directory. Production builds and manifest
     write/check operations always read ``exercises/``; only ``validate`` and a
-    read-only ``inspect`` accept a source file or another directory.
+    read-only ``inspect`` accept a source file or another directory. Publication
+    rules apply whenever the resolved source is ``exercises/``; any other file
+    or directory is checked for grammar only.
     """
     parser = argparse.ArgumentParser(prog="agrarian", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     validate_command = commands.add_parser(
-        "validate", help="Validate Markdown without generating site output."
+        "validate",
+        help="Validate Markdown without generating site output.",
+        description=(
+            "Validate Markdown without generating site output. Publication rules "
+            "apply when validating exercises/; a single file or any other directory "
+            "is checked for grammar only."
+        ),
     )
     validate_command.add_argument(
         "source",
         type=Path,
         nargs="?",
-        default=Path("exercises"),
-        help="Markdown file or directory (default: exercises/).",
+        default=COURSE_SOURCE,
+        help=(
+            "Markdown file or directory (default: exercises/; publication rules "
+            "apply to exercises/, other sources are checked for grammar only)."
+        ),
     )
     build_command = commands.add_parser(
         "build", help="Validate and rebuild the complete course from exercises/."
@@ -46,13 +59,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     inspect_command = commands.add_parser(
         "inspect",
         help="Print, write or check the structural course manifest.",
+        description=(
+            "Print, write or check the structural course manifest. Publication rules "
+            "apply when inspecting exercises/; a single file or any other directory "
+            "is checked for grammar only."
+        ),
     )
     inspect_command.add_argument(
         "source",
         type=Path,
         nargs="?",
         default=None,
-        help="Markdown file or directory for stdout inspection (default: exercises/).",
+        help=(
+            "Markdown file or directory for stdout inspection (default: exercises/; "
+            "publication rules apply to exercises/, other sources are checked for "
+            "grammar only)."
+        ),
     )
     mode = inspect_command.add_mutually_exclusive_group()
     mode.add_argument(
@@ -76,11 +98,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if arguments.command == "validate":
         source = arguments.source
     elif arguments.command == "inspect":
-        source = arguments.source or Path("exercises")
+        source = arguments.source or COURSE_SOURCE
     else:
-        source = Path("exercises")
+        source = COURSE_SOURCE
     try:
         documents = discover_documents(source)
+        if source.resolve() == COURSE_SOURCE.resolve():
+            check_publication(documents)
         if arguments.command == "inspect":
             rendered = format_manifest(course_manifest(documents))
             if arguments.write:

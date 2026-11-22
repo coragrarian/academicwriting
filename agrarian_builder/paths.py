@@ -1,15 +1,18 @@
 """Derive site-relative page paths and portable links from semantic entities.
 
 Module, subsection and exercise slugs map deterministically to ``index.html``
-paths relative to the generated site root. This module owns path construction
-shared by rendering and manifest inspection; it does not sort modules, choose
-course traversal order or touch the filesystem.
+paths relative to the generated site root. This module owns site layout
+conventions shared by policy checking, rendering and manifest inspection,
+including module IDs reserved for generated site routes and static assets; it
+does not sort modules, choose course traversal order or touch the filesystem.
 """
 
 import os
 from pathlib import Path
 
 from .model import Document, Exercise, Section
+
+RESERVED_MODULE_IDS: frozenset[str] = frozenset({"about", "assets"})
 
 
 def page_path(
