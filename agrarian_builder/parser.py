@@ -413,9 +413,7 @@ def _table_rows(tokens: list[Token]) -> list[list[str]]:
 def _declaration_plain_text(text: str) -> str:
     """Strip emphasis markers, surrounding whitespace and one trailing colon."""
     plain = text.replace("*", "").replace("_", "").strip()
-    if plain.endswith(":"):
-        plain = plain[:-1].strip()
-    return plain.casefold()
+    return plain.removesuffix(":").strip().casefold()
 
 
 def _declaration_suggestion(text: str) -> str | None:
@@ -425,7 +423,7 @@ def _declaration_suggestion(text: str) -> str | None:
 
 def _declaration(chunk: list[Token]) -> str | None:
     if chunk[0].type == "heading_open" and chunk[0].tag == "h4":
-        return DECLARATIONS.get(chunk[1].content.casefold())
+        return "bank" if chunk[1].content.strip().casefold() == "answer bank" else None
     if chunk[0].type == "paragraph_open":
         match = re.fullmatch(r"\*\*(.+?):\*\*", chunk[1].content.strip())
         if match:
@@ -998,6 +996,15 @@ def _exercise(
             index += 2
             after_declaration = True
             continue
+        if chunk[0].type == "paragraph_open" or (
+            chunk[0].type == "heading_open" and chunk[0].tag == "h4"
+        ):
+            suggestion = _declaration_suggestion(_inline_text_without_code(chunk[1]))
+            if suggestion is not None:
+                text = chunk[1].content.strip()
+                raise SourceError(
+                    f"{context}: unrecognised declaration {text!r}; write {suggestion}"
+                )
         if chunk[0].type == "heading_open":
             heading = chunk[1].content
             if chunk[0].tag != "h4" or not (ITEM_RE.fullmatch(heading) or heading == "Model"):

@@ -888,3 +888,41 @@ def test_inline_code_brackets_in_ordered_or_quoted_lists_are_not_task_answers():
     )
     assert len(parsed.questions) == 1
     assert parsed.questions[0].kind == "single-choice"
+
+
+@pytest.mark.parametrize(
+    ("candidate", "expected_text", "suggestion"),
+    [
+        ("**Answer bank**:", "**Answer bank**:", "**Answer bank:**"),
+        ("**Answer bank**", "**Answer bank**", "**Answer bank:**"),
+        ("Answer bank:", "Answer bank:", "**Answer bank:**"),
+        ("*Answer bank:*", "*Answer bank:*", "**Answer bank:**"),
+        ("__Answer bank:__", "__Answer bank:__", "**Answer bank:**"),
+        ("#### Answer bank:", "Answer bank:", "**Answer bank:**"),
+        ("#### **Answer bank:**", "**Answer bank:**", "**Answer bank:**"),
+        ("Answer key:", "Answer key:", "**Answer key:**"),
+        ("**Answer key**:", "**Answer key**:", "**Answer key:**"),
+        ("#### Answer key", "Answer key", "**Answer key:**"),
+        ("**Answers:**", "**Answers:**", "**Answer bank:** or **Answer key:**"),
+        ("Answers", "Answers", "**Answer bank:** or **Answer key:**"),
+        ("#### Answers", "Answers", "**Answer bank:** or **Answer key:**"),
+        ("Purposes:", "Purposes:", "**Purposes:**"),
+        ("**Purpose:**", "**Purpose:**", "**Purposes:**"),
+        ("#### Purposes", "Purposes", "**Purposes:**"),
+        ("#### Purpose", "Purpose", "**Purposes:**"),
+        ("Endings:", "Endings:", "**Endings:**"),
+        ("**Ending:**", "**Ending:**", "**Endings:**"),
+        ("#### Endings", "Endings", "**Endings:**"),
+        ("#### Ending", "Ending", "**Endings:**"),
+    ],
+)
+def test_near_miss_answer_declarations_are_diagnosed_with_canonical_suggestion(
+    candidate, expected_text, suggestion
+):
+    body = f"___ [1]\n\n{candidate}\n\n" + mapping("[1]", "yes")
+    with pytest.raises(SourceError) as error:
+        exercise(body)
+    assert str(error.value) == (
+        f"fixture.md, Section, Exercise 1: unrecognised declaration {expected_text!r}; "
+        f"write {suggestion}"
+    )
