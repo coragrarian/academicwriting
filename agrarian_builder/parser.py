@@ -51,13 +51,18 @@ class SourceError(ValueError):
     """
 
 
-MARK = r'<mark\s+class=["\']correct-answer["\']\s*>(.*?)</mark>'
+MARK_OPEN = r'<mark\s+class=["\']correct-answer["\']\s*>'
+MARK_CLOSE = r"</mark>"
+MARK = rf"{MARK_OPEN}(.*?){MARK_CLOSE}"
 MARK_RE = re.compile(MARK, re.IGNORECASE | re.DOTALL)
 LABEL = r"(?:[0-9]+|[A-Za-z]+)"
 # Prefer a label after the blank when both sides contain brackets: a citation
 # such as "Reddy et al. [8] __________ [B]" is not a gap labelled 8.
 GAP_RE = re.compile(rf"_{{3,}}\s*\[({LABEL})\]|\[({LABEL})\]\s*_{{3,}}(?!_)(?!\s*\[{LABEL}\])")
-TASK_RE = re.compile(r"^\s*\[([ xX])\]\s*(.+)$", re.DOTALL)
+TASK_RE = re.compile(
+    r"^\s*\[(?P<mark>[ xX])\]\s*(?P<text>(?:(?=(?P<key>[a-zA-Z])\)\s+))?.+)$",
+    re.DOTALL,
+)
 ITEM_RE = re.compile(rf"Item\s+({LABEL})", re.IGNORECASE)
 DECLARATIONS = {
     "answer bank": "bank",
@@ -70,8 +75,8 @@ WORD = r"[\w][\w'’/-]*"
 # an auxiliary plus a word. A longer unmarked phrase has no explicit boundary.
 PLAIN = rf"(?:(?:was|were|has|have|had)\s+)?{WORD}"
 INLINE_RE = re.compile(
-    rf"(?P<left>{MARK})\s*\|\s*(?P<right_plain>{PLAIN})"
-    rf"|(?P<left_plain>{PLAIN})\s*\|\s*(?P<right>{MARK})",
+    rf"{MARK_OPEN}(?P<left>.*?){MARK_CLOSE}\s*\|\s*(?P<right_plain>{PLAIN})"
+    rf"|(?P<left_plain>{PLAIN})\s*\|\s*{MARK_OPEN}(?P<right>.*?){MARK_CLOSE}",
     re.IGNORECASE | re.DOTALL,
 )
 INSTRUCTION_RE = re.compile(r"^\*\*Instructions:\*\*\s*", re.IGNORECASE)
@@ -229,13 +234,20 @@ class Heading:
     end: int
 
 
+def _line_map(token: Token) -> tuple[int, int]:
+    """Return the source-line range that ``markdown-it`` attaches to block tokens."""
+    if token.map is None or len(token.map) != 2:
+        raise RuntimeError(f"Expected source line map on {token.type!r} token")
+    return token.map[0], token.map[1]
+
+
 def _headings(tokens: list[Token]) -> list[Heading]:
     result = []
     for index, token in enumerate(tokens):
         if token.type == "heading_open":
-            assert token.map is not None
+            start, end = _line_map(token)
             title = re.sub(r"<[^>]+>", "", tokens[index + 1].content).strip()
-            result.append(Heading(int(token.tag[1]), title, *token.map))
+            result.append(Heading(int(token.tag[1]), title, start, end))
     return result
 
 
@@ -289,9 +301,10 @@ def _heading_identities(
             raise SourceError(
                 f"{context}: heading id must be a nonempty lowercase URL-safe slug"
             )
-        assert heading.map is not None and token.map is not None
-        identities[heading.map[0]] = identifier
-        for line in range(*token.map):
+        heading_start, _ = _line_map(heading)
+        token_start, token_end = _line_map(token)
+        identities[heading_start] = identifier
+        for line in range(token_start, token_end):
             lines[line] = "\n"
     return identities
 
@@ -535,22 +548,17 @@ class _ContentParser:
                 raise SourceError(
                     f"{self.context}: inline choices require exactly two alternatives"
                 )
-            correct_left = match.group("left") is not None
-            marked = match.group("left") if correct_left else match.group("right")
-            correct = MARK_RE.fullmatch(marked)
-            assert correct is not None
-            alternatives = (
-                [correct.group(1), match.group("right_plain")]
-                if correct_left
-                else [
-                    match.group("left_plain"),
-                    correct.group(1),
-                ]
-            )
+            left = match.group("left")
+            if left is not None:
+                alternatives = [left, match.group("right_plain")]
+                correct_index = 0
+            else:
+                alternatives = [match.group("left_plain"), match.group("right")]
+                correct_index = 1
             question = self._add(
                 "inline-choice",
                 [
-                    Option(self.markdown.renderInline(text), index == (0 if correct_left else 1))
+                    Option(self.markdown.renderInline(text), index == correct_index)
                     for index, text in enumerate(alternatives)
                 ],
                 label=f"Choice {len(self.questions) + 1}",
@@ -602,7 +610,7 @@ class _ContentParser:
         raw = GAP_RE.sub(replace_gap, raw)
         return self.markdown.renderInline(raw)
 
-    def _matching(self, chunk: list[Token]) -> list[Block]:
+    def _matching(self, chunk: list[Token], bank: _Bank) -> list[Block]:
         """Resolve labelled table entries against purpose or ending mappings.
 
         The table supplies selectable source labels; each mapping supplies a
@@ -613,8 +621,7 @@ class _ContentParser:
         # Markdown tables pad missing cells and discard excess cells. Matching
         # must validate authored boundaries before that normalisation can hide
         # an incomplete or ambiguous answer. Escaped pipes remain cell text.
-        assert chunk[0].map is not None
-        start, end = chunk[0].map
+        start, end = _line_map(chunk[0])
         for line in self.source_lines[start + 2:end]:
             cells = re.split(r"(?<!\\)\|", line.strip())
             if cells and not cells[0]:
@@ -640,13 +647,12 @@ class _ContentParser:
             if identifier in identifiers:
                 raise SourceError(f"{self.context}: duplicate matching entry {identifier}")
             identifiers.append(identifier)
-        assert self.bank is not None
-        unknown = set(self.bank.answers) - set(identifiers)
+        unknown = set(bank.answers) - set(identifiers)
         if unknown:
             raise SourceError(
                 f"{self.context}: matching mapping references unknown entry {sorted(unknown)}"
             )
-        missing = set(identifiers) - set(self.bank.answers)
+        missing = set(identifiers) - set(bank.answers)
         if missing:
             raise SourceError(f"{self.context}: matching entry has no mapping {sorted(missing)}")
         table_html = self.markdown.renderer.render(chunk, self.markdown.options, {})
@@ -655,7 +661,7 @@ class _ContentParser:
                 "html", html=table_html.replace("<table>", '<table class="matching-sentences">')
             )
         ]
-        for index, (answer, text) in enumerate(self.bank.entries, 1):
+        for index, (answer, text) in enumerate(bank.entries, 1):
             if answer is None:
                 raise SourceError(f"{self.context}: matching mappings require labelled entries")
             question = self._add(
@@ -692,22 +698,22 @@ class _ContentParser:
                 continue
             if kind == "bullet_list_open":
                 entries = _list_entries(chunk, self.context)
-                tasks = [TASK_RE.fullmatch(entry) for entry in entries]
-                if any(tasks):
-                    if not all(tasks):
+                tasks = [
+                    match
+                    for entry in entries
+                    if (match := TASK_RE.fullmatch(entry)) is not None
+                ]
+                if tasks:
+                    if len(tasks) != len(entries):
                         raise SourceError(f"{self.context}: mixed task and ordinary list entries")
-                    options = []
-                    for task in tasks:
-                        assert task is not None
-                        text = task.group(2)
-                        key = re.match(r"([a-zA-Z])\)\s+", text)
-                        options.append(
-                            Option(
-                                self.markdown.renderInline(text),
-                                task.group(1).lower() == "x",
-                                key.group(1) if key else None,
-                            )
+                    options = [
+                        Option(
+                            self.markdown.renderInline(task.group("text")),
+                            task.group("mark").lower() == "x",
+                            task.group("key"),
                         )
+                        for task in tasks
+                    ]
                     correct_count = sum(option.correct for option in options)
                     keys = [option.key for option in options if option.key]
                     if len(keys) != len(set(keys)):
@@ -723,7 +729,7 @@ class _ContentParser:
                     continue
             if kind == "table_open" and self.bank and self.bank.kind == "matching":
                 matching_tables += 1
-                blocks.extend(self._matching(chunk))
+                blocks.extend(self._matching(chunk, self.bank))
                 continue
             if kind == "paragraph_open" and INSTRUCTION_RE.match(chunk[1].content):
                 blocks.append(
