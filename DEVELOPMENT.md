@@ -40,8 +40,10 @@ There is no backend or database.
 | `agrarian_builder/cli.py` | Command-line interface for `validate`, `inspect` and `build` |
 | `agrarian_builder/parser.py` | Interprets and validates the Markdown conventions |
 | `agrarian_builder/model.py` | Semantic representation of modules, exercises, questions and feedback |
+| `agrarian_builder/course.py` | Course module ordering and linear learning-page traversal |
 | `agrarian_builder/contracts.py` | Typed JSON contracts shared between the renderer and browser scripts |
-| `agrarian_builder/manifest.py` | Structural fingerprints and review-oriented course manifest derivation |
+| `agrarian_builder/fingerprint.py` | Structural fingerprints for scored exercise responses |
+| `agrarian_builder/manifest.py` | Review-oriented course manifest derivation and formatting |
 | `agrarian_builder/paths.py` | Site-relative page paths and portable relative links |
 | `agrarian_builder/text.py` | Plain-text extraction from generated inline HTML fragments |
 | `agrarian_builder/people.py` | Public directory entries, roles and optional portrait/profile metadata |
@@ -207,12 +209,14 @@ discovered exercise IDs, so obsolete records do not inflate totals.
 Saved module state is merged at exercise granularity across `progress`,
 `responses`, `checked` and `fingerprints`. Each write reads the latest stored
 module state, updates or deletes only the mounted exercise's entries, writes the
-merged object and replaces the in-memory records in place. The mounted form
-remains authoritative for its own exercise while `storage` events and persisted
-`pageshow` restores refresh other exercises and progress counts without touching
-the mounted controls or feedback. Checked attempts are re-scored against the
-current answer key on load and persisted only when the recomputed status differs
-from the stored progress.
+merged object and replaces the in-memory records in place only after a
+successful write. When `localStorage` cannot be read or written, in-memory
+records act as the session's only store and retain progress across partial
+navigation. The mounted form remains authoritative for its own exercise while
+`storage` events and persisted `pageshow` restores refresh other exercises and
+progress counts without touching the mounted controls or feedback. Checked
+attempts are re-scored against the current answer key on load and persisted
+only when the recomputed status differs from the stored progress.
 
 Each exercise answer payload includes a 16-character structural `fingerprint`
 computed from its scored responses (`id`, `kind`, `source_label`, plain-text
@@ -224,10 +228,12 @@ responses or a checked flag and a stored fingerprint that differs from the
 current payload fingerprint, the revised policy deletes its `responses` and
 `checked` entries, sets any existing `progress` to `in-progress`, stores the new
 fingerprint, persists the change and informs the learner in `#exercise-feedback`
-that previous answers were cleared. When saved responses exist without a stored
-fingerprint, the legacy policy adopts and persists the current fingerprint
-without discarding the learner's attempt. Input and submit store the current
-fingerprint; Reset removes it.
+that previous answers were cleared. Because Home reads stored `progress` without
+loading per-exercise answer payloads, a revised exercise keeps any stale
+`completed` count on Home until that exercise page is visited. When saved
+responses exist without a stored fingerprint, the legacy policy adopts and
+persists the current fingerprint without discarding the learner's attempt. Input
+and submit store the current fingerprint; Reset removes it.
 
 Changing a front-matter title or module `order` preserves identity when the
 explicit module ID is retained. Moving unchanged subsections/exercises within
@@ -312,11 +318,13 @@ not change their destinations.
 | Exercise wording, answers or authored feedback | `exercises/*.md` |
 | Markdown interpretation or validation | `agrarian_builder/parser.py` |
 | Semantic entities and relationships | `agrarian_builder/model.py` |
+| Module ordering or linear learning-page traversal | `agrarian_builder/course.py` |
 | Browser JSON payload contracts (`#site-data`, `#answer-key`) | `agrarian_builder/contracts.py` |
-| Structural fingerprints or the course manifest | `agrarian_builder/manifest.py`, `course.manifest.json` |
+| Structural fingerprints for scored exercise responses | `agrarian_builder/fingerprint.py` |
+| Review-oriented course manifest | `agrarian_builder/manifest.py`, `course.manifest.json` |
 | Site-relative page paths or portable relative links | `agrarian_builder/paths.py` |
 | Plain-text extraction from generated inline HTML | `agrarian_builder/text.py` |
-| Course order, rendered pages or Previous/Next targets | `agrarian_builder/renderer.py` |
+| Rendered pages, matching display order or Previous/Next labels | `agrarian_builder/renderer.py` |
 | Page structure | `templates/` |
 | Public people, roles and optional portraits | `agrarian_builder/people.py` |
 | Typography, spacing or visual appearance | `static/styles.css` |
@@ -324,6 +332,7 @@ not change their destinations.
 | Partial navigation or browser history | `static/navigation.js` |
 | Parser behaviour | `tests/test_parser.py` |
 | Fingerprints or course manifest | `tests/test_manifest.py` |
+| JSDoc and Python payload contract alignment | `tests/test_contracts.py` |
 | Generated structure or course navigation | `tests/test_build.py` |
 | Generic compiler, additive authoring or build safety | `tests/test_extensibility.py` |
 | Browser interaction and persistence | `tests/test_browser.py` |
@@ -413,4 +422,8 @@ git diff --check
 
 Before trusting a structural change, run `agrarian inspect --check`, review the
 manifest diff, and regenerate `course.manifest.json` with `--write` only when
-every difference is intended.
+every difference is intended. Because the manifest does not cover presentation
+or rendered HTML, also check that the change has not unintentionally altered:
+
+- matching display order;
+- Previous/Next labels.
