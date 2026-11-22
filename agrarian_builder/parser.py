@@ -1010,8 +1010,9 @@ def _exercise(
             suggestion = _declaration_suggestion(_inline_text_without_code(chunk[1]))
             if suggestion is not None:
                 text = chunk[1].content.strip()
+                item_context = f"{context}, {current.title or 'exercise'}"
                 raise SourceError(
-                    f"{context}: unrecognised declaration {text!r}; write {suggestion}"
+                    f"{item_context}: unrecognised declaration {text!r}; write {suggestion}"
                 )
         if chunk[0].type == "heading_open":
             heading = chunk[1].content

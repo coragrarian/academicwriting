@@ -937,6 +937,25 @@ def test_near_miss_answer_declarations_are_diagnosed_with_canonical_suggestion(
     with pytest.raises(SourceError) as error:
         exercise(body)
     assert str(error.value) == (
-        f"fixture.md, Section, Exercise 1: unrecognised declaration {expected_text!r}; "
+        f"fixture.md, Section, Exercise 1, exercise: unrecognised declaration {expected_text!r}; "
+        f"write {suggestion}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("candidate", "expected_text", "suggestion"),
+    [
+        ("**Answer bank**:", "**Answer bank**:", "**Answer bank:**"),
+        ("#### Answer key", "Answer key", "**Answer key:**"),
+    ],
+)
+def test_near_miss_declaration_inside_item_reports_item_context(
+    candidate, expected_text, suggestion
+):
+    body = f"#### Item A\n\n___ [1]\n\n{candidate}\n\n" + mapping("[1]", "yes")
+    with pytest.raises(SourceError) as error:
+        exercise(body)
+    assert str(error.value) == (
+        f"fixture.md, Section, Exercise 1, Item A: unrecognised declaration {expected_text!r}; "
         f"write {suggestion}"
     )
