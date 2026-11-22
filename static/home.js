@@ -9,6 +9,7 @@
   "use strict";
 
   const { readState, countCompleted } = window.AgrarianProgress;
+  /** @type {HomeSiteData} */
   const { modules, exercise_urls: exerciseUrls } = JSON.parse(document.getElementById("site-data").textContent);
   const progress = [...document.querySelectorAll("[data-home-module]")].map((row) => {
     const module = row.dataset.homeModule;

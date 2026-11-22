@@ -35,6 +35,7 @@
 (() => {
   "use strict";
 
+  /** @type {CourseSiteData} */
   const siteData = JSON.parse(document.getElementById("site-data").textContent);
   const { RECORDS, storageKey, readStoredState, readState, countCompleted } = window.AgrarianProgress;
   const moduleNames = Object.keys(siteData.modules);
@@ -158,6 +159,7 @@
     form.dataset.exerciseInitialised = "true";
 
     const exerciseId = mountedExerciseId;
+    /** @type {AnswerPayload} */
     const key = JSON.parse(document.getElementById("answer-key").textContent);
     const feedback = document.getElementById("exercise-feedback");
     const sharedFeedback = document.getElementById("shared-feedback");
