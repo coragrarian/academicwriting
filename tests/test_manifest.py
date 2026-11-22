@@ -7,9 +7,9 @@ import pytest
 from conftest import ROOT
 from site_support import course_sequence
 
+from agrarian_builder.fingerprint import exercise_fingerprint
 from agrarian_builder.manifest import (
     course_manifest,
-    exercise_fingerprint,
     format_manifest,
 )
 from agrarian_builder.parser import parse_document

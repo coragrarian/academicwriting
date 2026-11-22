@@ -36,7 +36,7 @@ from .contracts import (
     QuestionPayload,
 )
 from .course import learning_sequence, ordered_documents
-from .manifest import exercise_fingerprint
+from .fingerprint import exercise_fingerprint
 from .model import Block, Document, Exercise, Feedback, Question, Section
 from .paths import link_for, page_path
 from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
