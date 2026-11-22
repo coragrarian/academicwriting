@@ -35,6 +35,7 @@ from .contracts import (
     HomeSiteData,
     QuestionPayload,
 )
+from .manifest import exercise_fingerprint
 from .model import Block, Document, Exercise, Feedback, Question, Section
 from .paths import link_for, page_path
 from .people import COORDINATORS, DATA_PLATFORM, RESEARCH_TEAM
@@ -259,6 +260,7 @@ def _answer_data(exercise: Exercise) -> AnswerPayload:
                 },
             }
     return {
+        "fingerprint": exercise_fingerprint(exercise),
         "questions": questions,
         "groups": groups,
         "feedback": _feedback_data(exercise.metadata.feedback),

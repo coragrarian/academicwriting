@@ -886,3 +886,101 @@ def test_recomputed_status_is_persisted_for_home(page, synthetic_site):
     expect(page.locator("[data-home-entry]")).to_have_attribute(
         "href", "alpha/choosing-a-label/exercise-1/index.html"
     )
+
+
+def test_revised_fingerprint_clears_saved_answers_and_keeps_in_progress(page, synthetic_site):
+    page.goto(f"{synthetic_site[0]}/index.html")
+    exercise = "alpha--choosing-a-label--exercise-1"
+    page.evaluate(
+        """(exercise) => {
+          localStorage.setItem('agrarian-writing-v2:alpha', JSON.stringify({
+            progress: {[exercise]: 'completed'},
+            responses: {[exercise]: {'context-q1': [1]}},
+            checked: {[exercise]: true},
+            fingerprints: {[exercise]: '0000000000000000'}
+          }));
+        }""",
+        exercise,
+    )
+    key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    expect(page.locator("#exercise-feedback")).to_have_text(
+        "This exercise was revised after your last attempt, so your previous answers have been cleared."
+    )
+    expect(page.locator("[data-current-status]")).to_have_text("In progress")
+    expect(page.locator('[data-progress-module="alpha"]')).to_have_text("0/3")
+    expect(page.locator("input:checked")).to_have_count(0)
+    expect(page.locator("[data-result], [data-item-feedback]:visible")).to_have_count(0)
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {exercise: "in-progress"}
+    assert exercise not in saved["responses"]
+    assert exercise not in saved["checked"]
+    assert saved["fingerprints"] == {exercise: key["fingerprint"]}
+
+
+def test_legacy_attempt_without_fingerprint_adopts_current_fingerprint(page, synthetic_site):
+    page.goto(f"{synthetic_site[0]}/index.html")
+    exercise = "alpha--choosing-a-label--exercise-1"
+    page.evaluate(
+        """(exercise) => {
+          localStorage.setItem('agrarian-writing-v2:alpha', JSON.stringify({
+            progress: {[exercise]: 'completed'},
+            responses: {[exercise]: {'context-q1': [1]}},
+            checked: {[exercise]: true}
+          }));
+        }""",
+        exercise,
+    )
+    key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(page.locator('input[value="1"]')).to_be_checked()
+    expect(page.locator("#exercise-feedback")).to_have_text("1 of 1 responses correct.")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {exercise: "completed"}
+    assert saved["responses"] == {exercise: {"context-q1": [1]}}
+    assert saved["checked"] == {exercise: True}
+    assert saved["fingerprints"] == {exercise: key["fingerprint"]}
+
+
+def test_reset_removes_stored_exercise_fingerprint(page, synthetic_site):
+    exercise = "alpha--choosing-a-label--exercise-1"
+    key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    respond(page, key)
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["fingerprints"] == {exercise: key["fingerprint"]}
+
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["fingerprints"] == {exercise: key["fingerprint"]}
+
+    page.locator("#reset-exercise").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Not started")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    for record in ("progress", "responses", "checked", "fingerprints"):
+        assert exercise not in saved[record]
+
+
+def test_cross_tab_merge_preserves_and_removes_fingerprints(page, synthetic_site):
+    other = page.context.new_page()
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    second_key = open_exercise(other, synthetic_site, "alpha", "choosing-a-label", 2)
+
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+
+    respond(other, second_key)
+    expect(other.locator("[data-current-status]")).to_have_text("In progress")
+    saved = other.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["fingerprints"] == {
+        "alpha--choosing-a-label--exercise-1": first_key["fingerprint"],
+        "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
+    }
+
+    page.locator("#reset-exercise").click()
+    other.locator("button[type=submit]").click()
+    expect(other.locator("[data-current-status]")).to_have_text("Completed")
+    saved = other.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["fingerprints"] == {
+        "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
+    }

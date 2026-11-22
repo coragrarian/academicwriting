@@ -1,18 +1,19 @@
 /* Shared browser-local progress contract: each module stores RECORDS (progress,
-   raw responses and checked flags) by exercise ID, which is the merge unit
-   across tabs. Count only the current catalogue; exercise pages alone check
-   answers and write attempts. */
+   raw responses, checked flags and structural fingerprints) by exercise ID,
+   which is the merge unit across tabs. Count only the current catalogue;
+   exercise pages alone check answers and write attempts. */
 /**
  * @typedef {"not-started" | "in-progress" | "completed"} ExerciseStatus
  * @typedef {Object} SavedModuleState
  * @property {Object<string, ExerciseStatus>} progress
  * @property {Object<string, Object<string, (number[] | string)>>} responses
  * @property {Object<string, boolean>} checked
+ * @property {Object<string, string>} fingerprints
  */
 (() => {
   "use strict";
 
-  const RECORDS = ["progress", "responses", "checked"];
+  const RECORDS = ["progress", "responses", "checked", "fingerprints"];
   const storageKey = (module) => `agrarian-writing-v2:${module}`;
   const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
 

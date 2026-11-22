@@ -20,6 +20,7 @@
  * @property {string[]} questions
  * @property {FeedbackPayload} feedback
  * @typedef {Object} AnswerPayload
+ * @property {string} fingerprint
  * @property {Object<string, QuestionPayload>} questions
  * @property {GroupPayload[]} groups
  * @property {FeedbackPayload} feedback
@@ -325,6 +326,25 @@
       }
     }
 
+    // Clear stale attempts when an exercise's scored response structure changed,
+    // while grandfathering legacy saved responses that pre-date fingerprints.
+    const hasAttempt = Object.hasOwn(state.responses, exerciseId) || Boolean(state.checked[exerciseId]);
+    const storedFingerprint = state.fingerprints[exerciseId];
+    let revised = false;
+    if (hasAttempt && typeof storedFingerprint === "string" && storedFingerprint !== key.fingerprint) {
+      delete state.responses[exerciseId];
+      delete state.checked[exerciseId];
+      if (Object.hasOwn(state.progress, exerciseId)) {
+        state.progress[exerciseId] = "in-progress";
+      }
+      state.fingerprints[exerciseId] = key.fingerprint;
+      persist(exerciseId);
+      revised = true;
+    } else if (Object.hasOwn(state.responses, exerciseId) && typeof storedFingerprint !== "string") {
+      state.fingerprints[exerciseId] = key.fingerprint;
+      persist(exerciseId);
+    }
+
     // Recreate feedback from responses and the checked flag instead of storing
     // per-question results. Checked attempts use the current key when a form
     // returns; an unchecked draft restores without revealing feedback.
@@ -337,6 +357,9 @@
         persist(exerciseId);
       }
     }
+    if (revised) {
+      feedback.textContent = "This exercise was revised after your last attempt, so your previous answers have been cleared.";
+    }
     updateStatus();
 
     form.addEventListener("input", () => {
@@ -345,6 +368,7 @@
       state.responses[exerciseId] = selectedAnswers();
       state.progress[exerciseId] = "in-progress";
       delete state.checked[exerciseId];
+      state.fingerprints[exerciseId] = key.fingerprint;
       clearFeedback();
       persist(exerciseId);
       updateStatus();
@@ -357,6 +381,7 @@
       state.responses[exerciseId] = given;
       state.progress[exerciseId] = correct ? "completed" : "in-progress";
       state.checked[exerciseId] = true;
+      state.fingerprints[exerciseId] = key.fingerprint;
       persist(exerciseId);
       updateStatus();
     });
@@ -367,6 +392,7 @@
       delete state.responses[exerciseId];
       delete state.progress[exerciseId];
       delete state.checked[exerciseId];
+      delete state.fingerprints[exerciseId];
       clearFeedback();
       persist(exerciseId);
       updateStatus();

@@ -41,6 +41,7 @@ class GroupPayload(TypedDict):
 class AnswerPayload(TypedDict):
     """Complete JSON payload emitted in ``#answer-key`` on exercise pages."""
 
+    fingerprint: str
     questions: dict[str, QuestionPayload]
     groups: list[GroupPayload]
     feedback: FeedbackPayload
