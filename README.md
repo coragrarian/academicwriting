@@ -1,5 +1,3 @@
-<p><a href="https://coragrarian.github.io/academicwriting/"><img src="static/favicon.svg" width="36" height="36" alt=""> <strong>CorAgrarian</strong></a></p>
-
 # Academic Writing for Agrarian Sciences
 
 [![Course: live](https://img.shields.io/badge/Course-live-2b6f50)](https://coragrarian.github.io/academicwriting/)
