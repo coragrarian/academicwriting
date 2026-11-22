@@ -1059,3 +1059,31 @@ def test_persisted_pageshow_without_storage_keeps_memory(browser, synthetic_site
         ).to_have_attribute("data-status", "completed")
     finally:
         context.close()
+
+
+def test_stale_tab_write_merges_storage_without_storage_events(page, synthetic_site):
+    stale = page.context.new_page()
+    second_key = open_exercise(stale, synthetic_site, "alpha", "choosing-a-label", 2)
+    stale.evaluate(
+        "Object.defineProperty(StorageEvent.prototype, 'storageArea', { get: () => null })"
+    )
+
+    first_key = open_exercise(page, synthetic_site, "alpha", "choosing-a-label", 1)
+    respond(page, first_key)
+    page.locator("button[type=submit]").click()
+    expect(page.locator("[data-current-status]")).to_have_text("Completed")
+    expect(stale.locator('[data-progress-module="alpha"]')).to_have_text("0/3")
+
+    respond(stale, second_key)
+    expect(stale.locator("[data-current-status]")).to_have_text("In progress")
+    expect(stale.locator('[data-progress-module="alpha"]')).to_have_text("1/3")
+    saved = stale.evaluate("JSON.parse(localStorage.getItem('agrarian-writing-v2:alpha'))")
+    assert saved["progress"] == {
+        "alpha--choosing-a-label--exercise-1": "completed",
+        "alpha--choosing-a-label--exercise-2": "in-progress",
+    }
+    assert saved["checked"] == {"alpha--choosing-a-label--exercise-1": True}
+    assert saved["fingerprints"] == {
+        "alpha--choosing-a-label--exercise-1": first_key["fingerprint"],
+        "alpha--choosing-a-label--exercise-2": second_key["fingerprint"],
+    }
