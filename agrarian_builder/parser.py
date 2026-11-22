@@ -52,6 +52,7 @@ class SourceError(ValueError):
 
 
 MARK_OPEN = r'<mark\s+class=["\']correct-answer["\']\s*>'
+MARK_OPEN_RE = re.compile(MARK_OPEN, re.IGNORECASE)
 MARK_CLOSE = r"</mark>"
 MARK = rf"{MARK_OPEN}(.*?){MARK_CLOSE}"
 MARK_RE = re.compile(MARK, re.IGNORECASE | re.DOTALL)
@@ -69,6 +70,15 @@ DECLARATIONS = {
     "answer key": "key",
     "purposes": "matching",
     "endings": "matching",
+}
+DECLARATION_SUGGESTIONS = {
+    "answer bank": "**Answer bank:**",
+    "answer key": "**Answer key:**",
+    "answers": "**Answer bank:** or **Answer key:**",
+    "purposes": "**Purposes:**",
+    "purpose": "**Purposes:**",
+    "endings": "**Endings:**",
+    "ending": "**Endings:**",
 }
 WORD = r"[\w][\w'’/-]*"
 # Unmarked alternatives in the canonical inline syntax are one word or
@@ -353,6 +363,19 @@ def _table_rows(tokens: list[Token]) -> list[list[str]]:
     return rows
 
 
+def _declaration_plain_text(text: str) -> str:
+    """Strip emphasis markers, surrounding whitespace and one trailing colon."""
+    plain = text.replace("*", "").replace("_", "").strip()
+    if plain.endswith(":"):
+        plain = plain[:-1].strip()
+    return plain.casefold()
+
+
+def _declaration_suggestion(text: str) -> str | None:
+    """Return the canonical form for a declaration or near-miss heading/paragraph."""
+    return DECLARATION_SUGGESTIONS.get(_declaration_plain_text(text))
+
+
 def _declaration(chunk: list[Token]) -> str | None:
     if chunk[0].type == "heading_open" and chunk[0].tag == "h4":
         return DECLARATIONS.get(chunk[1].content.casefold())
@@ -361,6 +384,82 @@ def _declaration(chunk: list[Token]) -> str | None:
         if match:
             return DECLARATIONS.get(match.group(1).casefold())
     return None
+
+
+def _inline_text_without_code(token: Token) -> str:
+    """Reconstruct inline prose while replacing inline code spans with a sentinel."""
+    parts: list[str] = []
+    for child in token.children or ():
+        if child.type == "code_inline":
+            parts.append("\x00")
+        elif child.type in {"softbreak", "hardbreak"}:
+            parts.append("\n")
+        else:
+            parts.append(child.content)
+    return "".join(parts)
+
+
+def _item_first_inline(tokens: list[Token], start: int) -> Token | None:
+    """Return the first direct paragraph inline token of a list item."""
+    depth = 0
+    for index in range(start, len(tokens)):
+        token = tokens[index]
+        depth += token.nesting
+        if depth == 0:
+            return None
+        if depth == 2 and token.type == "inline" and tokens[index - 1].type == "paragraph_open":
+            return token
+    return None
+
+
+def _validate_overview(markdown: MarkdownIt, source: str, context: str) -> None:
+    """Reject answer syntax, declarations and metadata outside exercises."""
+    tokens = markdown.parse(source)
+    construct: str | None = None
+    for chunk in _chunks(tokens):
+        if chunk[0].type in {"fence", "code_block"}:
+            continue
+        if chunk[0].type == "paragraph_open":
+            text = _inline_text_without_code(chunk[1])
+            if _declaration(chunk) is not None or _declaration_suggestion(text) is not None:
+                construct = "answer declaration"
+                break
+        for index, token in enumerate(chunk):
+            if token.type in {"fence", "code_block"}:
+                continue
+            if token.type == "html_block":
+                if re.search(r"<!--\s*agrarian\b", token.content):
+                    construct = "metadata comment"
+                    break
+                if MARK_OPEN_RE.search(token.content):
+                    construct = "answer marker"
+                    break
+            elif token.type == "list_item_open":
+                first = _item_first_inline(chunk, index)
+                if first is not None and TASK_RE.fullmatch(_inline_text_without_code(first)):
+                    construct = "task-list answer"
+                    break
+            elif token.type == "inline":
+                text = _inline_text_without_code(token)
+                if any(
+                    child.type == "html_inline"
+                    and re.search(r"<!--\s*agrarian\b", child.content)
+                    for child in token.children or ()
+                ):
+                    construct = "metadata comment"
+                    break
+                if MARK_OPEN_RE.search(text):
+                    construct = "answer marker"
+                    break
+                if GAP_RE.search(text):
+                    construct = "labelled gap"
+                    break
+        if construct is not None:
+            break
+    if construct is not None:
+        raise SourceError(
+            f"{context}: {construct} outside an exercise; move it under a ### exercise heading"
+        )
 
 
 @dataclass
@@ -1047,6 +1146,9 @@ def parse_document(
         raise SourceError(f"{source_path}: expected exactly one level-one title")
     title = data["title"] if data else headings[0].title
     slug = data["id"] if data else slugify(document_slug or title)
+    first_heading = headings[1].start if len(headings) > 1 else len(lines)
+    module_overview = "".join(lines[headings[0].end : first_heading])
+    _validate_overview(markdown, module_overview, source_path)
     first_section = next(
         (heading.start for heading in headings if heading.level == 2), len(lines)
     )
@@ -1069,6 +1171,9 @@ def parse_document(
                     f"{source_path}, {heading.title}: duplicate subsection slug {section_slug}"
                 )
             seen_sections.add(section_slug)
+            next_heading = headings[index + 1].start if index + 1 < len(headings) else len(lines)
+            section_overview = "".join(lines[heading.end : next_heading])
+            _validate_overview(markdown, section_overview, f"{source_path}, {heading.title}")
             end = next(
                 (later.start for later in headings[index + 1 :] if later.level <= 3), len(lines)
             )

@@ -682,3 +682,78 @@ def test_document_validation(source, message):
     with pytest.raises(SourceError, match=message) as error:
         parse_document(source, source_path="broken.md")
     assert "broken.md" in str(error.value)
+
+
+@pytest.mark.parametrize("scope", ["module", "subsection"])
+@pytest.mark.parametrize(
+    ("prose", "construct"),
+    [
+        ("An answer " + MARK.format("yes") + " in prose.", "answer marker"),
+        ("<div>" + MARK.format("yes") + "</div>", "answer marker"),
+        ("Complete __________ [1] here.", "labelled gap"),
+        ("Complete [A] ___ here.", "labelled gap"),
+        ("- [x] Yes\n- [ ] No", "task-list answer"),
+        ("1. [x] Yes\n2. [ ] No", "task-list answer"),
+        ("> - [ ] Unchecked", "task-list answer"),
+        ("- Outer\n  - [x] Nested", "task-list answer"),
+        ("**Answer bank:**", "answer declaration"),
+        ("**Answer key:**", "answer declaration"),
+        ("**Purposes:**", "answer declaration"),
+        ("**Endings:**", "answer declaration"),
+        ("**Answer bank**:", "answer declaration"),
+        ("Answers:", "answer declaration"),
+        ("<!-- agrarian\nfeedback:\n  correct: Well done.\n-->", "metadata comment"),
+        ("Text <!-- agrarian\nfeedback:\n  correct: Well done.\n-->", "metadata comment"),
+    ],
+)
+def test_overview_prose_rejects_answer_syntax_and_metadata_with_context(scope, prose, construct):
+    if scope == "module":
+        source = f"# Module\n\n{prose}\n\n## Overview section\n\n### Exercise 1\n\n- [x] Yes\n"
+        expected_context = "overview.md"
+    else:
+        source = (
+            f"# Module\n\n## Overview section\n\n{prose}\n\n### Exercise 1\n\n- [x] Yes\n"
+        )
+        expected_context = "overview.md, Overview section"
+    with pytest.raises(SourceError) as error:
+        parse_document(source, source_path="overview.md")
+    assert str(error.value) == (
+        f"{expected_context}: {construct} outside an exercise; move it under a ### exercise heading"
+    )
+
+
+@pytest.mark.parametrize("scope", ["module", "subsection"])
+def test_overview_prose_ignores_code_and_allows_ordinary_comments(scope):
+    prose = (
+        "Inline examples: "
+        '`<mark class="correct-answer">yes</mark>`, `___ [1]`, `**Answer bank:**`, '
+        "`<!-- agrarian -->`.\n\n"
+        "- `[x] Yes`\n"
+        "- Purposes\n\n"
+        "<!-- ordinary author note -->\n\n"
+        "```markdown\n"
+        '<mark class="correct-answer">yes</mark>\n'
+        "___ [1]\n"
+        "- [x] Yes\n"
+        "**Answer bank:**\n"
+        "<!-- agrarian\n"
+        "feedback:\n"
+        "  correct: Example only.\n"
+        "-->\n"
+        "```\n\n"
+        "    ___ [2]\n"
+        "    - [x] Indented code\n"
+        "    **Answer key:**\n"
+    )
+    if scope == "module":
+        source = f"# Module\n\n{prose}\n## Overview section\n\n### Exercise 1\n\n- [x] Yes\n"
+    else:
+        source = (
+            "# Module\n\n## Overview section\n\n<!-- agrarian\nid: overview-section\n-->\n\n"
+            f"{prose}\n### Exercise 1\n\n- [x] Yes\n"
+        )
+    document = parse_document(source, source_path="overview.md")
+    rendered = (
+        document.introduction_html if scope == "module" else document.sections[0].introduction_html
+    )
+    assert "<pre>" in rendered and "<code>" in rendered
